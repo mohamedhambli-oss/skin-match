@@ -235,6 +235,55 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
 </div>
 
 
+<!-- ══ REGION ══ -->
+<div id="sc-region" class="hidden">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#FDF8F5;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,#F2C4BC,#E8A09A);opacity:.25;pointer-events:none"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
+      <div style="width:38px;height:38px;border-radius:10px;background:#C4726A;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:Georgia,serif">SM</div>
+      <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F">Skin<span style="color:#C4726A">Match</span></div>
+    </div>
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:10px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px">🌍 Région</div>
+      <h2 style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#3D2B1F;margin-bottom:6px">Où êtes-vous ?</h2>
+      <p style="font-size:13px;color:#8B6F5E">Les produits sont adaptés à votre pays.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px">
+      <button onclick="setRegion('fr')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:26px">🇫🇷</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">France</div><div style="font-size:11px;color:#9A8A85">Belgique · Suisse</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('dz')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:26px">🇩🇿</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Algérie</div><div style="font-size:11px;color:#9A8A85">Produits locaux inclus</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('ma')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:26px">🇲🇦</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Maroc</div><div style="font-size:11px;color:#9A8A85">Tunisie · Maghreb</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('gb')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:26px">🇬🇧</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">UK / International</div><div style="font-size:11px;color:#9A8A85">USA · Canada · Europe</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('es')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:26px">🇪🇸</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">España</div><div style="font-size:11px;color:#9A8A85">Portugal · Latinoamérica</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('de')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:26px">🇩🇪</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Deutschland</div><div style="font-size:11px;color:#9A8A85">Austria · Switzerland</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+    </div>
+    <div style="margin-top:20px;font-size:11px;color:#C8B4AE;text-align:center">Vous pourrez changer votre région plus tard</div>
+  </div>
+</div>
+
 <!-- ══ WELCOME ══ -->
 <div id="sc-welcome" class="hidden">
 
@@ -569,6 +618,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
 <script>
 // ─── LANGUE (doit être en premier) ───────────────────────────────────────────
 let LANG = 'fr';
+let REGION = 'fr';
 
 const T = {
   fr:{
@@ -1082,6 +1132,27 @@ function build(){
 }
 
 function t(key){ return (T[LANG]&&T[LANG][key]!==undefined)?T[LANG][key]:(T.fr[key]||key); }
+function setRegion(r) {
+  REGION = r;
+  var flags = {fr:'🇫🇷',dz:'🇩🇿',ma:'🇲🇦',gb:'🇬🇧',es:'🇪🇸',de:'🇩🇪',other:'🌍'};
+  var badge = document.getElementById('region-badge');
+  if (badge) badge.textContent = (flags[r] || '🌍');
+  go('welcome');
+}
+
+function getRegionProducts() {
+  // Retourne les clés de produits disponibles pour la région courante
+  var available = [];
+  for (var key in DB) {
+    var p = DB[key];
+    // Si pas de champ region = disponible partout
+    if (!p.region) { available.push(key); continue; }
+    // Si le produit a une région, vérifier si la région courante est dedans
+    if (p.region.indexOf(REGION) !== -1) { available.push(key); }
+  }
+  return available;
+}
+
 function setLang(l){
   LANG = l;
   initQuestions();
@@ -1089,7 +1160,7 @@ function setLang(l){
   setTimeout(applyWelcomeLang, 50);
 }
 
-const SCREENS=["lang","welcome","register","login","scan","q1","diag","q2","q3","q4","q5","result","compare","suivi","dashboard"];
+const SCREENS=["lang","region","welcome","register","login","scan","q1","diag","q2","q3","q4","q5","result","compare","suivi","dashboard"];
 
 const ST={
   screen:'lang',user:null,
@@ -1717,7 +1788,41 @@ const DIAG_RESULTS = {
   grasse:   {label:"Peau Grasse",   id:"grasse",   desc:"Votre peau produit trop de sébum. Brillance, pores dilatés et imperfections sont vos préoccupations principales. Des soins purifiants et séboregulateurs sont essentiels."},
   mixte:    {label:"Peau Mixte",    id:"mixte",    desc:"Votre zone T (front, nez, menton) est grasse tandis que vos joues sont normales ou sèches. Vous avez besoin de produits équilibrants."},
   normale:  {label:"Peau Normale",  id:"normale",  desc:"Votre peau est bien équilibrée, ni trop grasse ni trop sèche. Vous avez peu d'imperfections. Maintenez cet équilibre avec une routine simple."},
-  sensible: {label:"Peau Sensible", id:"sensible", desc:"Votre peau réagit facilement aux agressions extérieures. Rougeurs, picotements et irritations sont fréquents. Des produits doux et apaisants sont indispensables."},
+  sensible: {label:"Peau Sensible", id:"sensible", desc:"Votre peau réagit facilement aux agressions extérieures. Rougeurs, picotements et irritations sont fréquents. Des produits doux et apaisants sont indispensables."},,
+
+  // ── ALGÉRIE — Marques locales ─────────────────────────────────────────────
+  "dz-biophar-creme": {nom:"Crème Hydratante BioPharm",marque:"BioPharm Algérie",prix:"850 DA",link:"https://www.biopharmalger.com",yuka:78,yl:"Bon",usage:"Crème hydratante quotidienne",texture:"Crème légère",ak:["Glycérine","Aloe vera","Vitamine E"],comp:["Glycerin","Aloe Vera","Tocopherol"],clean:false,vegan:false,pq:"Peaux normales à sèches.",ben:"Hydrate et nourrit la peau au quotidien.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Hydrates and nourishes skin daily.",region:["dz"]},
+  "dz-biophar-gel": {nom:"Gel Nettoyant Purifiant BioPharm",marque:"BioPharm Algérie",prix:"650 DA",link:"https://www.biopharmalger.com",yuka:74,yl:"Bon",usage:"Gel nettoyant peaux mixtes à grasses",texture:"Gel moussant",ak:["Acide salicylique","Zinc","Aloe vera"],comp:["Salicylic Acid","Zinc","Aloe Vera"],clean:false,vegan:false,pq:"Peaux grasses et mixtes.",ben:"Nettoie et régule le sébum.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Cleanses and regulates sebum.",region:["dz"]},
+  "dz-saidal-huile": {nom:"Huile d'Argan Pure Saidal",marque:"Saidal",prix:"1200 DA",link:"https://www.saidal.dz",yuka:88,yl:"Excellent",usage:"Huile nourrissante visage et corps",texture:"Huile",ak:["Huile d'argan","Vitamine E","Oméga 9"],comp:["Argan Oil","Tocopherol","Oleic Acid"],clean:true,vegan:true,pq:"Peaux sèches à très sèches.",ben:"Nourrit et répare la barrière cutanée.",app:"Soir sur peau propre.",moment:"PM",ben_en:"Nourishes and repairs the skin barrier.",region:["dz"]},
+  "dz-saidal-creme": {nom:"Crème Solaire SPF50 Saidal",marque:"Saidal",prix:"900 DA",link:"https://www.saidal.dz",yuka:70,yl:"Bon",usage:"Protection solaire SPF50",texture:"Crème fluide",ak:["Filtres UV","Glycérine","Aloe vera"],comp:["UV Filters","Glycerin","Aloe Vera"],clean:false,vegan:false,pq:"Tous types de peau.",ben:"Protège contre les UV en climat chaud.",app:"Le matin avant exposition.",moment:"AM",ben_en:"Protects against UV in hot climates.",region:["dz"]},
+  "dz-atlas-rose": {nom:"Eau de Rose Pure Atlas",marque:"Atlas Cosmetics",prix:"500 DA",link:"https://atlascosmetics.dz",yuka:90,yl:"Excellent",usage:"Lotion tonique hydratante",texture:"Lotion",ak:["Eau de rose","Glycérine"],comp:["Rose Water","Glycerin"],clean:true,vegan:true,pq:"Tous types de peau, peaux sensibles.",ben:"Tonifie et hydrate après le nettoyage.",app:"Matin et soir après nettoyage.",moment:"AM+PM",ben_en:"Tones and hydrates after cleansing.",region:["dz"]},
+  "dz-atlas-huile-nigelle": {nom:"Huile de Nigelle Noire Atlas",marque:"Atlas Cosmetics",prix:"700 DA",link:"https://atlascosmetics.dz",yuka:92,yl:"Excellent",usage:"Huile multi-usage anti-imperfections",texture:"Huile",ak:["Huile de nigelle","Thymoquinone","Oméga 6"],comp:["Black Seed Oil","Thymoquinone","Omega 6"],clean:true,vegan:true,pq:"Peaux avec imperfections, acné.",ben:"Réduit l'acné et les taches grâce à la thymoquinone.",app:"2-3 gouttes soir sur zones ciblées.",moment:"PM",ben_en:"Reduces acne and dark spots with thymoquinone.",region:["dz"]},
+  "dz-diepharmex-creme": {nom:"Crème Réparatrice Diepharmex",marque:"Diepharmex",prix:"780 DA",link:"https://diepharmex.dz",yuka:76,yl:"Bon",usage:"Crème cicatrisante et réparatrice",texture:"Crème",ak:["Dexpanthenol","Allantoïne","Vitamine E"],comp:["Dexpanthenol","Allantoin","Tocopherol"],clean:false,vegan:false,pq:"Peaux sèches, irritées, cicatrices.",ben:"Répare et apaise les peaux abîmées.",app:"Matin et soir sur zones à traiter.",moment:"AM+PM",ben_en:"Repairs and soothes damaged skin.",region:["dz"]},
+  "dz-henna-masque": {nom:"Masque Henné & Argile Ghassoul",marque:"Terrafine Algérie",prix:"450 DA",link:"https://terrafine.dz",yuka:85,yl:"Excellent",usage:"Masque purifiant argile & henné",texture:"Masque",ak:["Argile ghassoul","Henné","Huile d'olive"],comp:["Ghassoul Clay","Henna","Olive Oil"],clean:true,vegan:true,pq:"Peaux grasses à mixtes.",ben:"Purifie et matifie en profondeur.",app:"1-2x/semaine, laisser 10 min.",moment:"PM",ben_en:"Deep purifies and mattifies skin.",region:["dz"]},
+  "dz-naturalia-serum": {nom:"Sérum Vitamine C Naturalia DZ",marque:"Naturalia DZ",prix:"1500 DA",link:"https://naturalia.dz",yuka:80,yl:"Excellent",usage:"Sérum éclat anti-taches",texture:"Sérum",ak:["Vitamine C","Niacinamide","Acide hyaluronique"],comp:["Ascorbic Acid","Niacinamide","Hyaluronic Acid"],clean:false,vegan:true,pq:"Peaux avec taches, teint terne.",ben:"Illumine et unifie le teint.",app:"Matin sur peau propre.",moment:"AM",ben_en:"Brightens and evens skin tone.",region:["dz"]},
+  "dz-flair-spf": {nom:"Fluide SPF50+ Flair Pharma",marque:"Flair Pharma DZ",prix:"1100 DA",link:"https://flairpharma.dz",yuka:72,yl:"Bon",usage:"Protection solaire légère SPF50+",texture:"Fluide",ak:["Filtres UV","Vitamine E","Aloe vera"],comp:["UV Filters","Vitamin E","Aloe Vera"],clean:false,vegan:false,pq:"Tous types de peau.",ben:"Protection haute sans effet blanc.",app:"Le matin en dernière étape.",moment:"AM",ben_en:"High protection without white cast.",region:["dz"]},
+
+  // ── MAROC ─────────────────────────────────────────────────────────────────
+  "ma-nectarome-argan": {nom:"Huile d'Argan Bio Nectarome",marque:"Nectarome Maroc",prix:"180 MAD",link:"https://www.nectarome.com",yuka:92,yl:"Excellent",usage:"Huile d'argan bio pure",texture:"Huile",ak:["Huile d'argan","Vitamine E"],comp:["Argan Oil","Tocopherol"],clean:true,vegan:true,pq:"Tous types de peau, peaux sèches.",ben:"Nourrit et régénère intensément.",app:"Soir quelques gouttes.",moment:"PM",ben_en:"Intensely nourishes and regenerates.",region:["ma","dz","tn"]},
+  "ma-zineglob-rose": {nom:"Eau de Rose Bio Zineglob",marque:"Zineglob",prix:"60 MAD",link:"https://zineglob.ma",yuka:88,yl:"Excellent",usage:"Eau de rose tonique pure",texture:"Lotion",ak:["Eau de rose pure","Glycérine"],comp:["Pure Rose Water","Glycerin"],clean:true,vegan:true,pq:"Tous types de peau.",ben:"Tonifie et hydrate après nettoyage.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Tones and hydrates after cleansing.",region:["ma","dz","tn"]},
+  "ma-sothys-argan": {nom:"Crème Argan & Beurre de Karité",marque:"Sothys Maroc",prix:"220 MAD",link:"https://www.sothys.ma",yuka:80,yl:"Excellent",usage:"Crème nourrissante peaux sèches",texture:"Crème riche",ak:["Argan","Karité","Vitamine E"],comp:["Argan Oil","Shea Butter","Tocopherol"],clean:false,vegan:false,pq:"Peaux sèches.",ben:"Nourrit et protège les peaux sèches.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Nourishes and protects dry skin.",region:["ma"]},
+
+  // ── INTERNATIONAL (UK / US / EU) ──────────────────────────────────────────
+  "int-the-ordinary-ha": {nom:"Hyaluronic Acid 2% + B5",marque:"The Ordinary",prix:"8€ / £7",link:"https://theordinary.com",yuka:86,yl:"Excellent",usage:"Sérum hydratant acide hyaluronique",texture:"Sérum gel",ak:["Acide hyaluronique 2%","Vitamine B5"],comp:["Sodium Hyaluronate","Panthenol"],clean:false,vegan:true,pq:"Tous types de peau.",ben:"Hydratation intense en profondeur.",app:"Matin et soir avant la crème.",moment:"AM+PM",ben_en:"Intense deep hydration.",region:["gb","de","es","other"]},
+  "int-the-ordinary-niac": {nom:"Niacinamide 10% + Zinc 1%",marque:"The Ordinary",prix:"6€ / £5",link:"https://theordinary.com",yuka:84,yl:"Excellent",usage:"Sérum anti-imperfections et pores",texture:"Sérum",ak:["Niacinamide 10%","Zinc 1%"],comp:["Niacinamide","Zinc PCA"],clean:false,vegan:true,pq:"Peaux grasses, pores dilatés, imperfections.",ben:"Réduit les pores et régule le sébum.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Reduces pores and regulates sebum.",region:["gb","de","es","other"]},
+  "int-the-ordinary-retinol": {nom:"Retinol 0.5% in Squalane",marque:"The Ordinary",prix:"8€ / £7",link:"https://theordinary.com",yuka:82,yl:"Excellent",usage:"Sérum anti-âge au rétinol",texture:"Sérum huile",ak:["Rétinol 0.5%","Squalane"],comp:["Retinol","Squalane"],clean:false,vegan:true,pq:"Peaux matures, rides.",ben:"Réduit rides et améliore texture.",app:"Soir uniquement.",moment:"PM",ben_en:"Reduces wrinkles and improves texture.",region:["gb","de","es","other"]},
+  "int-paula-choice-bha": {nom:"Skin Perfecting 2% BHA",marque:"Paula's Choice",prix:"35€ / £30",link:"https://www.paulaschoice.co.uk",yuka:80,yl:"Excellent",usage:"Exfoliant liquide BHA anti-pores",texture:"Lotion",ak:["Acide salicylique 2%","Niacinamide"],comp:["Salicylic Acid 2%","Niacinamide"],clean:false,vegan:true,pq:"Peaux grasses, acnéiques, pores bouchés.",ben:"Exfolie et débouche les pores en profondeur.",app:"Soir sur peau sèche.",moment:"PM",ben_en:"Exfoliates and unclogs pores deeply.",region:["gb","de","es","other"]},
+  "int-cerave-moisturiser": {nom:"Moisturising Cream",marque:"CeraVe",prix:"14€ / £12",link:"https://www.cerave.co.uk",yuka:82,yl:"Excellent",usage:"Crème hydratante quotidienne",texture:"Crème",ak:["Céramides","Acide hyaluronique","Niacinamide"],comp:["Ceramides","Hyaluronic Acid","Niacinamide"],clean:false,vegan:false,pq:"Peaux normales à sèches.",ben:"Hydratation 24h et restauration de la barrière.",app:"Matin et soir.",moment:"AM+PM",ben_en:"24h hydration and barrier restoration.",region:["gb","de","es","other","fr","dz","ma"]},
+  "int-la-roche-spf": {nom:"Anthelios Invisible SPF50+",marque:"La Roche-Posay",prix:"22€ / £20",link:"https://www.laroche-posay.co.uk",yuka:65,yl:"Bon",usage:"Protection solaire SPF50+ invisible",texture:"Fluide",ak:["Mexoryl SX","Mexoryl XL","Eau thermale"],comp:["Mexoryl SX","Mexoryl XL"],clean:false,vegan:false,pq:"Tous types de peau.",ben:"Protection maximale texture invisible.",app:"Le matin.",moment:"AM",ben_en:"Maximum protection invisible texture.",region:["gb","de","es","other","fr","dz","ma"]},
+
+  // ── ESPAGNE ───────────────────────────────────────────────────────────────
+  "es-isdin-spf": {nom:"Eryfotona Actinica SPF100+",marque:"ISDIN",prix:"28€",link:"https://www.isdin.com",yuka:72,yl:"Bon",usage:"Protection solaire SPF100+ très haute",texture:"Fluide",ak:["Photolyase","Filtres UV","ADN repair"],comp:["Photolyase","UV Filters","DNA Repair"],clean:false,vegan:false,pq:"Peaux exposées au soleil, kératoses.",ben:"Répare et protège les dommages UV.",app:"Le matin généreusement.",moment:"AM",ben_en:"Repairs and protects UV damage.",region:["es"]},
+  "es-miaderm-serum": {nom:"Sérum Rosehip Miaderm",marque:"Miaderm",prix:"18€",link:"https://miaderm.com",yuka:86,yl:"Excellent",usage:"Sérum huile de rose musquée",texture:"Huile-sérum",ak:["Huile rose musquée","Vitamine C","Rétinol naturel"],comp:["Rosehip Oil","Vitamin C","Natural Retinol"],clean:true,vegan:true,pq:"Peaux matures, taches, cicatrices.",ben:"Régénère et illumine le teint.",app:"Soir sur peau propre.",moment:"PM",ben_en:"Regenerates and brightens complexion.",region:["es"]},
+
+  // ── ALLEMAGNE ─────────────────────────────────────────────────────────────
+  "de-eucerin-aqua": {nom:"Aquaphor Healing Ointment",marque:"Eucerin",prix:"8€",link:"https://www.eucerin.de",yuka:88,yl:"Excellent",usage:"Baume réparateur multi-usage",texture:"Baume",ak:["Panthenol","Bisabolol","Glycérine"],comp:["Petrolatum","Panthenol","Bisabolol"],clean:false,vegan:false,pq:"Peaux sèches, lèvres, zones abîmées.",ben:"Répare et protège les peaux très sèches.",app:"Au besoin sur zones sèches.",moment:"AM+PM",ben_en:"Repairs and protects very dry skin.",region:["de"]},
+  "de-nivea-creme": {nom:"NIVEA Crème Universelle",marque:"NIVEA",prix:"4€",link:"https://www.nivea.de",yuka:74,yl:"Bon",usage:"Crème universelle visage et corps",texture:"Crème riche",ak:["Eucerit","Glycérine","Panthenol"],comp:["Eucerit","Glycerin","Panthenol"],clean:false,vegan:false,pq:"Tous types de peau.",ben:"Hydrate durablement visage et corps.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Durably hydrates face and body.",region:["de","other"]},
+
 };
 
 let diagScores = {seche:0,grasse:0,mixte:0,normale:0,sensible:0};
@@ -2665,7 +2770,8 @@ function buildCompareCards(query) {
     if (ST.result && ST.result.steps) {
         ST.result.steps.forEach(function(s) { keys.push(s.key); });
     }
-    Object.keys(DB).forEach(function(k) {
+    var regionKeys = getRegionProducts();
+    regionKeys.forEach(function(k) {
         if (keys.indexOf(k) === -1) keys.push(k);
     });
 
