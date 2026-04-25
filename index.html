@@ -1086,6 +1086,16 @@ function getCompat(key,skin,concern,age,allergies){
   return Math.min(99,Math.max(72,s+Math.floor(Math.random()*8)));
 }
 
+function getRegionProducts() {
+  var available = [];
+  for (var key in DB) {
+    var p = DB[key];
+    if (!p.region) { available.push(key); continue; }
+    if (p.region.indexOf(REGION) !== -1) { available.push(key); }
+  }
+  return available;
+}
+
 function build(){
   const b=gB(ST.budget),sk=ST.skinType||"normale",steps=[];
   const c=ST.concerns.length>0?ST.concerns:["deshydratation"];
@@ -1821,7 +1831,7 @@ const DIAG_RESULTS = {
 
   // ── ALLEMAGNE ─────────────────────────────────────────────────────────────
   "de-eucerin-aqua": {nom:"Aquaphor Healing Ointment",marque:"Eucerin",prix:"8€",link:"https://www.eucerin.de",yuka:88,yl:"Excellent",usage:"Baume réparateur multi-usage",texture:"Baume",ak:["Panthenol","Bisabolol","Glycérine"],comp:["Petrolatum","Panthenol","Bisabolol"],clean:false,vegan:false,pq:"Peaux sèches, lèvres, zones abîmées.",ben:"Répare et protège les peaux très sèches.",app:"Au besoin sur zones sèches.",moment:"AM+PM",ben_en:"Repairs and protects very dry skin.",region:["de"]},
-  "de-nivea-creme": {nom:"NIVEA Crème Universelle",marque:"NIVEA",prix:"4€",link:"https://www.nivea.de",yuka:74,yl:"Bon",usage:"Crème universelle visage et corps",texture:"Crème riche",ak:["Eucerit","Glycérine","Panthenol"],comp:["Eucerit","Glycerin","Panthenol"],clean:false,vegan:false,pq:"Tous types de peau.",ben:"Hydrate durablement visage et corps.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Durably hydrates face and body.",region:["de","other"]},
+  "de-nivea-creme": {nom:"NIVEA Crème Universelle",marque:"NIVEA",prix:"4€",link:"https://www.nivea.de",yuka:74,yl:"Bon",usage:"Crème universelle visage et corps",texture:"Crème riche",ak:["Eucerit","Glycérine","Panthenol"],comp:["Eucerit","Glycerin","Panthenol"],clean:false,vegan:false,pq:"Tous types de peau.",ben:"Hydrate durablement visage et corps.",app:"Matin et soir.",moment:"AM+PM",ben_en:"Durably hydrates face and body.",region:["de","other"]}
 
 };
 
