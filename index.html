@@ -235,55 +235,6 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
 </div>
 
 
-<!-- ══ REGION ══ -->
-<div id="sc-region" class="hidden">
-  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#FDF8F5;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,#F2C4BC,#E8A09A);opacity:.25;pointer-events:none"></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
-      <div style="width:38px;height:38px;border-radius:10px;background:#C4726A;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:Georgia,serif">SM</div>
-      <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F">Skin<span style="color:#C4726A">Match</span></div>
-    </div>
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:10px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px">🌍 Région</div>
-      <h2 style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#3D2B1F;margin-bottom:6px">Où êtes-vous ?</h2>
-      <p style="font-size:13px;color:#8B6F5E">Les produits sont adaptés à votre pays.</p>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px">
-      <button onclick="setRegion('fr')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
-        <span style="font-size:26px">🇫🇷</span>
-        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">France</div><div style="font-size:11px;color:#9A8A85">Belgique · Suisse</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-      <button onclick="setRegion('dz')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
-        <span style="font-size:26px">🇩🇿</span>
-        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Algérie</div><div style="font-size:11px;color:#9A8A85">Produits locaux inclus</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-      <button onclick="setRegion('ma')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
-        <span style="font-size:26px">🇲🇦</span>
-        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Maroc</div><div style="font-size:11px;color:#9A8A85">Tunisie · Maghreb</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-      <button onclick="setRegion('gb')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
-        <span style="font-size:26px">🇬🇧</span>
-        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">UK / International</div><div style="font-size:11px;color:#9A8A85">USA · Canada · Europe</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-      <button onclick="setRegion('es')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
-        <span style="font-size:26px">🇪🇸</span>
-        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">España</div><div style="font-size:11px;color:#9A8A85">Portugal · Latinoamérica</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-      <button onclick="setRegion('de')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
-        <span style="font-size:26px">🇩🇪</span>
-        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Deutschland</div><div style="font-size:11px;color:#9A8A85">Austria · Switzerland</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-    </div>
-    <div style="margin-top:20px;font-size:11px;color:#C8B4AE;text-align:center">Vous pourrez changer votre région plus tard</div>
-  </div>
-</div>
-
 <!-- ══ WELCOME ══ -->
 <div id="sc-welcome" class="hidden">
 
@@ -1163,14 +1114,7 @@ function getRegionProducts() {
   return available;
 }
 
-function setLang(l){
-  LANG = l;
-  initQuestions();
-  go('region');
-  setTimeout(applyWelcomeLang, 50);
-}
-
-const SCREENS=["lang","region","welcome","register","login","scan","q1","diag","q2","q3","q4","q5","result","compare","suivi","dashboard"];
+const SCREENS=["lang","welcome","register","login","scan","q1","diag","q2","q3","q4","q5","result","compare","suivi","dashboard"];
 
 const ST={
   screen:'lang',user:null,
@@ -1185,6 +1129,15 @@ function go(screen){
   ST.screen=screen;
   window.scrollTo(0,0);
   if(screen==='welcome') setTimeout(applyWelcomeLang,10);
+}
+
+function setLang(l){
+  LANG = l;
+  initQuestions();
+  go('welcome');
+  setTimeout(applyWelcomeLang, 50);
+  // Afficher la modale région après 300ms
+  setTimeout(function(){ showRegionModal(); }, 300);
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
@@ -2221,6 +2174,20 @@ function showWhyAI(key, nom, marque) {
     contentEl.appendChild(compatBlock);
 }
 
+function showRegionModal() {
+  var m = document.getElementById('region-modal');
+  if (m) m.style.display = 'flex';
+}
+
+function setRegion(r) {
+  REGION = r;
+  var m = document.getElementById('region-modal');
+  if (m) m.style.display = 'none';
+  var flags = {fr:'🇫🇷',dz:'🇩🇿',ma:'🇲🇦',gb:'🇬🇧',es:'🇪🇸',de:'🇩🇪',other:'🌍'};
+  var badge = document.getElementById('region-badge');
+  if (badge) badge.textContent = (flags[r] || '🌍');
+}
+
 function closeWhyModal() {
     document.getElementById("why-modal").style.display = "none";
 }
@@ -3090,6 +3057,49 @@ setTimeout(applyWelcomeLang, 50);
     </div>
     <div id="why-content" style="font-size:14px;line-height:1.75;color:#3D2B1F"></div>
     <button onclick="closeWhyModal()" style="width:100%;margin-top:20px;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">Fermer</button>
+  </div>
+</div>
+
+<!-- MODALE RÉGION -->
+<div id="region-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-end;justify-content:center">
+  <div style="background:#FDF8F5;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:460px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:10px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px">🌍 Région</div>
+      <h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#3D2B1F;margin-bottom:6px">Où êtes-vous ?</h2>
+      <p style="font-size:13px;color:#8B6F5E">Les produits sont adaptés à votre pays.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="setRegion('fr')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:24px">🇫🇷</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">France</div><div style="font-size:11px;color:#9A8A85">Belgique · Suisse</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('dz')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:24px">🇩🇿</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Algérie</div><div style="font-size:11px;color:#9A8A85">Produits locaux inclus</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('ma')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:24px">🇲🇦</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Maroc</div><div style="font-size:11px;color:#9A8A85">Tunisie · Maghreb</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('gb')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:24px">🇬🇧</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">UK / International</div><div style="font-size:11px;color:#9A8A85">USA · Canada · Europe</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('es')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:24px">🇪🇸</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">España</div><div style="font-size:11px;color:#9A8A85">Portugal · Latinoamérica</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+      <button onclick="setRegion('de')" style="width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:inherit">
+        <span style="font-size:24px">🇩🇪</span>
+        <div style="text-align:left;flex:1"><div style="font-size:14px;font-weight:700;color:#3D2B1F">Deutschland</div><div style="font-size:11px;color:#9A8A85">Austria · Switzerland</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
