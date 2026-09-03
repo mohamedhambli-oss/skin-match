@@ -51,7 +51,9 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23C4726A'/><rect x='5' y='5' width='90' height='90' rx='18' fill='%23D4887F'/><text y='72' x='50' text-anchor='middle' font-size='52' font-weight='700' fill='white' font-family='Georgia,serif'>SM</text></svg>">
 <meta name="supported-color-schemes" content="light">
 <!-- Chemin relatif : un chemin absolu casse dès que le dépôt ou le domaine change. -->
-<link rel="manifest" href="manifest.json">
+<!-- Manifeste propre à la borne : installée sur l'écran d'accueil de la tablette,
+     l'application tourne en plein écran, sans barre de navigateur ni onglets. -->
+<link rel="manifest" href="manifest-pharmacie.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -62,7 +64,7 @@
 <meta property="og:title" content="SkinMatch — Ta routine skincare personnalisée">
 <meta property="og:description" content="Analyse de peau personnalisée et recommandations de produits selon ton profil, ton âge et ton budget.">
 <meta property="og:type" content="website">
-<title>SkinMatch — Your Skin, Your Routine</title>
+<title>SkinMatch Pharmacie — SkinMatch — Your Skin, Your Routine</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
 <!-- Clé API chargée depuis un fichier local NON versionné (voir .gitignore).
@@ -75,13 +77,13 @@
   import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyBMWoVUUrj2R5FywcCl34z9ooFTI9ZMAE4",
-    authDomain: "skin-match-c7189.firebaseapp.com",
-    projectId: "skin-match-c7189",
-    storageBucket: "skin-match-c7189.firebasestorage.app",
-    messagingSenderId: "1033609385398",
-    appId: "1:1033609385398:web:4b08eef7db24e6470ddd17",
-    measurementId: "G-DBH333L5FB"
+    apiKey: "AIzaSyCoE564VJlbcnWKTr24jPmAgNQHWfmZp4w",
+    authDomain: "skin-match-pharmacie.firebaseapp.com",
+    projectId: "skin-match-pharmacie",
+    storageBucket: "skin-match-pharmacie.firebasestorage.app",
+    messagingSenderId: "832026359464",
+    appId: "1:832026359464:web:45948797b8acff29d4349d",
+    measurementId: "G-LV4MVZRSMQ"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -724,6 +726,14 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
         </div>
         <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
       </button>
+      <button onclick="setLang('es')" style="width:100%;padding:18px 20px;border-radius:16px;border:none;background:#fff;cursor:pointer;display:flex;align-items:center;gap:16px;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,.12);transition:transform .15s" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px">🇬🇧</div>
+        <div style="text-align:left">
+          <div style="font-size:16px;font-weight:700;color:#3D2B1F;font-family:Georgia,serif">Español</div>
+          <div style="font-size:12px;color:#9A8A85;margin-top:2px">España · América Latina</div>
+        </div>
+        <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" viewBox="0 0 24 24" fill="#C4726A"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
     </div>
     <!-- Plus de langues bientôt -->
     <div style="margin-top:32px;font-size:12px;color:rgba(255,255,255,.55);text-align:center">More languages coming soon · D'autres langues bientôt</div>
@@ -790,7 +800,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <!-- 1. CHIFFRES CLÉS (déplacés en haut pour accroche immédiate) -->
     <div style="background:#fff;border-radius:18px;padding:14px 8px;margin:8px 0 22px;border:1px solid rgba(196,114,106,.15);box-shadow:0 2px 8px rgba(196,114,106,.06);display:flex">
       <div style="flex:1;text-align:center">
-        <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#3D2B1F;line-height:1">160+</div>
+        <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#3D2B1F;line-height:1">295</div>
         <div style="font-size:9px;color:#8B6F5E;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:4px" id="stat1-lbl">Produits</div>
       </div>
       <div style="width:1px;background:rgba(196,114,106,.15);margin:6px 0"></div>
@@ -812,36 +822,52 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
         <!-- Étape 1 : Cible (objectif/comprendre) -->
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px">
           <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#FDEBE5,#F8D9CE);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 18px rgba(196,114,106,.18);position:relative">&#127919;<div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#3D2B1F;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #FBF0ED">1</div></div>
-          <div style="font-size:12px;font-weight:700;color:#3D2B1F;text-align:center;line-height:1.25" id="step1-title">Plus belle peau</div>
-          <div style="font-size:10px;color:#B0958F;text-align:center;line-height:1.3" id="step1-sub">Visible en 4 semaines</div>
+          <div style="font-size:12px;font-weight:700;color:#3D2B1F;text-align:center;line-height:1.25" id="step1-title">Une routine juste</div>
+          <div style="font-size:10px;color:#B0958F;text-align:center;line-height:1.3" id="step1-sub">Adaptée à votre peau</div>
         </div>
         <div style="color:rgba(196,114,106,.4);font-size:14px;padding-top:22px;flex-shrink:0">&#8594;</div>
         <!-- Étape 2 : Cerveau (analyse intelligente) -->
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px">
           <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#F0EBE5,#E0D2C8);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 18px rgba(196,114,106,.18);position:relative">&#129504;<div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#3D2B1F;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #FBF0ED">2</div></div>
-          <div style="font-size:12px;font-weight:700;color:#3D2B1F;text-align:center;line-height:1.25" id="step2-title">Économise gros</div>
-          <div style="font-size:10px;color:#B0958F;text-align:center;line-height:1.3" id="step2-sub">200€/an de produits inutiles</div>
+          <div style="font-size:12px;font-weight:700;color:#3D2B1F;text-align:center;line-height:1.25" id="step2-title">Achetez utile</div>
+          <div style="font-size:10px;color:#B0958F;text-align:center;line-height:1.3" id="step2-sub">Fini les achats au hasard</div>
         </div>
         <div style="color:rgba(196,114,106,.4);font-size:14px;padding-top:22px;flex-shrink:0">&#8594;</div>
         <!-- Étape 3 : Diamant (résultat précieux) -->
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px">
           <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#FFE9A8,#FFC85A);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 18px rgba(196,114,106,.18);position:relative">&#128142;<div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#3D2B1F;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #FBF0ED">3</div></div>
           <div style="font-size:12px;font-weight:700;color:#3D2B1F;text-align:center;line-height:1.25" id="step3-title">Stop aux mauvais conseils</div>
-          <div style="font-size:10px;color:#B0958F;text-align:center;line-height:1.3" id="step3-sub">Skincare prouvé, pas Insta</div>
+          <div style="font-size:10px;color:#B0958F;text-align:center;line-height:1.3" id="step3-sub">Analyse des compositions</div>
         </div>
       </div>
     </div>
 
-    <!-- 3. BANDEAU SCAN DE PEAU -->
-    <div onclick="go('scan')" style="background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:22px;border:1px dashed rgba(196,114,106,.35);display:flex;align-items:center;gap:10px;cursor:pointer">
-      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#C4726A,#A85A52);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">&#128247;</div>
-      <div style="flex:1;font-size:12px;color:#3D2B1F;line-height:1.3;text-align:left">
-        <strong style="color:#C4726A;font-weight:700" id="scan-banner-text">Tu peux aussi scanner ta peau</strong>
-        <span style="font-size:9px;background:#C4726A;color:#fff;border-radius:20px;padding:2px 7px;font-weight:700;letter-spacing:.5px;margin-left:4px;display:inline-block;vertical-align:1px">NEW</span>
+    <!-- Explication du parcours, propre à la borne : la cliente découvre l'outil sur place. -->
+    <div id="borne-intro" style="background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;border:1px solid #F0E8E5">
+      <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F;line-height:1.2;margin-bottom:6px">
+        Trouvez les soins faits pour votre peau</div>
+      <div style="font-size:13.5px;color:#8B6F5E;line-height:1.5;margin-bottom:14px">
+        Répondez à 5 questions rapides. Nous analysons la composition des produits de la pharmacie
+        et vous indiquons ceux qui conviennent à votre peau, en écartant vos allergènes.</div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;text-align:center;background:#FBF6F4;border-radius:10px;padding:10px 6px">
+          <div style="font-family:Georgia,serif;font-size:17px;font-weight:700;color:#C4726A">1</div>
+          <div style="font-size:10.5px;color:#8B6F5E;line-height:1.3;margin-top:2px">Vos réponses</div></div>
+        <div style="flex:1;text-align:center;background:#FBF6F4;border-radius:10px;padding:10px 6px">
+          <div style="font-family:Georgia,serif;font-size:17px;font-weight:700;color:#C4726A">2</div>
+          <div style="font-size:10.5px;color:#8B6F5E;line-height:1.3;margin-top:2px">Votre routine</div></div>
+        <div style="flex:1;text-align:center;background:#FBF6F4;border-radius:10px;padding:10px 6px">
+          <div style="font-family:Georgia,serif;font-size:17px;font-weight:700;color:#C4726A">3</div>
+          <div style="font-size:10.5px;color:#8B6F5E;line-height:1.3;margin-top:2px">Les produits en rayon</div></div>
       </div>
-      <div style="color:#C4726A;font-size:16px;font-weight:700;flex-shrink:0">&#8594;</div>
+      <div style="font-size:11px;color:#B0958F;margin-top:12px;line-height:1.4">
+        Aucun compte n'est nécessaire. Vos réponses restent sur cette tablette et sont effacées
+        automatiquement après votre passage.</div>
     </div>
 
+    <!-- Bandeau « scanner ta peau » retiré : photo de visage inadaptée à une tablette partagée. -->
+
+    <div id="borne-options" style="display:none">
     <!-- 3ter. BANDEAU TROUVER UN PRODUIT -->
     <div onclick="startFindProduct()" style="background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:22px;border:1px dashed rgba(196,114,106,.35);display:flex;align-items:center;gap:10px;cursor:pointer">
       <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#C4726A,#A85A52);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">&#128269;</div>
@@ -860,6 +886,8 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
       <div style="color:#C4726A;font-size:16px;font-weight:700;flex-shrink:0">&#8594;</div>
     </div>
 
+    </div>
+
     <!-- 3bis. BOUTON DIAGNOSTIC (mis en avant, au-dessus des avis) -->
     <button onclick="showTermsModal()" id="btn-start-top" style="width:100%;box-sizing:border-box;padding:14px 20px;border-radius:50px;border:2px solid #C4726A;background:#fff;color:#C4726A;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:22px;display:flex;align-items:center;justify-content:center;gap:8px">
       <span id="btn-start-top-text">Analyser ma peau sans compte</span> &#8594;
@@ -870,12 +898,12 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
       <div style="font-size:9px;font-weight:700;color:rgba(196,114,106,.85);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:12px">&#9733; Ils ont test&#233; SkinMatch</div>
       <div style="background:rgba(255,255,255,.85);border-radius:16px;padding:14px 16px;border:1px solid rgba(196,114,106,.12)">
         <div style="margin-bottom:8px"><span style="color:#F5A623;font-size:12px">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
-        <div id="test-text" style="font-size:13px;color:#3D2B1F;line-height:1.6;font-style:italic;margin-bottom:10px;transition:opacity .3s">"Ma peau n'a jamais &#233;t&#233; aussi &#233;quilibr&#233;e. SkinMatch a tout chang&#233;."</div>
+        <div id="test-text" style="font-size:13px;color:#3D2B1F;line-height:1.6;font-style:italic;margin-bottom:10px;transition:opacity .3s">Chaque produit est analysé ingrédient par ingrédient, pas selon sa marque.</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div id="test-av" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C4726A,#A85A52);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">S</div>
           <div style="text-align:left">
-            <div id="test-name" style="font-size:11px;font-weight:700;color:#3D2B1F">Sarah M.</div>
-            <div id="test-skin" style="font-size:10px;color:#B0958F">Peau mixte &#183; Paris</div>
+            <div id="test-name" style="font-size:11px;font-weight:700;color:#3D2B1F">Comment ça marche</div>
+            <div id="test-skin" style="font-size:10px;color:#B0958F">Analyse de composition</div>
           </div>
         </div>
       </div>
@@ -1719,14 +1747,8 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span style="font-size:10px;font-weight:600" id="nav-home-lbl">Accueil</span>
     </button>
-    <button onclick="navTo('dashboard')" id="nav-space" class="nav-btn" style="flex:1;background:none;border:none;cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Outfit',sans-serif">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span style="font-size:10px;font-weight:600" id="nav-space-lbl">Mon espace</span>
-    </button>
-    <button onclick="navTo('scan-product')" id="nav-scan" class="nav-btn" style="flex:1;background:none;border:none;cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Outfit',sans-serif">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
-      <span style="font-size:10px;font-weight:600" id="nav-scan-lbl">Scanner</span>
-    </button>
+    
+    
     <button onclick="toggleChatbot()" id="nav-chat" class="nav-btn" style="flex:1;background:none;border:none;cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Outfit',sans-serif">
       <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C4726A,#A85A52);display:flex;align-items:center;justify-content:center">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -2010,7 +2032,101 @@ const T = {
     buy_easypara_modal:"Buy on Easypara →",buy_cibleskin_modal:"Buy on Cible Skin →",
     buy_note:"French certified pharmacy · Free delivery from €49",
     share_footer:"Generated by SkinMatch · Your Skin, Your Routine",
-  }
+  },
+  es:{
+    welcome_title:"Su rutina.<br>A su medida.",
+    welcome_desc:"Análisis de piel personalizado y recomendaciones según su perfil, su edad y su presupuesto.",
+    btn_register:"Crear una cuenta",btn_login:"Iniciar sesión",btn_guest:"Continuar sin cuenta",
+    legal:"Al continuar, acepta nuestras condiciones de uso.",or:"o",
+    q1_title:"Tipo de piel",q1_sub:"Elija el que le corresponde.",
+    q2_title:"Su franja de edad",q2_sub:"La edad nos ayuda a afinar los consejos, no a cambiar su rutina.",
+    q3_title:"Sus problemas de piel",q3_sub:"Seleccione todo lo que le concierna.",
+    q3_allergies:"Alergias / Ingredientes a evitar",
+    q4_title:"Su presupuesto",q4_sub:"Por producto, de media.",
+    q5_title:"Tipo de rutina",q5_sub:"Según el tiempo que desee dedicarle.",
+    btn_continue:"Continuar",btn_generate:"Generar mi rutina",btn_restart:"Empezar de nuevo",
+    result_eyebrow:"Su rutina personalizada",
+    share_btn:"Compartir mi rutina",order_title:"Orden de aplicación",
+    tab_am:"☀️ Mañana",tab_pm:"🌙 Noche",
+    products_title:"Los productos seleccionados",conseil_label:"💡 Consejo experto",
+    allergy_title:"Alergias registradas",allergy_text:"Verifique la composición. Alérgenos:",
+    suivi_title:"Seguimiento a las 4 semanas",
+    suivi_text:"Su piel evoluciona. Vuelva en 4 semanas para ajustar su rutina.",
+    suivi_btn:"Repetir mi análisis",
+    fiche_btn:"Saber más",note_yuka:"🔬 Análisis INCI",
+    budget_total:"Presupuesto estimado:",compatible:"compatible",
+    morning_only:"Solo por la mañana",result_routine:"Su rutina personalizada",result_hello:"Hola",evening_only:"Solo por la noche",both:"Mañana y noche",
+    register_title:"Crear su cuenta",register_sub:"Guarde su perfil para acceder a sus recomendaciones.",
+    login_title:"Bienvenido de nuevo",login_sub:"Inicie sesión para acceder a su perfil.",
+    placeholder_name:"Nombre",placeholder_email:"Correo electrónico",
+    placeholder_pw_reg:"Contraseña (mín. 6)",placeholder_pw:"Contraseña",
+    btn_login_action:"Iniciar sesión",already_account:"Ya tengo una cuenta",no_account:"Crear una cuenta",
+    err_name:"Introduzca su nombre.",err_email:"Correo electrónico no válido.",
+    err_pw:"Contraseña: 6 caracteres como mínimo.",err_pw2:"Contraseña obligatoria.",
+    skin_seche:"Seca",skin_seche_sub:"Tirantez, falta de hidratación",
+    skin_grasse:"Grasa",skin_grasse_sub:"Brillos, poros dilatados",
+    skin_mixte:"Mixta",skin_mixte_sub:"Zona T grasa, mejillas normales",
+    skin_normale:"Normal",skin_normale_sub:"Equilibrada, pocas molestias",
+    skin_sensible:"Sensible",skin_sensible_sub:"Reactiva, rojeces frecuentes",
+    skin_labels:{seche:"seca",grasse:"grasa",mixte:"mixta",normale:"normal",sensible:"sensible"},
+    ages:[
+      {id:"18-25",label:"18 – 25 años",sub:"Prevención y luminosidad"},
+      {id:"26-35",label:"26 – 35 años",sub:"Mantenimiento y corrección"},
+      {id:"36-45",label:"36 – 45 años",sub:"Antiedad temprano"},
+      {id:"46+",  label:"46 años y más",sub:"Corrección intensa"},
+    ],
+    budgets:[
+      {id:"low", label:"Económico", sub:"< 15 € / producto",    phrase:"Las mejores fórmulas no son siempre las más caras 💛"},
+      {id:"mid", label:"Moderado",  sub:"15 € – 50 € / producto",phrase:"El equilibrio justo entre eficacia y presupuesto"},
+      {id:"high",label:"Premium",   sub:"> 50 € / producto",     phrase:"La alta cosmética al servicio de su piel"},
+      {id:"mix", label:"Flexible",  sub:"Sin límite",            phrase:"Combinamos lo mejor para usted."},
+    ],
+    routines:[
+      {id:"simple",    label:"Esencial",  sub:"3 pasos, rápido"},
+      {id:"complete",  label:"Completa",  sub:"Mañana y noche"},
+      {id:"specifique",label:"Específica",sub:"Lo esencial + 1 tratamiento dirigido"},
+    ],
+    concern_labels:{acne:"el acné",taches:"las manchas",rides:"las arrugas",pores:"los poros dilatados",rougeurs:"las rojeces",cernes:"las ojeras",eclat:"la falta de luminosidad",deshydratation:"la deshidratación",imperfections:"los puntos negros",sensibilite:"la reactividad"},
+    why_prefix:"Seleccionado para su piel",why_against:"eficaz contra",
+    age1:"18 – 25 años",age1_sub:"Prevención y luminosidad",
+    age2:"26 – 35 años",age2_sub:"Mantenimiento y corrección",
+    age3:"36 – 45 años",age3_sub:"Antiedad temprano",
+    age4:"46 años y más",age4_sub:"Corrección intensa",
+    concerns:["Acné / Granos","Manchas e hiperpigmentación","Arrugas y antiedad","Poros dilatados","Rojeces / Cuperosis","Ojeras y bolsas","Tez apagada / Luminosidad","Deshidratación","Puntos negros","Reactividad / Irritaciones"],
+    allergies:["Perfumes / Fragancias","Parabenos","Alcohol","Sulfatos (SLS/SLES)","Siliconas","Aceites esenciales","Ácido salicílico","Retinol","Vitamina C","Ácidos (AHA/BHA)","Methylisothiazolinone (MIT)","Phénoxyéthanol","Limonène","Linalool","Géraniol","Citronellol","Citral","Coumarine","Lavande / Lavandin","Bergamote (Citrus aurantium bergamia)","Rose (huile / extrait de fleur)","Menthol","Lanoline","Ninguna alergia conocida"],
+    budgets:[
+      {id:"low",label:"Económico",sub:"Eficaz sin arruinarse"},
+      {id:"mid",label:"Moderado",sub:"El mejor compromiso"},
+      {id:"high",label:"Premium",sub:"Los mejores activos del mercado"},
+      {id:"mix",label:"Flexible",sub:"Confío en SkinMatch"},
+    ],
+    routines:[
+      {id:"simple",label:"Esencial",sub:"3 pasos, 5 minutos al día"},
+      {id:"complete",label:"Completa",sub:"Mañana y noche, resultados óptimos"},
+      {id:"specifique",label:"Específica",sub:"Lo esencial + 1 tratamiento para su problema principal"},
+    ],
+    skin_labels:{seche:"seca",grasse:"grasa",mixte:"mixta",normale:"normal",sensible:"sensible"},
+    concern_labels:{acne:"el acné",taches:"las manchas",rides:"las arrugas",pores:"los poros dilatados",rougeurs:"las rojeces",cernes:"las ojeras",eclat:"la falta de luminosidad",deshydratation:"la deshidratación",imperfections:"los puntos negros",sensibilite:"la reactividad"},
+    why_prefix:"Seleccionado para su piel",why_against:"eficaz contra",
+    intro_skin:{seche:"seca",grasse:"grasa",mixte:"mixta",normale:"normal",sensible:"sensible"},
+    intro_tpl:"Su rutina a medida para una piel {skin}{age}. Cada producto ha sido seleccionado según sus necesidades y su presupuesto.",
+    conseils:{
+      acne:"Evite tocarse la cara. Cambie la funda de almohada cada semana. Introduzca los activos de forma progresiva.",
+      taches:"El SPF por la mañana es imprescindible: sin él, las manchas se agravan con el sol.",
+      rides:"El retinol se empieza 2 veces por semana por la noche y se aumenta poco a poco. Siempre con SPF.",
+      eclat:"La hidratación interna y el sueño cuentan tanto como su rutina. 1,5 L de agua al día como mínimo.",
+      deshydratation:"Aplique el sérum sobre la piel ligeramente húmeda para favorecer la absorción del ácido hialurónico.",
+      rougeurs:"Evite el agua muy caliente. Descarte los productos con alcohol, perfume o mentol.",
+      pores:"La constancia con el BHA y la niacinamida reduce visiblemente los poros en 4 semanas.",
+      imperfections:"No se apriete nunca los puntos negros con los dedos; use un exfoliante BHA 2 o 3 veces por semana.",
+      sensibilite:"Introduzca un solo producto cada vez y espere 2 semanas antes de añadir otro.",
+      cernes:"Aplique con toques suaves, nunca frotando. Dormir con la cabeza algo elevada también ayuda.",
+    },
+    buy_easypara:"Easypara →",buy_cibleskin:"Cible Skin →",
+    buy_easypara_modal:"Comprar en Easypara →",buy_cibleskin_modal:"Comprar en Cible Skin →",
+    buy_note:"${t('buy_note')}",
+    share_footer:"${t('share_footer')}",
+  },
 };
 
 // ─── IMAGES ───────────────────────────────────────────────────────────────────
@@ -2778,7 +2894,7 @@ function analyseINCI(texte, allergiesUtilisateur) {
 
   // Croisement avec les allergies déclarées par l'utilisateur
   var perso = (allergiesUtilisateur || []).filter(function(a){
-    return a && a !== "Aucune allergie connue" && a !== "No known allergies";
+    return a && a !== "Aucune allergie connue" && a !== "No known allergies" && a !== "Ninguna alergia conocida";
   });
   res.conflits = res.allergenes.filter(function(a){
     return perso.some(function(p){
@@ -2871,13 +2987,13 @@ function scoreCompat(key, skin, concern, age, allergies) {
   // ── 1. Exclusions de sécurité (elles écrasent tout le reste) ──
   var inciProd = (typeof INCI_DB !== "undefined") ? INCI_DB[key] : null;
   var AMAP = {
-    'Parfums / Fragrances':'parfum','Fragrances / Perfumes':'parfum',
-    'Parabènes':'paraben','Parabens':'paraben','Alcool':'alcohol','Alcohol':'alcohol',
-    'Sulfates (SLS/SLES)':'sulfate','Silicones':'silicone',
-    'Rétinol':'retinol','Retinol':'retinol','Vitamine C':'vitc','Vitamin C':'vitc',
-    'Acide salicylique':'salicylic','Salicylic acid':'salicylic',
-    'Acides (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
-    'Huiles essentielles':'parfum','Essential oils':'parfum'
+    'Parfums / Fragrances':'parfum','Perfumes / Fragancias':'parfum','Fragrances / Perfumes':'parfum',
+    'Parabènes':'paraben','Parabenos':'paraben','Parabens':'paraben','Alcool':'alcohol','Alcohol ':'alcohol','Alcohol':'alcohol',
+    'Sulfates (SLS/SLES)':'sulfate','Sulfatos (SLS/SLES)':'sulfate','Silicones':'silicone','Siliconas':'silicone',
+    'Rétinol':'retinol','Retinol':'retinol','Vitamine C':'vitc','Vitamina C':'vitc','Vitamin C':'vitc',
+    'Acide salicylique':'salicylic','Ácido salicílico':'salicylic','Salicylic acid':'salicylic',
+    'Acides (AHA/BHA)':'aha_bha','Ácidos (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
+    'Huiles essentielles':'parfum','Aceites esenciales':'parfum','Essential oils':'parfum'
   };
   var bloquants = [];
   (allergies || []).forEach(function(a){
@@ -3122,16 +3238,16 @@ function build(){
 
   // Mapping allergie → champ INCI_DB
   const ALLERGY_INCI_MAP_BUILD = {
-    'Parfums / Fragrances':'parfum','Fragrances / Perfumes':'parfum',
-    'Parabènes':'paraben','Parabens':'paraben',
-    'Alcool':'alcohol','Alcohol':'alcohol',
-    'Sulfates (SLS/SLES)':'sulfate',
-    'Silicones':'silicone',
+    'Parfums / Fragrances':'parfum','Perfumes / Fragancias':'parfum','Fragrances / Perfumes':'parfum',
+    'Parabènes':'paraben','Parabenos':'paraben','Parabens':'paraben',
+    'Alcool':'alcohol','Alcohol ':'alcohol','Alcohol':'alcohol',
+    'Sulfates (SLS/SLES)':'sulfate','Sulfatos (SLS/SLES)':'sulfate',
+    'Silicones':'silicone','Siliconas':'silicone',
     'Rétinol':'retinol','Retinol':'retinol',
-    'Vitamine C':'vitc','Vitamin C':'vitc',
-    'Acide salicylique':'salicylic','Salicylic acid':'salicylic',
-    'Acides (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
-    'Huiles essentielles':'parfum','Essential oils':'parfum',
+    'Vitamine C':'vitc','Vitamina C':'vitc','Vitamin C':'vitc',
+    'Acide salicylique':'salicylic','Ácido salicílico':'salicylic','Salicylic acid':'salicylic',
+    'Acides (AHA/BHA)':'aha_bha','Ácidos (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
+    'Huiles essentielles':'parfum','Aceites esenciales':'parfum','Essential oils':'parfum',
   };
 
   // Filtre allergies : exclure les produits qui contiennent un allergène déclaré
@@ -4312,10 +4428,14 @@ function finishOnboarding() {
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
+// Les témoignages de clientes affichés ici étaient des textes de remplissage
+// inventés. Diffuser de faux avis de consommateurs est une pratique commerciale
+// trompeuse (art. L121-4 28° du Code de la consommation). Ils sont remplacés par
+// des faits vérifiables sur le fonctionnement de l'application.
 var _TESTS = [
-  {av:"S", color:"linear-gradient(135deg,#C4726A,#A85A52)", text:"Ma peau n'a jamais ete aussi equilibree. SkinMatch a tout change.", name:"Sarah M.", skin:"Peau mixte · Paris"},
-  {av:"L", color:"linear-gradient(135deg,#2E7D32,#1B5E20)", text:"Enfin une appli qui comprend ma peau grasse sans me ruiner.", name:"Lea D.", skin:"Peau grasse · Lyon"},
-  {av:"A", color:"linear-gradient(135deg,#C62828,#8B1A1A)", text:"Mes rougeurs ont vraiment diminue en 3 semaines.", name:"Amina K.", skin:"Peau sensible · Marseille"}
+  {av:"✓", color:"linear-gradient(135deg,#5E8C6A,#3E5E48)", text:"Chaque produit est analysé ingrédient par ingrédient, pas selon sa marque.", name:"Comment ça marche", skin:"Analyse de composition"},
+  {av:"⚖", color:"linear-gradient(135deg,#C4726A,#A85A52)", text:"95 substances allergisantes détectées, conformément au règlement européen 2023/1545.", name:"Conformité", skin:"Annexe III à jour"},
+  {av:"⛔", color:"linear-gradient(135deg,#B4544B,#8B3030)", text:"Les substances interdites à la vente dans l'UE sont signalées, y compris sur d'anciens stocks.", name:"Sécurité", skin:"Lilial et Lyral"}
 ];
 var _testIdx = 0;
 function _rotateTest() {
@@ -4469,17 +4589,17 @@ function applyWelcomeLang(){
   var hiw = document.getElementById('how-it-works-title');
   if(hiw) hiw.textContent = LANG==='en' ? "What will change for you" : "Ce qui va changer pour toi";
   var s1t = document.getElementById('step1-title');
-  if(s1t) s1t.textContent = LANG==='en' ? 'Better skin' : 'Plus belle peau';
+  if(s1t) s1t.textContent = LANG==='en' ? 'Better skin' : 'Une routine juste';
   var s1s = document.getElementById('step1-sub');
-  if(s1s) s1s.textContent = LANG==='en' ? 'Visible in 4 weeks' : 'Visible en 4 semaines';
+  if(s1s) s1s.textContent = LANG==='en' ? 'Visible in 4 weeks' : 'Adaptée à votre peau';
   var s2t = document.getElementById('step2-title');
-  if(s2t) s2t.textContent = LANG==='en' ? 'Save big' : 'Économise gros';
+  if(s2t) s2t.textContent = LANG==='en' ? 'Save big' : 'Achetez utile';
   var s2s = document.getElementById('step2-sub');
-  if(s2s) s2s.textContent = LANG==='en' ? '200€/year on useless products' : '200€/an de produits inutiles';
+  if(s2s) s2s.textContent = LANG==='en' ? '200€/year on useless products' : 'Fini les achats au hasard';
   var s3t = document.getElementById('step3-title');
   if(s3t) s3t.textContent = LANG==='en' ? 'No more bad advice' : 'Stop aux mauvais conseils';
   var s3s = document.getElementById('step3-sub');
-  if(s3s) s3s.textContent = LANG==='en' ? 'Proven skincare, not Insta' : 'Skincare prouvé, pas Insta';
+  if(s3s) s3s.textContent = LANG==='en' ? 'Proven skincare, not Insta' : 'Analyse des compositions';
   // Bouton diagnostic
   const diagBtn = document.querySelector('#q1-opts .sr');
   if(diagBtn){
@@ -12690,10 +12810,7 @@ function cancelChallenge(id) {
 }
 
 var COMM_POSTS = [
-  {id:'p1',skin:'mixte',type:'routine',author:'Sarah M.',city:'Paris',av:'linear-gradient(135deg,#C4726A,#8B4A42)',time:'2h',likes:24,comments:8,liked:false,text:'Ma routine soir peau mixte après 3 mois de test. Enfin un équilibre !',routine:[{n:1,name:'Gel Moussant Effaclar',brand:'La Roche-Posay',price:'12€'},{n:2,name:'Niacinamide 10%',brand:'The Ordinary',price:'6€'},{n:3,name:'Hyalu B5 Sérum',brand:'La Roche-Posay',price:'28€'}],tags:['#peaumixte','#routinesoir']},
-  {id:'p2',skin:'seche',type:'progression',author:'Marie T.',city:'Lyon',av:'linear-gradient(135deg,#4A6FA5,#2C4A7A)',time:'5h',likes:62,comments:21,liked:true,text:'4 semaines avec SkinMatch. Les tiraillements ont disparu !',prodIcon:'💧',prodName:'Cicaplast Baume B5',prodBrand:'La Roche-Posay · 14€',score:'94%',tags:['#peausèche','#avant-après']},
-  {id:'p3',skin:'sensible',type:'bonplan',author:'Amina K.',city:'Marseille',av:'linear-gradient(135deg,#C4726A,#8B3030)',time:'1j',likes:89,comments:33,liked:false,text:'Cicaplast Baume B5 à 8,90€ chez Pharmavie. Pour peaux sensibles, une pépite.',prodIcon:'🌿',prodName:'Cicaplast Baume B5',prodBrand:'La Roche-Posay',price:'8,90€',oldPrice:'14€',promo:'-36%',tags:['#peausensible','#bonplan']},
-  {id:'p4',skin:'grasse',type:'question',author:'Clara B.',city:'Bordeaux',av:'linear-gradient(135deg,#2E7D32,#1B5E20)',time:'2j',likes:14,comments:12,liked:false,text:"Quelqu'un a testé le SPF Altruist pour peau grasse ?",replies:[{i:'S',c:'linear-gradient(135deg,#C4726A,#8B4A42)',t:"Je l'utilise depuis 1 an !"},{i:'L',c:'linear-gradient(135deg,#4A6FA5,#2C4A7A)',t:'Pas de film blanc, fonce !'}],tags:['#peaugrasse','#SPF']},
+  // Fil communautaire désactivé : les publications étaient fictives.
 ];
 var SKIN_FILTERS=[{key:null,lbl:'Tous'},{key:'mixte',lbl:'Mixte'},{key:'grasse',lbl:'Grasse'},{key:'seche',lbl:'Sèche'},{key:'sensible',lbl:'Sensible'},{key:'normale',lbl:'Normale'}];
 var _skinFilter=null;
@@ -14505,6 +14622,550 @@ if (typeof window.go === "function") {
     return r;
   };
 }
+
+})();
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   MODE BORNE — Pharmacie Raymond Poincaré
+   Version destinée à la tablette mise à disposition des clientes.
+   Différences avec l'application grand public :
+     · pas d'espace personnel, pas de scan de code-barres, pas de compte
+     · remise à zéro automatique entre deux clientes (données de santé)
+     · question d'intention d'achat en fin de parcours
+     · espace avis
+     · statistiques agrégées consultables via ?admin=1
+   ══════════════════════════════════════════════════════════════════════════ */
+(function(){
+"use strict";
+
+var STATS_KEY = "pharma_stats";
+var INACTIVITE_MS = 3 * 60 * 1000;   // 3 minutes sans interaction → session suivante
+
+/* ── Statistiques : agrégats anonymes, aucune donnée personnelle ── */
+function lireStats(){
+  try { return JSON.parse(localStorage.getItem(STATS_KEY)) || vide(); }
+  catch(e){ return vide(); }
+}
+function vide(){ return { sessions:0, routines:0, fiches:0, reponses:[], avis:[], ev:[] }; }
+function ecrireStats(s){ try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch(e){} }
+function compter(champ){ var s=lireStats(); s[champ]=(s[champ]||0)+1; ecrireStats(s); }
+
+/* ── Journal d'événements ──
+   Un identifiant de session permet de reconstituer un parcours complet :
+   qui abandonne, à quelle étape, et quelle porte d'entrée est choisie.
+   Aucune donnée personnelle : ni réponses de santé, ni texte libre. */
+var SID = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+function ev(nom, detail){
+  var s = lireStats();
+  if (!s.ev) s.ev = [];
+  s.ev.push({ d:Date.now(), sid:SID, n:nom, v:(detail === undefined ? "" : String(detail).slice(0,40)) });
+  // Le stockage local est limité : on garde les 3000 derniers événements.
+  if (s.ev.length > 3000) s.ev = s.ev.slice(-3000);
+  ecrireStats(s);
+}
+
+/* ── Remise à zéro entre deux clientes ──
+   Le questionnaire produit des données de santé (type de peau, allergies,
+   grossesse). Sur un appareil partagé, elles ne doivent pas survivre à la
+   session. Seules les statistiques agrégées sont conservées. */
+function reinitialiser(recharger){
+  try {
+    var garder = [STATS_KEY, "skinmatch_lang"];
+    var aSupprimer = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (garder.indexOf(k) === -1) aSupprimer.push(k);
+    }
+    aSupprimer.forEach(function(k){ try { localStorage.removeItem(k); } catch(e){} });
+    sessionStorage.clear();
+  } catch(e){}
+  if (recharger) location.reload();
+}
+
+var minuteur = null;
+function relancerMinuteur(){
+  clearTimeout(minuteur);
+  minuteur = setTimeout(function(){
+    // On ne coupe pas quelqu'un en pleine saisie d'avis.
+    if (document.getElementById("borne-avis-txt") === document.activeElement) { relancerMinuteur(); return; }
+    reinitialiser(true);
+  }, INACTIVITE_MS);
+}
+["click","touchstart","keydown","scroll"].forEach(function(ev){
+  window.addEventListener(ev, relancerMinuteur, { passive:true });
+});
+
+/* ── Journalisation du parcours ──
+   On enregistre les passages d'écran pour mesurer où les gens s'arrêtent. */
+var ECRANS_SUIVIS = { q1:"etape_1_peau", q2:"etape_2_age", q3:"etape_3_problemes",
+                      q4:"etape_4_budget", q5:"etape_5_routine", result:"routine_affichee",
+                      "find-product":"recherche_produit" };
+
+/* ── Écrans interdits en mode borne ── */
+var BLOQUES = ["dashboard","scan-product","profile","suivi","scan","parrainage","abonnement","register","login","compare"];
+var _dejaVu = {};
+["go","navTo"].forEach(function(nom){
+  if (typeof window[nom] !== "function") return;
+  var orig = window[nom];
+  window[nom] = function(ecran){
+    if (BLOQUES.indexOf(ecran) > -1) return orig.call(this, "welcome");
+    // Une étape n'est comptée qu'une fois par session, même si on revient en arrière.
+    if (ECRANS_SUIVIS[ecran] && !_dejaVu[ecran]) { _dejaVu[ecran] = 1; ev(ECRANS_SUIVIS[ecran]); }
+    return orig.apply(this, arguments);
+  };
+});
+
+/* ── Bloc d'intention d'achat ── */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+function blocIntention(contexte, libelle){
+  var id = "borne-int-" + Math.random().toString(36).slice(2,7);
+  return '<div id="' + id + '" data-ctx="' + esc(contexte) + '" data-lib="' + esc(libelle||"") + '" ' +
+    'style="background:#fff;border:2px solid #C4726A;border-radius:20px;padding:22px 18px;margin:20px 0 14px;text-align:center">' +
+    '<div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#3D2B1F;line-height:1.25;margin-bottom:6px">' +
+      'Ces produits vous intéressent&nbsp;?</div>' +
+    '<div style="font-size:13px;color:#8B6F5E;margin-bottom:18px;line-height:1.45">' +
+      'Votre réponse nous aide à améliorer les conseils. Elle est anonyme.</div>' +
+    '<div style="display:flex;flex-direction:column;gap:9px">' +
+      '<button onclick="window._borneRep(\'' + id + '\',\'achat\')" ' +
+        'style="width:100%;padding:17px;border:none;border-radius:50px;background:#C4726A;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer">' +
+        'Oui, je vais les acheter</button>' +
+      '<button onclick="window._borneRep(\'' + id + '\',\'reflexion\')" ' +
+        'style="width:100%;padding:15px;border:1.5px solid #EDD9D4;border-radius:50px;background:#fff;color:#8B6F5E;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">' +
+        'J\'y réfléchis</button>' +
+      '<button onclick="window._borneRep(\'' + id + '\',\'non\')" ' +
+        'style="width:100%;padding:13px;border:none;background:none;color:#B0958F;font-size:13px;font-family:inherit;cursor:pointer;text-decoration:underline">' +
+        'Non, ça ne me convient pas</button>' +
+    '</div></div>';
+}
+
+window._borneRep = function(id, reponse){
+  var box = document.getElementById(id);
+  if (!box) return;
+  var s = lireStats();
+  s.reponses.push({ d:Date.now(), sid:SID, ctx:box.dataset.ctx, lib:box.dataset.lib, r:reponse });
+  ecrireStats(s);
+  ev("intention", reponse);
+
+  var merci = {
+    achat:     ["Parfait&nbsp;!", "Présentez cet écran à l\'équipe de la pharmacie, elle vous accompagnera."],
+    reflexion: ["C\'est noté", "Prenez le temps. Vous pouvez photographier l\'écran pour retrouver la sélection."],
+    non:       ["Merci de nous le dire", "Dites-nous ce qui n\'allait pas, cela nous aide beaucoup."]
+  }[reponse];
+
+  box.style.borderColor = "#EDD9D4";
+  box.innerHTML =
+    '<div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F;margin-bottom:4px">' + merci[0] + '</div>' +
+    '<div style="font-size:13px;color:#8B6F5E;line-height:1.45;margin-bottom:16px">' + merci[1] + '</div>' +
+    blocAvis();
+  var t = document.getElementById("borne-avis-txt");
+  if (t && reponse === "non") t.focus();
+};
+
+/* ── Espace avis ── */
+function blocAvis(){
+  return '<div style="border-top:1px solid #F0E8E5;padding-top:16px;text-align:left">' +
+    '<div style="font-size:13.5px;font-weight:700;color:#3D2B1F;margin-bottom:9px;text-align:center">Votre avis sur l\'application</div>' +
+    '<div id="borne-notes" style="display:flex;justify-content:center;gap:7px;margin-bottom:11px">' +
+      [1,2,3,4,5].map(function(n){
+        return '<button onclick="window._borneNote(' + n + ')" data-n="' + n + '" class="borne-etoile" ' +
+          'style="width:44px;height:44px;border:1.5px solid #EDD9D4;background:#fff;border-radius:50%;font-size:19px;cursor:pointer;line-height:1">☆</button>';
+      }).join('') +
+    '</div>' +
+    '<textarea id="borne-avis-txt" rows="3" placeholder="Ce qui vous a plu, ce qui manque… (facultatif)" ' +
+      'style="width:100%;padding:11px;border:1.5px solid #EDD9D4;border-radius:12px;font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box"></textarea>' +
+    '<div style="font-size:10.5px;color:#B0958F;margin:6px 0 10px;line-height:1.4">' +
+      'Merci de ne pas indiquer votre nom ni vos coordonnées.</div>' +
+    '<button onclick="window._borneAvis()" ' +
+      'style="width:100%;padding:14px;border:none;border-radius:50px;background:#3D2B1F;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">' +
+      'Envoyer mon avis</button></div>';
+}
+var noteChoisie = 0;
+window._borneNote = function(n){
+  noteChoisie = n;
+  document.querySelectorAll(".borne-etoile").forEach(function(b){
+    var v = parseInt(b.dataset.n, 10);
+    b.textContent = v <= n ? "★" : "☆";
+    b.style.borderColor = v <= n ? "#C4726A" : "#EDD9D4";
+    b.style.color = v <= n ? "#C4726A" : "#B0958F";
+  });
+};
+window._borneAvis = function(){
+  var t = document.getElementById("borne-avis-txt");
+  var texte = t ? t.value.trim().slice(0, 500) : "";
+  if (!noteChoisie && !texte) { alert("Choisissez une note ou écrivez un mot."); return; }
+  var s = lireStats();
+  s.avis.push({ d:Date.now(), note:noteChoisie, txt:texte });
+  ecrireStats(s);
+  var parent = t.closest("div[id^='borne-int-']") || t.parentElement.parentElement;
+  parent.innerHTML =
+    '<div style="text-align:center;padding:10px 0">' +
+    '<div style="font-size:34px;margin-bottom:6px">🌸</div>' +
+    '<div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F">Merci&nbsp;!</div>' +
+    '<div style="font-size:13px;color:#8B6F5E;margin-top:4px">Votre retour a bien été enregistré.</div>' +
+    '<button onclick="window._borneFin()" style="margin-top:16px;padding:13px 26px;border:1.5px solid #EDD9D4;border-radius:50px;background:#fff;color:#8B6F5E;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer">' +
+    'Terminer et laisser la place</button></div>';
+  noteChoisie = 0;
+};
+window._borneFin = function(){ reinitialiser(true); };
+
+/* ── Injection en fin de routine et sur la fiche produit ── */
+function injecter(contexte, libelle){
+  setTimeout(function(){
+    var ecran = document.querySelector('#sc-' + (contexte === 'routine' ? 'result' : 'find-product') + ' .content')
+             || document.querySelector('.content');
+    if (!ecran || ecran.querySelector("div[id^='borne-int-']")) return;
+    var d = document.createElement("div");
+    d.innerHTML = blocIntention(contexte, libelle);
+    ecran.appendChild(d.firstChild);
+  }, 350);
+}
+if (typeof window.renderResult === "function") {
+  var _rr = window.renderResult;
+  window.renderResult = function(){
+    var r = _rr.apply(this, arguments);
+    compter("routines"); injecter("routine", "");
+    return r;
+  };
+}
+if (typeof window.openFindDetail === "function") {
+  var _ofd = window.openFindDetail;
+  window.openFindDetail = function(key){
+    var r = _ofd.apply(this, arguments);
+    compter("fiches");
+    injecter("produit", (typeof DB !== "undefined" && DB[key]) ? DB[key].nom : String(key));
+    return r;
+  };
+}
+
+/* ── Vue administrateur : pharmacie.html?admin=1 ── */
+function vueAdmin(){
+  var s = lireStats(), E = s.ev || [];
+  var sessions = {};
+  E.forEach(function(x){ (sessions[x.sid] = sessions[x.sid] || []).push(x.n); });
+  var nbSess = Object.keys(sessions).length || s.sessions || 0;
+  var ont = function(nom){ return Object.keys(sessions).filter(function(k){ return sessions[k].indexOf(nom) > -1; }).length; };
+  var pc = function(v, base){ base = base || nbSess; return base ? Math.round(v / base * 100) + " %" : "—"; };
+  var compte = function(nom){
+    var m = {};
+    E.filter(function(x){ return x.n === nom && x.v; }).forEach(function(x){ m[x.v] = (m[x.v]||0)+1; });
+    return Object.keys(m).map(function(k){ return [k, m[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+  };
+
+  // ── Entonnoir : où les gens s'arrêtent ──
+  var etapes = [["Ont ouvert la borne", nbSess],
+                ["Ont commencé le questionnaire", ont("etape_1_peau")],
+                ["Étape 3 — problèmes", ont("etape_3_problemes")],
+                ["Étape 5 — type de routine", ont("etape_5_routine")],
+                ["Ont vu leur routine", ont("routine_affichee")],
+                ["Ont répondu sur l'achat", ont("intention")]];
+
+  var barre = function(v, max, coul){
+    var l = max ? Math.round(v / max * 100) : 0;
+    return '<div style="background:#F0E8E5;border-radius:4px;height:7px;margin-top:4px;overflow:hidden">' +
+      '<div style="width:' + l + '%;height:100%;background:' + coul + '"></div></div>';
+  };
+  var bloc = function(titre, contenu){
+    return '<div style="background:#fff;border:1px solid #F0E8E5;border-radius:12px;padding:14px;margin-bottom:11px">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#8B6F5E;margin-bottom:10px">' + titre + '</div>' +
+      contenu + '</div>';
+  };
+  var liste = function(paires, total, coul){
+    if (!paires.length) return '<div style="font-size:13px;color:#B0958F">Aucune donnée.</div>';
+    var max = paires[0][1];
+    return paires.slice(0,10).map(function(p){
+      return '<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:13px">' +
+        '<span>' + esc(p[0]) + '</span><span style="font-weight:700">' + p[1] + (total ? ' · ' + pc(p[1], total) : '') + '</span></div>' +
+        barre(p[1], max, coul || "#C4726A") + '</div>';
+    }).join('');
+  };
+
+  // ── Usage des fonctionnalités ──
+  var entrees = compte("entree");
+  var usage = [["Routine complète", ont("routine_affichee")],
+               ["Recherche par produit", E.filter(function(x){return x.n==="entree"&&x.v==="produit";}).length],
+               ["Recherche par problème", E.filter(function(x){return x.n==="entree"&&x.v==="probleme";}).length]]
+              .sort(function(a,b){ return b[1]-a[1]; });
+
+  var rep = function(r){ return s.reponses.filter(function(x){ return x.r === r; }).length; };
+  var totRep = s.reponses.length;
+  var moy = s.avis.filter(function(a){ return a.note; });
+  var note = moy.length ? (moy.reduce(function(t,a){ return t+a.note; },0)/moy.length).toFixed(1) : "—";
+  var jours = {};
+  E.forEach(function(x){ var d = new Date(x.d).toLocaleDateString("fr-FR"); if (x.n==="session") jours[d]=(jours[d]||0)+1; });
+
+  var html =
+  '<div style="max-width:680px;margin:0 auto;padding:18px 15px 60px;font-family:Outfit,system-ui,sans-serif;color:#3D2B1F">' +
+  '<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #3D2B1F;padding-bottom:10px;margin-bottom:16px">' +
+    '<div><div style="font-family:Georgia,serif;font-size:22px;font-weight:700">Statistiques de la borne</div>' +
+    '<div style="font-size:11px;color:#8B6F5E">Données locales à cette tablette · ' + nbSess + ' sessions</div></div>' +
+    '<button onclick="location.href=location.pathname" style="padding:7px 13px;border:1px solid #EDD9D4;background:#fff;border-radius:50px;font-size:12px;cursor:pointer;font-family:inherit">Retour</button>' +
+  '</div>' +
+
+  bloc("Combien vont jusqu'au bout",
+    etapes.map(function(e,i){
+      var perte = i > 0 && etapes[i-1][1] ? Math.round((etapes[i-1][1]-e[1])/etapes[i-1][1]*100) : 0;
+      return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px">' +
+        '<span>' + e[0] + '</span><span style="font-weight:700">' + e[1] + ' · ' + pc(e[1]) + '</span></div>' +
+        barre(e[1], nbSess, i === etapes.length-1 ? "#5E8C6A" : "#C4726A") +
+        (perte > 0 ? '<div style="font-size:10.5px;color:#B4544B;margin-top:2px">− ' + perte + ' % à cette étape</div>' : '') +
+        '</div>';
+    }).join('')) +
+
+  bloc("Fonctionnalité la plus utilisée", liste(usage, nbSess, "#7A8BA8")) +
+
+  bloc("Intention d'achat",
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
+    [["Vont acheter", rep("achat"), "#5E8C6A"],["Y réfléchissent", rep("reflexion"), "#B5843D"],["Ne conviennent pas", rep("non"), "#B4544B"]]
+      .map(function(c){
+        return '<div style="text-align:center;background:#FBF6F4;border-radius:10px;padding:11px 6px">' +
+          '<div style="font-family:Georgia,serif;font-size:21px;font-weight:700;color:' + c[2] + '">' + c[1] + '</div>' +
+          '<div style="font-size:10px;color:#8B6F5E;line-height:1.25;margin-top:2px">' + c[0] + '</div>' +
+          '<div style="font-size:10px;color:#B0958F">' + pc(c[1], totRep) + '</div></div>';
+      }).join('') + '</div>' +
+    '<div style="font-size:12px;color:#8B6F5E;line-height:1.45">' +
+      'Sur ' + nbSess + ' sessions, ' + totRep + ' personnes ont répondu, dont ' + rep("achat") + ' ont déclaré vouloir acheter — soit ' + pc(rep("achat")) + ' des visiteurs.' +
+      '<br><span style="color:#B0958F">Intention déclarée, pas achat constaté.</span></div>') +
+
+  bloc("Problèmes de peau recherchés", liste(compte("probleme_declare").concat(compte("probleme_choisi")), 0, "#96709E")) +
+  bloc("Types de peau", liste(compte("peau"), 0, "#7A8BA8")) +
+  bloc("Catégories consultées", liste(compte("categorie_choisie"), 0, "#B5843D")) +
+  bloc("Produits les plus regardés", liste(compte("produit_consulte"), 0, "#C4726A")) +
+  bloc("Fréquentation par jour", liste(Object.keys(jours).map(function(k){ return [k, jours[k]]; }), 0, "#5E8C6A")) +
+
+  bloc("Avis · note moyenne " + note + " / 5",
+    (s.avis.length ? s.avis.slice().reverse().slice(0,25).map(function(a){
+      return '<div style="padding:7px 0;border-bottom:1px solid #FAF6F4;font-size:13px">' +
+        '<span style="color:#C4726A">' + "★".repeat(a.note) + "☆".repeat(5-a.note) + '</span> ' +
+        '<span style="color:#B0958F;font-size:11px">' + new Date(a.d).toLocaleDateString("fr-FR") + '</span>' +
+        (a.txt ? '<div style="color:#5A4A44;margin-top:2px">' + esc(a.txt) + '</div>' : '') + '</div>';
+    }).join('') : '<div style="font-size:13px;color:#B0958F">Aucun avis pour le moment.</div>')) +
+
+  '<button onclick="window._borneCSV()" style="width:100%;padding:14px;border:none;border-radius:12px;background:#3D2B1F;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">Exporter tout en CSV</button>' +
+  '<button onclick="window._borneMail()" style="width:100%;padding:13px;border:1.5px solid #EDD9D4;border-radius:12px;background:#fff;color:#3D2B1F;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">M\'envoyer le résumé par e-mail</button>' +
+  '<button onclick="if(confirm(\'Effacer toutes les statistiques ?\')){localStorage.removeItem(\'' + STATS_KEY + '\');location.reload();}" style="width:100%;padding:12px;border:1.5px solid #F0E8E5;border-radius:12px;background:#fff;color:#B0958F;font-size:13px;font-family:inherit;cursor:pointer">Réinitialiser</button>' +
+  '</div>';
+  document.body.innerHTML = html;
+  document.body.style.background = "#FDF8F5";
+}
+
+// Résumé texte envoyable depuis la tablette, sans dépendance réseau.
+window._borneMail = function(){
+  var s = lireStats(), E = s.ev || [];
+  var sess = {}; E.forEach(function(x){ sess[x.sid] = 1; });
+  var n = Object.keys(sess).length;
+  var ont = function(nom){ var m={}; E.filter(function(x){return x.n===nom;}).forEach(function(x){m[x.sid]=1;}); return Object.keys(m).length; };
+  var rep = function(r){ return s.reponses.filter(function(x){ return x.r===r; }).length; };
+  var corps = [
+    "SkinMatch — borne pharmacie",
+    "Relevé du " + new Date().toLocaleDateString("fr-FR"),
+    "",
+    "Sessions : " + n,
+    "Questionnaire commencé : " + ont("etape_1_peau"),
+    "Routine affichée : " + ont("routine_affichee"),
+    "Ont répondu sur l'achat : " + ont("intention"),
+    "",
+    "Vont acheter : " + rep("achat"),
+    "Y réfléchissent : " + rep("reflexion"),
+    "Ne conviennent pas : " + rep("non"),
+    "",
+    "Avis recueillis : " + s.avis.length
+  ].join("\n");
+  location.href = "mailto:?subject=" + encodeURIComponent("SkinMatch borne — relevé du " + new Date().toLocaleDateString("fr-FR")) +
+                  "&body=" + encodeURIComponent(corps);
+};
+
+window._borneCSV = function(){
+  var s = lireStats(), l = ["type;date;session;evenement;valeur;reponse;note;avis"];
+  (s.ev||[]).forEach(function(x){
+    l.push(["evenement", new Date(x.d).toISOString(), x.sid, x.n, (x.v||"").replace(/;/g,","), "", "", ""].join(";"));
+  });
+  s.reponses.forEach(function(r){
+    l.push(["reponse", new Date(r.d).toISOString(), r.sid||"", r.ctx, (r.lib||"").replace(/;/g,","), r.r, "", ""].join(";"));
+  });
+  s.avis.forEach(function(a){
+    l.push(["avis", new Date(a.d).toISOString(), "", "", "", "", a.note, (a.txt||"").replace(/[;\n\r]/g," ")].join(";"));
+  });
+  var b = new Blob(["\ufeff" + l.join("\n")], { type:"text/csv;charset=utf-8" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "borne-pharmacie-" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click();
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   PARCOURS BORNE : le questionnaire est l'entrée obligatoire.
+   Tant qu'il n'est pas rempli, seul le bouton de démarrage est proposé.
+   Une fois rempli, les trois accès mènent directement aux résultats,
+   sans reposer la moindre question.
+   ══════════════════════════════════════════════════════════════════════ */
+function profilComplet(){
+  return !!(typeof ST !== "undefined" && ST.skinType && ST.result && ST.result.steps && ST.result.steps.length);
+}
+
+function majAccueil(){
+  var opts = document.getElementById("borne-options");
+  var intro = document.getElementById("borne-intro");
+  var btn = document.getElementById("btn-start-top");
+  var complet = profilComplet();
+  if (opts) opts.style.display = complet ? "block" : "none";
+  if (btn) {
+    btn.style.display = "block";
+    var t = document.getElementById("btn-start-top-text");
+    if (t) t.textContent = complet ? "Revoir ma routine" : "Commencer — 5 questions rapides";
+    btn.onclick = complet ? function(){ go("result"); if (typeof renderResult === "function") renderResult(); }
+                          : function(){ showTermsModal(); };
+  }
+  if (intro){
+    var h2 = intro.querySelector("div");
+    if (complet){
+      intro.innerHTML =
+        '<div style="font-family:Georgia,serif;font-size:19px;font-weight:700;color:#3D2B1F;margin-bottom:5px">Votre profil est enregistré</div>' +
+        '<div style="font-size:13.5px;color:#8B6F5E;line-height:1.5">' +
+          'Peau ' + esc(ST.skinType||"") + (ST.ageGroup ? " · " + esc(ST.ageGroup) : "") +
+          '. Choisissez ci-dessous : nous connaissons déjà vos réponses.</div>' +
+        '<button onclick="window._borneRecommencer()" style="margin-top:12px;padding:9px 16px;border:1.5px solid #EDD9D4;border-radius:50px;background:#fff;color:#8B6F5E;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer">Recommencer le questionnaire</button>';
+    }
+  }
+}
+window._borneRecommencer = function(){ reinitialiser(true); };
+
+/* Les trois accès sautent toutes les étapes de profil déjà connues. */
+function brancherTraces(){
+  // Porte d'entrée choisie depuis l'accueil
+  ["startFindProduct","startFindConcern"].forEach(function(nom){
+    if (typeof window[nom] !== "function") return;
+    var o = window[nom];
+    window[nom] = function(){
+      ev("entree", nom === "startFindConcern" ? "probleme" : "produit");
+      return o.apply(this, arguments);
+    };
+  });
+  // Problématique traitée
+  if (typeof window.pickFindConcern === "function"){
+    var pc = window.pickFindConcern;
+    window.pickFindConcern = function(id){ ev("probleme_choisi", id); return pc.apply(this, arguments); };
+  }
+  // Catégorie de produit consultée
+  if (typeof window.pickFindCategory === "function"){
+    var pk = window.pickFindCategory;
+    window.pickFindCategory = function(id){ ev("categorie_choisie", id); return pk.apply(this, arguments); };
+  }
+  // Produit ouvert en détail
+  if (typeof window.openFindDetail === "function"){
+    var od = window.openFindDetail;
+    window.openFindDetail = function(key){
+      ev("produit_consulte", (typeof DB !== "undefined" && DB[key]) ? DB[key].nom : key);
+      return od.apply(this, arguments);
+    };
+  }
+  // Profil renseigné : type de peau, pour la répartition
+  if (typeof window.renderResult === "function"){
+    var rr = window.renderResult;
+    window.renderResult = function(){
+      if (typeof ST !== "undefined" && ST.skinType && !_dejaVu._peau){ _dejaVu._peau = 1; ev("peau", ST.skinType);
+        if (ST.concerns && ST.concerns[0]) ev("probleme_declare", ST.concerns[0]); }
+      return rr.apply(this, arguments);
+    };
+  }
+}
+
+function brancherAcces(){
+  if (typeof window.startFindConcern === "function"){
+    var _c = window.startFindConcern;
+    window.startFindConcern = function(){
+      // La problématique a été choisie dans le questionnaire : on va droit aux résultats.
+      if (profilComplet() && ST.concerns && ST.concerns.length){
+        FP.mode = "concern"; FP.skin = ST.skinType; FP.concern = ST.concerns[0];
+        FP.cat = null; FP.subtype = null;
+        go("find-product");
+        setTimeout(function(){ renderFindResults(); renderFindStep("results"); }, 0);
+        return;
+      }
+      return _c.apply(this, arguments);
+    };
+  }
+  if (typeof window.startFindProduct === "function"){
+    var _p = window.startFindProduct;
+    window.startFindProduct = function(){
+      // Le type de peau est connu ; il reste à indiquer QUOI on cherche,
+      // ce qui n'est pas une question de profil mais une intention d'achat.
+      if (profilComplet()){
+        FP.mode = "cat"; FP.skin = ST.skinType; FP.cat = null; FP.subtype = null; FP.concern = null;
+        go("find-product");
+        setTimeout(function(){ renderFindCatOpts(); renderFindStep("cat"); }, 0);
+        return;
+      }
+      return _p.apply(this, arguments);
+    };
+  }
+}
+
+/* Rafraîchir l'accueil à chaque passage */
+["go","navTo"].forEach(function(nom){
+  if (typeof window[nom] !== "function") return;
+  var o = window[nom];
+  window[nom] = function(ecran){
+    var r = o.apply(this, arguments);
+    if (ecran === "welcome") setTimeout(majAccueil, 60);
+    return r;
+  };
+});
+
+/* ── Confort d'exploitation sur la tablette ── */
+// Empêche la mise en veille pendant qu'une cliente utilise la borne.
+// L'API n'existe pas partout ; en son absence on ne fait rien, et le réglage
+// « veille jamais » du système prend le relais.
+var _veille = null;
+async function garderEcranAllume(){
+  try {
+    if ("wakeLock" in navigator && !_veille) {
+      _veille = await navigator.wakeLock.request("screen");
+      _veille.addEventListener("release", function(){ _veille = null; });
+    }
+  } catch(e){}
+}
+document.addEventListener("visibilitychange", function(){
+  if (document.visibilityState === "visible") garderEcranAllume();
+});
+window.addEventListener("click", garderEcranAllume, { once:true });
+window.garderEcranAllume = garderEcranAllume;
+
+// Un double-appui accidentel ne doit pas zoomer l'interface.
+var _dernierAppui = 0;
+document.addEventListener("touchend", function(e){
+  var t = Date.now();
+  if (t - _dernierAppui < 320) e.preventDefault();
+  _dernierAppui = t;
+}, { passive:false });
+
+/* ── Démarrage ── */
+if (/[?&]admin=1/.test(location.search)) {
+  setTimeout(vueAdmin, 400);
+} else {
+  compter("sessions");
+  relancerMinuteur();
+  brancherAcces();
+  brancherTraces();
+  ev("session");
+  window.addEventListener("load", function(){ setTimeout(majAccueil, 300); });
+  // Une session commence toujours propre : la précédente a pu être interrompue.
+  window.addEventListener("load", function(){
+    setTimeout(function(){
+      var s = lireStats();
+      try {
+        Object.keys(localStorage).forEach(function(k){
+          if (/^skinmatch_(photos|journal|scan_history|last_routine)$/.test(k)) localStorage.removeItem(k);
+        });
+      } catch(e){}
+      ecrireStats(s);
+    }, 100);
+  });
+}
+window._borneReset = function(){ reinitialiser(true); };
 
 })();
 </script>
