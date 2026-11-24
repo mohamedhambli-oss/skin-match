@@ -85,3 +85,24 @@ exports.gemini = onRequest({
     res.status(502).json({ error: "upstream" });
   }
 });
+
+// Suppression de compte : efface côté serveur ce que le client ne peut pas (ou n'a pas pu)
+// effacer — profil, quotas IA, contributions non validées — et anonymise les contributions
+// déjà validées, intégrées à la base produits.
+const functionsV1 = require("firebase-functions/v1");
+exports.cleanupDeletedUser = functionsV1.region("europe-west1").auth.user().onDelete(async (user) => {
+  const db = admin.firestore();
+  const uid = user.uid;
+  const batch = db.batch();
+  batch.delete(db.doc("users/" + uid));
+  batch.delete(db.doc("ai_usage/" + uid));
+  batch.delete(db.doc("routines/" + uid));
+  batch.delete(db.doc("feedbacks/" + uid));
+  const contribs = await db.collection("community_eans").where("addedBy", "==", uid).get();
+  contribs.forEach((d) => {
+    if (d.get("validated") === true) batch.update(d.ref, { addedBy: "deleted-user" });
+    else batch.delete(d.ref);
+  });
+  await batch.commit();
+  logger.info("user_data_deleted", { contributions: contribs.size });
+});

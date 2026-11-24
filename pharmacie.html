@@ -70,7 +70,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAnalytics, logEvent, setUserId, setUserProperties, setAnalyticsCollectionEnabled } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
@@ -141,6 +141,10 @@
   window._getDoc = getDoc;
   window._updateDoc = updateDoc;
   window._deleteDoc = deleteDoc;
+  window._collection = collection;
+  window._query = query;
+  window._where = where;
+  window._getDocs = getDocs;
   window._firebaseReady = true;
 
   // Traiter un éventuel retour de connexion Google par redirect (mobile)
@@ -11129,6 +11133,46 @@ async function doLogout() {
 
 // ── SUPPRESSION DE COMPTE (RGPD — Droit à l'oubli) ──
 // Supprime totalement le compte utilisateur + toutes ses données Firestore.
+// ══════════ PORTABILITÉ (art. 20 RGPD) : export de toutes mes données ══════════
+// Rassemble le compte (Firestore), mes contributions et tout ce qui est stocké sur
+// cet appareil (routine, journal, photos, cycle…) dans un fichier JSON téléchargé.
+async function _myCommunityEans(uid) {
+  if (!window._query || !window._getDocs) return [];
+  var snap = await window._getDocs(window._query(window._collection(window._db, 'community_eans'), window._where('addedBy', '==', uid)));
+  var out = [];
+  snap.forEach(function(d){ out.push(Object.assign({ id: d.id }, d.data())); });
+  return out;
+}
+
+async function exportMyData() {
+  var isEN = LANG === 'en';
+  var data = { exportedAt: new Date().toISOString(), app: 'SkinMatch', account: null, communityContributions: [], device: {} };
+  try {
+    var user = window._currentUser;
+    if (user && window._firebaseReady) {
+      var snap = await window._getDoc(window._doc(window._db, 'users', user.uid));
+      data.account = { uid: user.uid, email: user.email || null, createdAt: (user.metadata && user.metadata.creationTime) || null,
+                       profile: snap.exists() ? snap.data() : null };
+      try { data.communityContributions = await _myCommunityEans(user.uid); } catch (e) {}
+    }
+    Object.keys(localStorage).forEach(function(k){
+      if (k.indexOf('skinmatch') === 0 || k.indexOf('sm_') === 0) {
+        var v = localStorage.getItem(k);
+        try { data.device[k] = JSON.parse(v); } catch (e) { data.device[k] = v; }
+      }
+    });
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'skinmatch-mes-donnees-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+    showToast(isEN ? 'Your data file has been downloaded.' : 'Ton fichier de données a été téléchargé.', { type: 'success' });
+  } catch (e) {
+    showToast(isEN ? 'Export failed, please retry.' : "L'export a échoué, réessaie.", { type: 'error' });
+  }
+}
+
 function deleteMyAccount() {
   var isEN = LANG === 'en';
   if (!window._currentUser) {
@@ -11172,6 +11216,12 @@ async function _confirmAccountDeletion() {
     try { await window._deleteDoc(window._doc(window._db, 'users', uid)); } catch(e){}
     try { await window._deleteDoc(window._doc(window._db, 'routines', uid)); } catch(e){}
     try { await window._deleteDoc(window._doc(window._db, 'feedbacks', uid)); } catch(e){}
+    try {
+      var mine = await _myCommunityEans(uid);
+      for (var i = 0; i < mine.length; i++) {
+        if (!mine[i].validated) { try { await window._deleteDoc(window._doc(window._db, 'community_eans', mine[i].id)); } catch(e){} }
+      }
+    } catch(e){}
     
     // 2) Nettoyer le stockage local
     try {
@@ -11648,6 +11698,7 @@ function renderSettings() {
         { label: isEN ? 'Verify my email' : 'Vérifier mon email', value: window._currentUser && !window._currentUser.emailVerified ? (isEN?'Pending':'En attente') : (isEN?'Verified':'Vérifié'), action: window._currentUser && !window._currentUser.emailVerified ? 'resendEmailVerification()' : null },
         { label: isEN ? 'Change password' : 'Changer mon mot de passe', value: '', action: 'doForgotPassword()' },
         { label: isEN ? 'Logout' : 'Se déconnecter', value: '', action: 'doLogout()', danger: true },
+        { label: isEN ? 'Download my data' : 'Télécharger mes données', value: '', action: 'exportMyData()' },
         { label: isEN ? 'Delete my account' : 'Supprimer mon compte', value: '', action: 'deleteMyAccount()', danger: true },
       ]
     },

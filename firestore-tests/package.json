@@ -1,9 +1,9 @@
 {
   "name": "skinmatch-firestore-tests",
   "private": true,
-  "description": "Tests des règles Firestore sur l'émulateur (Java requis).",
+  "description": "Tests des règles Firestore et du nettoyage de compte sur l'émulateur (Java requis).",
   "scripts": {
-    "test": "firebase emulators:exec --only firestore --project demo-skinmatch --config ../firebase.json \"node --test rules.test.js\""
+    "test": "firebase emulators:exec --only firestore --project demo-skinmatch --config ../firebase.json \"node --test rules.test.js && node ../functions/test/cleanup.emulator.js\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
