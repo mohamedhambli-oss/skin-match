@@ -6,7 +6,7 @@
 <!-- CSP : restreint les sources autorisées pour script, style, img, frame, etc. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://apis.google.com https://www.googleapis.com;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://www.googleapis.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https:;
   font-src 'self' data: https://fonts.gstatic.com;
@@ -678,7 +678,6 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <script>
@@ -1210,16 +1209,16 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
       <p style="font-size:13px;color:#8B6F5E">Scanne le code-barres d'un produit pour savoir s'il est adapté à ta peau</p>
     </div>
 
-    <!-- Zone de scan caméra code-barres : Html5Qrcode injecte son propre <video> dans #reader -->
+    <!-- Zone de scan caméra code-barres : startBarcodeCamera() place la vidéo dans #reader -->
     <div id="barcode-camera-zone" style="margin-bottom:16px">
       <div style="position:relative;width:100%;height:260px;background:#111;border-radius:20px;overflow:hidden">
 
-        <!-- Conteneur que Html5Qrcode va remplir -->
+        <!-- Vidéo de la caméra -->
         <div id="reader" style="width:100%;height:100%;background:#111"></div>
 
         <!-- Overlay viseur (purement visuel) -->
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-          <div style="width:75%;height:110px;position:relative">
+          <div id="scan-frame" style="width:75%;height:110px;position:relative">
             <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #C4726A;border-left:3px solid #C4726A;border-radius:3px 0 0 0"></div>
             <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #C4726A;border-right:3px solid #C4726A;border-radius:0 3px 0 0"></div>
             <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #C4726A;border-left:3px solid #C4726A;border-radius:0 0 0 3px"></div>
@@ -1559,7 +1558,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Compte</strong> (prénom, e-mail, mot de passe chiffré par Firebase) — exécution du service (art. 6.1.b RGPD).</li><li><strong>Profil peau et routine</strong> (type de peau, tranche d'âge, préoccupations, budget, produits retenus) — exécution du service.</li><li><strong>Données de santé</strong> : grossesse ou allaitement, allergies, carnation (phototype). Elles servent à écarter les produits déconseillés. Elles ne sont enregistrées dans votre compte qu'avec votre <strong>consentement explicite</strong> (art. 9.2.a RGPD) ; sans lui, elles restent sur votre appareil.</li><li><strong>Cycle menstruel</strong> : stocké uniquement sur votre appareil, jamais transmis.</li><li><strong>Photos de peau</strong> (suivi avant/après) : stockées uniquement sur votre appareil.</li><li><strong>Analyse par IA</strong> : la photo ou le texte libre que vous soumettez est transmis à Google (API Gemini), avec votre consentement (art. 6.1.a). SkinMatch ne conserve ni la photo ni le texte ; seul un compteur d'utilisation quotidien est enregistré.</li><li><strong>Mesure d'audience</strong> (Google Analytics : pages vues, événements, type d'appareil), uniquement si vous l'acceptez — consentement.</li><li><strong>Conseils météo</strong> : position arrondie à environ 10 km, envoyée à Open-Meteo, uniquement si vous activez la fonction — consentement.</li><li><strong>Codes-barres proposés</strong> (code, nom et marque du produit, identifiant de compte) — intérêt légitime à enrichir la base produits.</li><li><strong>Préférences</strong> (langue, pays, notifications) : stockées sur votre appareil.</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">3. Destinataires et sous-traitants</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Vos données ne sont ni vendues ni louées. Elles sont traitées par :</p>
-    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Google Ireland Ltd / Google LLC — Firebase (authentification, base de données Firestore, fonctions serveur, hébergement), Google Analytics et API Gemini. Région de la base Firestore : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : région du projet Firebase, à lire dans la console Firestore]</mark>.</li><li>Open Beauty Facts — reçoit le code-barres scanné (aucune donnée personnelle).</li><li>Open-Meteo — reçoit la position arrondie si les conseils météo sont activés.</li><li>Fournisseurs techniques (Google Fonts, cdnjs, unpkg) — reçoivent l'adresse IP lors du chargement des polices et bibliothèques.</li></ul>
+    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Google Ireland Ltd / Google LLC — Firebase (authentification, base de données Firestore, fonctions serveur, hébergement), Google Analytics et API Gemini. Région de la base Firestore : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : région du projet Firebase, à lire dans la console Firestore]</mark>.</li><li>Open Beauty Facts — reçoit le code-barres scanné (aucune donnée personnelle).</li><li>Open-Meteo — reçoit la position arrondie si les conseils météo sont activés.</li><li>Fournisseurs techniques (Google Fonts, cdnjs) — reçoivent l'adresse IP lors du chargement des polices et bibliothèques.</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">4. Transferts hors de l'Union européenne</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Certains services de Google peuvent traiter des données aux États-Unis. Ces transferts reposent sur le cadre de protection des données UE–États-Unis (Data Privacy Framework) auquel Google LLC est certifiée, complété par les clauses contractuelles types de la Commission européenne.</p>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Les données transmises à l'API Gemini dans le cadre de l'offre payante ne sont pas utilisées par Google pour entraîner ses modèles.</p>
@@ -6894,100 +6893,156 @@ var SCAN_DEMO_PRODUCTS = {
 };
 
 // ══ CAMÉRA CODE-BARRES ══
-var barcodeStream = null;
-var barcodeFacingMode = "environment"; // caméra arrière pour scanner
-var barcodeDetector = null;
-var barcodeScanning = false;
+// Moteur maison (remplace html5-qrcode, qui analysait une image réduite à la taille du cadre
+// affiché et dont la zone de lecture ne correspondait pas au cadre visible) :
+//  · la vidéo est lue en pleine résolution ;
+//  · la zone analysée est exactement le cadre rose (avec une marge), plus l'image entière
+//    une fois sur trois pour les codes mal cadrés ;
+//  · détecteur natif BarcodeDetector quand il existe (Chrome Android), sinon zxing-wasm,
+//    embarqué dans vendor/ et chargé seulement à l'ouverture du scanner (iPhone, Firefox).
+var _SCAN_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
+var _scan = { stream: null, video: null, timer: null, facing: 'environment', busy: false, frame: 0 };
+var _scanCanvas = null;
+var _detectorPromise = null;
 
-// Détecteur natif du navigateur (bien plus fiable que le décodeur JS pour les codes-barres 1D
-// type EAN/UPC). Utilisé en priorité par Html5Qrcode via experimentalFeatures ci-dessous,
-// et directement pour le scan depuis une image de la galerie.
-if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-  try {
-    barcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39'] });
-  } catch(e) { barcodeDetector = null; }
+function _loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
-// Config partagée du scanner caméra : évite la duplication (et les divergences) entre
-// startBarcodeCamera() et flipBarcodeCamera(), et corrige la non-détection des codes-barres.
-// Options du constructeur Html5Qrcode : c'est ici (et non dans start()) que la bibliothèque
-// lit les formats et l'usage du détecteur natif BarcodeDetector.
-function _barcodeScannerOptions() {
-  var F = Html5QrcodeSupportedFormats;
-  return {
-    verbose: false,
-    useBarCodeDetectorIfSupported: true,
-    formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39]
-  };
+function _getBarcodeDetector() {
+  if (_detectorPromise) return _detectorPromise;
+  _detectorPromise = (async function() {
+    if ('BarcodeDetector' in window) {
+      try {
+        var sup = await window.BarcodeDetector.getSupportedFormats();
+        if (sup.indexOf('ean_13') > -1) {
+          return new window.BarcodeDetector({ formats: _SCAN_FORMATS.filter(function(f){ return sup.indexOf(f) > -1; }) });
+        }
+      } catch (e) {}
+    }
+    if (!window.BarcodeDetectionAPI) await _loadScript('vendor/barcode-detector-3.2.4.js');
+    var api = window.BarcodeDetectionAPI;
+    api.prepareZXingModule({
+      overrides: { locateFile: function(path, prefix) { return /\.wasm$/.test(path) ? 'vendor/zxing_reader-3.1.7.wasm' : prefix + path; } },
+      fireImmediately: true
+    });
+    return new api.BarcodeDetector({ formats: _SCAN_FORMATS });
+  })();
+  _detectorPromise.catch(function() { _detectorPromise = null; });
+  return _detectorPromise;
 }
 
-function _barcodeScanConfig(facingMode) {
-  return {
-    fps: 12,
-    // Zone de scan large et basse (pas carrée) : un code-barres 1D est bien plus large que haut,
-    // une zone carrée trop petite empêchait souvent de cadrer le code en entier → jamais détecté.
-    qrbox: function(viewfinderWidth, viewfinderHeight) {
-      return {
-        width: Math.round(Math.min(viewfinderWidth * 0.9, 340)),
-        height: Math.round(Math.min(viewfinderHeight * 0.5, 170))
-      };
-    },
-    aspectRatio: 1.777,
-    // Résolution demandée ici : start() n'accepte qu'UNE clé ({facingMode}) en premier argument,
-    // et rejetait l'appel quand width/height y étaient ajoutés — la caméra ne démarrait jamais.
-    videoConstraints: _barcodeVideoConstraints(facingMode || 'environment')
-  };
+function _setScanGuide(text) {
+  var g = document.getElementById('barcode-guide');
+  if (g) g.textContent = text;
 }
 
-// Contraintes vidéo partagées : une résolution plus haute donne une image plus nette,
-// indispensable pour décoder un code-barres (l'image par défaut du navigateur est souvent
-// trop basse résolution / floue pour que le décodeur y arrive).
-function _barcodeVideoConstraints(facingMode) {
-  return {
-    facingMode: facingMode,
-    width: { ideal: 1920 },
-    height: { ideal: 1080 }
-  };
+function _scanScreenVisible() {
+  var sc = document.getElementById('sc-scan-product');
+  return !!(sc && !sc.classList.contains('hidden'));
 }
 
-function startBarcodeCamera() {
+async function startBarcodeCamera() {
   var isEN = LANG === 'en';
   if (!_canScan('product')) { _showScanPaywall('product'); return; }
-  if (window._html5Scanner) {
-    try { window._html5Scanner.stop().catch(function(){}); } catch(e) {}
-    window._html5Scanner = null;
+  stopBarcodeCamera();
+  var reader = document.getElementById('reader');
+  var noCam = document.getElementById('barcode-no-camera');
+  if (!reader) return;
+  if (noCam) noCam.style.display = 'none';
+  var detectorReady = _getBarcodeDetector();           // téléchargement en parallèle de la caméra
+  detectorReady.catch(function(){});
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (noCam) noCam.style.display = 'flex';
+    return;
   }
-  var guide = document.getElementById('scan-guide') || document.getElementById('barcode-guide');
-  if (guide) guide.textContent = isEN ? 'Initializing...' : 'Initialisation...';
-  var readerId = document.getElementById('reader') ? 'reader' : 'barcode-video-container';
-  if (!document.getElementById('reader')) {
-    // Créer le conteneur reader si absent
-    var container = document.getElementById('barcode-camera-zone') || document.body;
-    var readerDiv = document.createElement('div');
-    readerDiv.id = 'reader';
-    readerDiv.style.cssText = 'width:100%;border-radius:20px;overflow:hidden;background:#111;min-height:240px;margin-bottom:12px';
-    if (container.firstChild) container.insertBefore(readerDiv, container.firstChild);
-    else container.appendChild(readerDiv);
-  }
+  _setScanGuide(isEN ? 'Opening camera…' : 'Ouverture de la caméra…');
+  var stream;
   try {
-    window._html5Scanner = new Html5Qrcode("reader", _barcodeScannerOptions());
-    window._html5Scanner.start(
-      { facingMode: "environment" },
-      _barcodeScanConfig("environment"),
-      function(code) { onBarcodeDetected(code); },
-      function() {}
-    ).then(function() {
-      if (guide) guide.textContent = isEN ? 'Point at barcode' : 'Pointe vers le code-barres';
-    }).catch(function(err) {
-      var denied = /NotAllowed|Permission/i.test(String(err && (err.name || err)));
-      if (guide) guide.textContent = denied
-        ? (isEN ? 'Camera denied — allow it in your settings' : 'Caméra refusée — autorise-la dans les réglages')
-        : (isEN ? 'Camera unavailable — use a photo or search by name' : 'Caméra indisponible — utilise une photo ou la recherche par nom');
-      console.warn('Scanner:', err);
-    });
-  } catch(e) {
-    if (guide) guide.textContent = 'Erreur: ' + e.message;
+    stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: {
+      facingMode: { ideal: _scan.facing }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+  } catch (err) {
+    var denied = /NotAllowed|Permission|Security/i.test(String(err && (err.name || err)));
+    _setScanGuide(denied
+      ? (isEN ? 'Camera denied — allow it in your settings' : 'Caméra refusée — autorise-la dans les réglages')
+      : (isEN ? 'Camera unavailable — use a photo or search by name' : 'Caméra indisponible — utilise une photo ou la recherche'));
+    return;
   }
+  if (!_scanScreenVisible()) { stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+  _scan.stream = stream;
+  // Mise au point continue quand le navigateur le permet (Android)
+  try {
+    var track = stream.getVideoTracks()[0];
+    var caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.focusMode && caps.focusMode.indexOf('continuous') > -1) track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+  } catch (e) {}
+  var v = document.createElement('video');
+  v.setAttribute('playsinline', ''); v.setAttribute('muted', ''); v.muted = true; v.autoplay = true;
+  v.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+  v.srcObject = stream;
+  reader.innerHTML = '';
+  reader.appendChild(v);
+  _scan.video = v;
+  try { await v.play(); } catch (e) {}
+  var detector;
+  try { detector = await detectorReady; }
+  catch (e) {
+    _setScanGuide(isEN ? 'Scanner unavailable — search by name' : 'Scanner indisponible — cherche par nom');
+    return;
+  }
+  if (_scan.video !== v) return;                       // caméra arrêtée entre-temps
+  _setScanGuide(isEN ? 'Barcode in the frame, 15–20 cm away' : 'Code-barres dans le cadre, à 15–20 cm');
+  _scan.frame = 0;
+  _scan.timer = setInterval(function() { _scanTick(detector, v); }, 120);
+}
+
+// Portion de la vidéo (en pixels réels de la caméra) qui correspond au cadre affiché.
+function _scanRegion(v, full) {
+  var vw = v.videoWidth, vh = v.videoHeight;
+  var sx = 0, sy = 0, sw = vw, sh = vh;
+  var frame = document.getElementById('scan-frame');
+  if (!full && frame && v.clientWidth && v.clientHeight) {
+    var s = Math.max(v.clientWidth / vw, v.clientHeight / vh);          // object-fit: cover
+    var ox = (v.clientWidth - vw * s) / 2, oy = (v.clientHeight - vh * s) / 2;
+    var vr = v.getBoundingClientRect(), fr = frame.getBoundingClientRect();
+    var mx = fr.width * 0.15, my = fr.height * 0.5;                     // marge : cadrage approximatif accepté
+    sx = Math.max(0, (fr.left - vr.left - mx - ox) / s);
+    sy = Math.max(0, (fr.top - vr.top - my - oy) / s);
+    sw = Math.min(vw - sx, (fr.width + 2 * mx) / s);
+    sh = Math.min(vh - sy, (fr.height + 2 * my) / s);
+  }
+  var k = Math.min(1, 1280 / sw);
+  var c = _scanCanvas || (_scanCanvas = document.createElement('canvas'));
+  c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+  c.getContext('2d', { willReadFrequently: true }).drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  return c;
+}
+
+function _pickBarcode(codes) {
+  for (var i = 0; codes && i < codes.length; i++) {
+    var raw = String(codes[i].rawValue || '');
+    if (/^\d{8,14}$/.test(raw)) return raw;
+  }
+  return null;
+}
+
+async function _scanTick(detector, v) {
+  if (_scan.busy || _scan.video !== v || v.readyState < 2 || !v.videoWidth) return;
+  _scan.busy = true;
+  try {
+    _scan.frame++;
+    var code = _pickBarcode(await detector.detect(_scanRegion(v, _scan.frame % 3 === 0)));
+    if (code && _scan.video === v) {
+      if (navigator.vibrate) { try { navigator.vibrate(60); } catch (e) {} }
+      stopBarcodeCamera();
+      onBarcodeDetected(code);
+    }
+  } catch (e) {
+  } finally { _scan.busy = false; }
 }
 
 // ── Système de toasts global (remplace alert) ──
@@ -7050,39 +7105,19 @@ function showConfirm(message, onConfirm, options) {
 }
 
 function stopBarcodeCamera() {
-  if (window._html5Scanner) {
-    try { window._html5Scanner.stop().catch(function(){}); } catch(e) {}
-    window._html5Scanner = null;
-  }
+  if (_scan.timer) clearInterval(_scan.timer);
+  _scan.timer = null;
+  if (_scan.stream) _scan.stream.getTracks().forEach(function(t){ try { t.stop(); } catch (e) {} });
+  _scan.stream = null;
+  if (_scan.video) { try { _scan.video.srcObject = null; } catch (e) {} }
+  _scan.video = null;
 }
 
 // Basculer entre caméra avant et arrière
 function flipBarcodeCamera() {
-  var isEN = LANG === 'en';
-  if (!window._html5Scanner || !Html5Qrcode.getCameras) {
-    showToast(isEN ? 'Camera switch unavailable' : 'Bascule caméra indisponible');
-    return;
-  }
-  // Toggle entre user (front) et environment (back)
-  window._currentFacing = (window._currentFacing === 'user') ? 'environment' : 'user';
-  var newFacing = window._currentFacing;
-  try {
-    window._html5Scanner.stop().then(function() {
-      window._html5Scanner = new Html5Qrcode("reader", _barcodeScannerOptions());
-      window._html5Scanner.start(
-        { facingMode: newFacing },
-        _barcodeScanConfig(newFacing),
-        function(code) { onBarcodeDetected(code); },
-        function() {}
-      ).catch(function(err) {
-        // Fallback : si la caméra avant n'existe pas, revenir à l'arrière
-        window._currentFacing = 'environment';
-        showToast(isEN ? 'Could not switch camera' : 'Impossible de changer de caméra');
-      });
-    }).catch(function(){});
-  } catch(e) {}
+  _scan.facing = _scan.facing === 'user' ? 'environment' : 'user';
+  startBarcodeCamera();
 }
-
 
 
 // ════════════ INDEX DE RECONNAISSANCE PHARMACIE ════════════
@@ -7600,31 +7635,22 @@ async function submitBarcodeContrib(code, prefillName, prefillBrand) {
 }
 
 function scanBarcodeFromFile(input) {
-  var file = input.files[0];
+  var file = input.files && input.files[0];
+  input.value = '';
   if (!file) return;
-  var img = new Image();
-  var url = URL.createObjectURL(file);
-  img.onload = function() {
-    if (barcodeDetector) {
-      barcodeDetector.detect(img).then(function(codes) {
-        URL.revokeObjectURL(url);
-        if (codes && codes.length > 0) {
-          onBarcodeDetected(codes[0].rawValue);
-        } else {
-          showToast("Aucun code-barres détecté dans cette image.", {type:"warning"});
-        }
-      });
-    } else {
-      URL.revokeObjectURL(url);
-      // Pas de détecteur natif (iPhone, Firefox…) : décodeur JavaScript de html5-qrcode.
-      var tmp = document.getElementById('reader-file-tmp');
-      if (!tmp) { tmp = document.createElement('div'); tmp.id = 'reader-file-tmp'; tmp.style.display = 'none'; document.body.appendChild(tmp); }
-      new Html5Qrcode('reader-file-tmp', _barcodeScannerOptions()).scanFile(file, false)
-        .then(function(code){ onBarcodeDetected(code); })
-        .catch(function(){ showToast(LANG === 'en' ? 'No barcode found in this image.' : 'Aucun code-barres détecté dans cette image.', {type:'warning'}); });
-    }
-  };
-  img.src = url;
+  var isEN = LANG === 'en';
+  var none = function() { showToast(isEN ? 'No barcode found in this photo. Try closer, sharper, well lit.' : 'Aucun code-barres trouvé sur cette photo. Essaie plus près, plus net, bien éclairé.', { type: 'warning' }); };
+  _setScanGuide(isEN ? 'Reading photo…' : 'Lecture de la photo…');
+  _getBarcodeDetector().then(async function(det) {
+    var bmp = await createImageBitmap(file);
+    // Photos de 12 Mpx : réduites à 2000 px, suffisant et bien plus rapide
+    var k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+    var c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    var code = _pickBarcode(await det.detect(c));
+    if (code) onBarcodeDetected(code); else none();
+  }).catch(none);
 }
 
 function resetBarcodeScanner() {
@@ -7632,8 +7658,7 @@ function resetBarcodeScanner() {
   if (resultDiv) { resultDiv.style.display = "none"; resultDiv.innerHTML = ""; }
   document.getElementById("barcode-camera-zone").style.display = "block";
   var guide = document.getElementById("barcode-guide");
-  if (guide) guide.textContent = "📷 Pointez le code-barres vers la caméra";
-  barcodeScanning = true;
+  if (guide) guide.textContent = LANG === 'en' ? 'Barcode in the frame, 15–20 cm away' : 'Code-barres dans le cadre, à 15–20 cm';
   startBarcodeCamera();
 }
 

@@ -1,7 +1,7 @@
 // SkinMatch — service worker
 // Doit être servi comme un vrai fichier depuis la même origine : un service worker
 // enregistré depuis une URL blob: est refusé par les navigateurs.
-const VERSION = 'sm-v6';
+const VERSION = 'sm-v7';
 const CACHE_APP  = VERSION + '-app';
 const CACHE_DATA = VERSION + '-data';
 
@@ -72,8 +72,9 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Polices, images, styles : cache d'abord, réseau en secours.
-  if (/\.(png|jpg|jpeg|svg|webp|woff2?|css)$/.test(url.pathname) || /fonts\.(googleapis|gstatic)/.test(url.hostname)) {
+  // Polices, images, styles et décodeur de codes-barres (vendor/, fichiers versionnés) :
+  // cache d'abord, réseau en secours.
+  if (/\.(png|jpg|jpeg|svg|webp|woff2?|css)$/.test(url.pathname) || /\/vendor\//.test(url.pathname) || /fonts\.(googleapis|gstatic)/.test(url.hostname)) {
     e.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((r) => {
         if (r.ok && (url.origin === location.origin || /fonts\./.test(url.hostname))) {
