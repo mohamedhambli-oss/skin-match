@@ -71,7 +71,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+  import { getAnalytics, logEvent, setUserId, setUserProperties, setAnalyticsCollectionEnabled } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCoE564VJlbcnWKTr24jPmAgNQHWfmZp4w",
@@ -87,13 +87,22 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const googleProvider = new GoogleAuthProvider();
-  // Analytics — initialisé seulement si compatible (pas de erreur sur old browsers ou iframes)
+  // Analytics — chargé UNIQUEMENT après accord explicite (bannière ou Paramètres).
+  // Sans accord, aucun cookie ni identifiant Google Analytics n'est déposé.
   let analytics = null;
+  window._enableAnalytics = () => {
+    try {
+      if (!analytics) analytics = getAnalytics(app);
+      setAnalyticsCollectionEnabled(analytics, true);
+    } catch(e) { console.warn('Analytics non initialisé:', e.message); }
+  };
+  window._disableAnalytics = () => {
+    if (analytics) { try { setAnalyticsCollectionEnabled(analytics, false); } catch(e) {} }
+  };
   try {
-    analytics = getAnalytics(app);
-  } catch(e) {
-    console.warn('Analytics non initialisé:', e.message);
-  }
+    const c = JSON.parse(localStorage.getItem('sm_cookie_consent') || 'null');
+    if (c && c.choice === 'accept') window._enableAnalytics();
+  } catch(e) {}
 
   // Exposer globalement pour les fonctions existantes
   window._auth = auth;
@@ -143,8 +152,6 @@
   onAuthStateChanged(auth, (user) => {
     window._currentUser = user;
     if (user) {
-      // Analytics : associer l'utilisateur
-      if (window._setUserId) window._setUserId(user.uid);
       if (window._logEvent) window._logEvent('login', { method: user.providerData?.[0]?.providerId || 'unknown' });
       // Charger profil Firestore
       getDoc(doc(db, 'users', user.uid)).then(snap => {
@@ -3148,6 +3155,8 @@ async function _aiCall(task, payload) {
 }
 
 async function normalizeAutreWithAI(autreTexte, type) {
+  // Texte libre (allergies, problèmes de peau) : envoyé à l'IA seulement avec accord.
+  if (typeof hasAiConsent === 'function' && !hasAiConsent()) return null;
   var res = await _aiCall("normalize", { type: type === "concern" ? "concern" : "allergy", text: String(autreTexte || "").slice(0, 200) });
   return res && Array.isArray(res.keys) ? res.keys : null;
 }
@@ -4285,12 +4294,6 @@ function setLang(l){
     // Cacher sc-lang explicitement
     var langScreen = document.getElementById('sc-lang');
     if (langScreen) langScreen.classList.add('hidden');
-    // Auto-accept cookies (pour ne pas bloquer les nouveaux users)
-    if (!localStorage.getItem('sm_cookie_consent')) {
-      localStorage.setItem('sm_cookie_consent', JSON.stringify({essential: true, ts: Date.now()}));
-    }
-    var cb = document.getElementById('cookie-banner');
-    if (cb) cb.style.display = 'none';
     if (typeof initQuestions === 'function') initQuestions();
     // Onboarding : si pas de compte connecté, on affiche les 3 slides
     if (!window._currentUser) {
@@ -4935,6 +4938,7 @@ function analyzeSkin() {
     var isEN = LANG === "en";
     // L'analyse passe par le proxy, qui exige un compte (quota par utilisateur).
     if (!window._currentUser) { _showLoginRequired('scan'); return; }
+    if (!hasAiConsent()) { askAiConsent(analyzeSkin); return; }
     if (!_canScan('skin')) { _showScanPaywall('skin'); return; }
     document.getElementById("scan-product-result").style.display = "block";
     document.getElementById("scan-loading").style.display = "block";
@@ -5510,7 +5514,6 @@ function doGenerate(){
     track('diagnostic_completed', {
       skin_type: ST.skinType,
       age_group: ST.ageGroup,
-      concerns: (ST.concerns||[]).join(','),
       budget: ST.budget,
       routine: ST.routine,
       products_count: (ST.result.steps||[]).length
@@ -7172,7 +7175,7 @@ function showConfirm(message, onConfirm, options) {
   var bCancel = document.createElement('button');
   bCancel.textContent = cancelLabel;
   bCancel.style.cssText = 'flex:1;padding:11px;border-radius:50px;border:1.5px solid #E8E0DC;background:#fff;color:#3D2B1F;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  bCancel.onclick = function(){ ov.remove(); };
+  bCancel.onclick = function(){ ov.remove(); if (typeof options.onCancel === 'function') options.onCancel(); };
   var bOk = document.createElement('button');
   bOk.textContent = okLabel;
   bOk.style.cssText = 'flex:1;padding:11px;border-radius:50px;border:none;background:'+(danger?'#C9302C':'#C4726A')+';color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
@@ -9722,7 +9725,7 @@ function renderDashboard() {
           try {
             localStorage.setItem('sm_community_waitlist','1');
             var uid = (window._currentUser && window._currentUser.uid) || 'anon';
-            if (window._logEvent) window._logEvent('community_waitlist_join', { uid: uid });
+            if (window._logEvent) window._logEvent('community_waitlist_join', {});
             // TODO post-lancement : sauvegarder l'inscription en base pour récupérer la liste d'attente
           } catch(e){}
           renderDashboard();
@@ -11242,10 +11245,114 @@ async function _confirmAccountDeletion() {
   }
 }
 
+// ══════════ CONSENTEMENTS RGPD ══════════
+// Trois consentements distincts, chacun retirable dans les Paramètres :
+//   sm_cookie_consent  → mesure d'audience (Google Analytics)
+//   sm_health_consent  → données de santé dans le compte (art. 9 RGPD) :
+//                        grossesse/allaitement, allergies, carnation (phototype)
+//   sm_ai_consent      → envoi d'une photo ou d'un texte libre à Google Gemini
+var HEALTH_CONSENT_VERSION = '1.0';
+function _readConsent(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+function _writeConsent(k, choice, version) {
+  try { localStorage.setItem(k, JSON.stringify({ choice: choice, version: version || '1.0', date: new Date().toISOString() })); } catch (e) {}
+}
+function healthConsentState() {
+  var c = _readConsent('sm_health_consent');
+  if (c) return c.choice;                                   // 'accept' | 'refuse'
+  var p = window._userProfile;
+  return p && p.healthConsentAt ? 'accept' : null;          // null : pas encore demandé
+}
+function hasHealthConsent() { return healthConsentState() === 'accept'; }
+function hasAiConsent() { var c = _readConsent('sm_ai_consent'); return !!(c && c.choice === 'accept'); }
+function _profileHasHealthData() {
+  return ST.pregnancy === 'enceinte' || ST.pregnancy === 'allaitante' || !!ST.phototype || (ST.allergies || []).length > 0;
+}
+
+// Profil envoyé au compte : liste fermée de champs, données de santé seulement avec accord.
+function _cloudProfile(withHealth) {
+  var p = { skinType: ST.skinType || null, ageGroup: ST.ageGroup || null, concerns: (ST.concerns || []).slice(),
+            budget: ST.budget || null, routine: ST.routine || null };
+  if (withHealth) { p.pregnancy = ST.pregnancy || null; p.phototype = ST.phototype || null; p.allergies = (ST.allergies || []).slice(); }
+  return p;
+}
+function _stripHealth(o) {
+  if (!o || typeof o !== 'object') return o;
+  var c = Object.assign({}, o); delete c.pregnancy; delete c.phototype; delete c.allergies; return c;
+}
+
+function askHealthConsent(onDone) {
+  var isEN = LANG === 'en';
+  showConfirm(isEN
+    ? '<strong>Save your health information to your account?</strong><br><br>Your profile includes <strong>health data</strong>: pregnancy or breastfeeding, allergies and skin tone (phototype). With your consent, it is stored in your account (Google Firebase) so you can find your routine on any device.<br><br>Without consent, it stays on this device only and your account keeps the rest of your routine. You can withdraw consent at any time in Settings.'
+    : '<strong>Enregistrer tes données de santé dans ton compte ?</strong><br><br>Ton profil contient des <strong>données de santé</strong> : grossesse ou allaitement, allergies et carnation (phototype). Avec ton accord, elles sont stockées dans ton compte (Google Firebase) pour retrouver ta routine sur tous tes appareils.<br><br>Sans accord, elles restent uniquement sur cet appareil et ton compte garde le reste de ta routine. Tu peux retirer ton accord à tout moment dans les Paramètres.',
+    function () { setHealthConsent(true).then(function () { if (onDone) onDone(true); }); },
+    { okLabel: isEN ? 'I agree' : "J'accepte", cancelLabel: isEN ? 'Device only' : 'Sur cet appareil',
+      onCancel: function () { setHealthConsent(false).then(function () { if (onDone) onDone(false); }); } });
+}
+
+async function setHealthConsent(accept) {
+  _writeConsent('sm_health_consent', accept ? 'accept' : 'refuse', HEALTH_CONSENT_VERSION);
+  if (!window._currentUser || !window._firebaseReady) return;
+  var ref = window._doc(window._db, 'users', window._currentUser.uid);
+  var upd = { healthConsentAt: accept ? new Date().toISOString() : null,
+              healthConsentVersion: accept ? HEALTH_CONSENT_VERSION : null };
+  try {
+    if (!accept) {
+      // Retrait : profil et routine réécrits sans les données de santé (updateDoc remplace le champ entier).
+      var snap = await window._getDoc(ref);
+      var d = snap.exists() ? snap.data() : {};
+      if (d.skinProfile) upd.skinProfile = _stripHealth(d.skinProfile);
+      if (d.lastRoutine) upd.lastRoutine = _stripHealth(d.lastRoutine);
+    }
+    await window._updateDoc(ref, upd);
+    if (window._userProfile) Object.assign(window._userProfile, upd);
+    if (window._savedRoutine && !accept) window._savedRoutine = _stripHealth(window._savedRoutine);
+  } catch (e) { console.warn('Enregistrement du consentement impossible :', e && e.code); }
+}
+
+function askAiConsent(onAccept) {
+  var isEN = LANG === 'en';
+  showConfirm(isEN
+    ? '<strong>Artificial intelligence analysis</strong><br><br>Your photo is sent to Google (Gemini API) to estimate your skin type. SkinMatch does not keep the photo. The result is an estimate, not medical advice.<br><br>You can withdraw consent in Settings.'
+    : '<strong>Analyse par intelligence artificielle</strong><br><br>Ta photo est envoyée à Google (API Gemini) pour estimer ton type de peau. SkinMatch ne conserve pas la photo. Le résultat est une estimation, pas un avis médical.<br><br>Tu peux retirer ton accord dans les Paramètres.',
+    function () { _writeConsent('sm_ai_consent', 'accept'); if (onAccept) onAccept(); },
+    { okLabel: isEN ? 'I agree' : "J'accepte", cancelLabel: isEN ? 'No thanks' : 'Non merci',
+      onCancel: function () { _writeConsent('sm_ai_consent', 'refuse'); } });
+}
+
+function toggleHealthConsentSetting() {
+  var isEN = LANG === 'en';
+  if (hasHealthConsent()) {
+    showConfirm(isEN ? 'Withdraw consent? Your health data (pregnancy, allergies, phototype) will be removed from your account and kept on this device only.'
+                     : 'Retirer ton accord ? Tes données de santé (grossesse, allergies, carnation) seront retirées de ton compte et resteront uniquement sur cet appareil.',
+      function () { setHealthConsent(false).then(renderSettings); },
+      { okLabel: isEN ? 'Withdraw' : 'Retirer', danger: true });
+  } else {
+    askHealthConsent(function (ok) {
+      if (ok && ST.result && window._currentUser) saveAndConfirm();
+      renderSettings();
+    });
+  }
+}
+function toggleAiConsentSetting() {
+  _writeConsent('sm_ai_consent', hasAiConsent() ? 'refuse' : 'accept');
+  renderSettings();
+}
+function toggleAnalyticsSetting() {
+  var c = _readConsent('sm_cookie_consent');
+  cookieChoice(c && c.choice === 'accept' ? 'refuse' : 'accept');
+  renderSettings();
+}
+
 async function saveAndConfirm() {
   if (!window._currentUser) { _showLoginRequired('save'); return; }
   var btn = document.getElementById('btn-save-routine');
   if (!ST.result) return;
+  // Première sauvegarde avec des données de santé : demander l'accord explicite d'abord.
+  if (healthConsentState() === null && _profileHasHealthData()) {
+    askHealthConsent(function(){ saveAndConfirm(); });
+    return;
+  }
   await saveRoutineToFirestore({skinType:ST.skinType,ageGroup:ST.ageGroup,concerns:ST.concerns,allergies:ST.allergies,budget:ST.budget,routine:ST.routine,products:(ST.result.steps||[]).map(function(s){return{key:s.key,nom:s.nom,marque:s.marque,prix:s.prix};}),savedAt:new Date().toISOString()});
   if(btn) btn.style.display='none';
   window._routineSaved=true;
@@ -11254,28 +11361,36 @@ async function saveAndConfirm() {
 }
 
 async function saveRoutineToFirestore(routineData) {
-  // Sauvegarder dans l'historique
-  try {
-    if (window._firebaseReady && window._currentUser) {
-      var histEntry = {
-        date: new Date().toISOString(),
-        skinType: routineData.skinType,
-        budget: routineData.budget,
-        products: (routineData.products||[]).map(function(p){ return {key:p.key||p, nom:p.nom||p.key||p}; }),
-        totalPrix: (routineData.products||[]).reduce(function(s,p){ return s+(parseFloat(String(p.prix||0).replace(/[^0-9.]/g,''))||0); },0)
-      };
-      window._getDoc(window._doc(window._db,'users',window._currentUser.uid)).then(function(snap){
-        var hist = snap.exists()&&snap.data().routineHistory ? snap.data().routineHistory : [];
-        hist.unshift(histEntry);
-        if(hist.length>10) hist=hist.slice(0,10);
-        window._setDoc(window._doc(window._db,'users',window._currentUser.uid),{routineHistory:hist},{merge:true});
-      });
-    }
-  } catch(e) {}
   if (!window._currentUser || !window._firebaseReady) return;
+  var withHealth = hasHealthConsent();
+  // Données de santé retirées de la routine sans accord explicite.
+  var routine = _stripHealth(routineData);
+  if (withHealth) {
+    routine.allergies = (ST.allergies || []).slice();
+    routine.pregnancy = ST.pregnancy || null;
+    routine.phototype = ST.phototype || null;
+  }
+  var uid = window._currentUser.uid;
+  var ref = window._doc(window._db, 'users', uid);
+  // Historique (sans données de santé)
   try {
-    await window._updateDoc(window._doc(window._db, 'users', window._currentUser.uid), {
-      lastRoutine: routineData, skinProfile: ST, updatedAt: new Date().toISOString()
+    var histEntry = {
+      date: new Date().toISOString(),
+      skinType: routineData.skinType,
+      budget: routineData.budget,
+      products: (routineData.products||[]).map(function(p){ return {key:p.key||p, nom:p.nom||p.key||p}; }),
+      totalPrix: (routineData.products||[]).reduce(function(s,p){ return s+(parseFloat(String(p.prix||0).replace(/[^0-9.]/g,''))||0); },0)
+    };
+    window._getDoc(ref).then(function(snap){
+      var hist = snap.exists()&&snap.data().routineHistory ? snap.data().routineHistory : [];
+      hist.unshift(histEntry);
+      if(hist.length>10) hist=hist.slice(0,10);
+      window._setDoc(ref,{routineHistory:hist},{merge:true});
+    }).catch(function(){});
+  } catch(e) {}
+  try {
+    await window._updateDoc(ref, {
+      lastRoutine: routine, skinProfile: _cloudProfile(withHealth), updatedAt: new Date().toISOString()
     });
   } catch(e) { console.log('Firestore save error:', e); }
 }
@@ -11574,6 +11689,14 @@ function renderSettings() {
         { label: isEN ? 'Change password' : 'Changer mon mot de passe', value: '', action: 'doForgotPassword()' },
         { label: isEN ? 'Logout' : 'Se déconnecter', value: '', action: 'doLogout()', danger: true },
         { label: isEN ? 'Delete my account' : 'Supprimer mon compte', value: '', action: 'deleteMyAccount()', danger: true },
+      ]
+    },
+    {
+      title: isEN ? '🔒 Privacy' : '🔒 Confidentialité',
+      items: [
+        { label: isEN ? 'Health data in my account' : 'Données de santé dans mon compte', toggle: hasHealthConsent(), action: 'toggleHealthConsentSetting()' },
+        { label: isEN ? 'AI analysis (photo, free text)' : 'Analyse IA (photo, texte libre)', toggle: hasAiConsent(), action: 'toggleAiConsentSetting()' },
+        { label: isEN ? 'Audience measurement' : "Mesure d'audience", toggle: !!((_readConsent('sm_cookie_consent')||{}).choice === 'accept'), action: 'toggleAnalyticsSetting()' },
       ]
     },
     {
@@ -14001,15 +14124,15 @@ function showCookieBanner() {
           '<div style="font-weight:700;font-size:14px;color:#3D2B1F;margin-bottom:4px">' + (isEN ? 'Cookies & privacy' : 'Cookies et confidentialité') + '</div>' +
           '<div style="font-size:12px;color:#5A4A42;line-height:1.5">' +
             (isEN
-              ? 'We use only essential cookies for the app to work and to remember your routine. No tracking, no advertising. '
-              : 'Nous utilisons uniquement des cookies techniques nécessaires au fonctionnement de l\'app et à la sauvegarde de ta routine. Aucun pistage, aucune publicité. ') +
+              ? 'The app stores your routine and preferences on your device to work. With your consent, we also measure audience (Google Analytics) to improve SkinMatch. No advertising. '
+              : 'L\'app enregistre ta routine et tes préférences sur ton appareil pour fonctionner. Avec ton accord, nous mesurons aussi l\'audience (Google Analytics) pour améliorer SkinMatch. Aucune publicité. ') +
             '<a href="javascript:void(0)" onclick="go(\'privacy\')" style="color:#C4726A;text-decoration:underline">' + (isEN ? 'Learn more' : 'En savoir plus') + '</a>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:10px">' +
-        '<button onclick="cookieChoice(\'refuse\')" style="flex:1;padding:11px;border-radius:50px;border:1.5px solid #C4726A;background:#fff;color:#C4726A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (isEN ? 'Refuse non-essential' : 'Refuser non-essentiels') + '</button>' +
-        '<button onclick="cookieChoice(\'accept\')" style="flex:1;padding:11px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">' + (isEN ? 'Accept all' : 'Tout accepter') + '</button>' +
+        '<button onclick="cookieChoice(\'refuse\')" style="flex:1;padding:11px;border-radius:50px;border:1.5px solid #C4726A;background:#fff;color:#C4726A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">' + (isEN ? 'Refuse' : 'Refuser') + '</button>' +
+        '<button onclick="cookieChoice(\'accept\')" style="flex:1;padding:11px;border-radius:50px;border:1.5px solid #C4726A;background:#fff;color:#C4726A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">' + (isEN ? 'Accept' : 'Accepter') + '</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(banner);
@@ -14034,6 +14157,8 @@ function cookieChoice(choice) {
       version: '1.0'
     }));
   } catch(e) {}
+  if (choice === 'accept') { if (window._enableAnalytics) window._enableAnalytics(); }
+  else if (window._disableAnalytics) window._disableAnalytics();
   // Retirer le padding ajouté pour la bannière
   document.querySelectorAll('[data-cookie-pad="1"]').forEach(function(c){
     c.style.paddingBottom = c.dataset.cookiePadPrev || '';
