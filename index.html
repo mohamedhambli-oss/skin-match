@@ -7575,14 +7575,15 @@ async function submitBarcodeContrib(code, prefillName, prefillBrand) {
     return;
   }
 
-  // Sauvegarder dans Firestore collection community_eans
-  if (window._firebaseReady) {
+  // Sauvegarder dans Firestore collection community_eans (compte requis par les règles ;
+  // une fiche existante n'est jamais écrasée, l'erreur est alors simplement ignorée).
+  if (window._firebaseReady && window._currentUser) {
     try {
       await window._setDoc(window._doc(window._db, "community_eans", code), {
         ean: code,
         nom: name,
         marque: brand,
-        addedBy: window._currentUser ? window._currentUser.uid : "anonymous",
+        addedBy: window._currentUser.uid,
         addedAt: new Date().toISOString(),
         validated: false
       });
