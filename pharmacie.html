@@ -5802,7 +5802,8 @@ function _lifespanFor(etape) {
   return 2;
 }
 
-function _parsePrice(prix) {
+// Prix seul, sans devise (coût mensuel). Nom distinct de _parsePrice, qui renvoie {value, currency}.
+function _priceNumber(prix) {
   if (!prix) return 0;
   var m = String(prix).replace(',', '.').match(/[\d.]+/);
   return m ? parseFloat(m[0]) : 0;
@@ -5856,7 +5857,7 @@ function buildRoutineInsights(r, isEN) {
   // ── 1. Coût mensuel réel ──
   var monthly = 0, lines = [];
   r.steps.forEach(function(s){
-    var price = _parsePrice(s.prix);
+    var price = _priceNumber(s.prix);
     if (!price) return;
     var months = _lifespanFor(s.etape);
     var perMonth = price / months;
