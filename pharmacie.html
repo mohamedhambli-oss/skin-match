@@ -893,25 +893,10 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
       <span id="btn-start-top-text">Analyser ma peau sans compte</span> &#8594;
     </button>
 
-    <!-- 3. AVIS / TÉMOIGNAGES -->
-    <div style="margin-bottom:22px">
-      <div style="font-size:9px;font-weight:700;color:rgba(196,114,106,.85);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:12px">&#9733; Ils ont test&#233; SkinMatch</div>
-      <div style="background:rgba(255,255,255,.85);border-radius:16px;padding:14px 16px;border:1px solid rgba(196,114,106,.12)">
-        <div style="margin-bottom:8px"><span style="color:#F5A623;font-size:12px">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
-        <div id="test-text" style="font-size:13px;color:#3D2B1F;line-height:1.6;font-style:italic;margin-bottom:10px;transition:opacity .3s">Chaque produit est analysé ingrédient par ingrédient, pas selon sa marque.</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div id="test-av" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C4726A,#A85A52);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">S</div>
-          <div style="text-align:left">
-            <div id="test-name" style="font-size:11px;font-weight:700;color:#3D2B1F">Comment ça marche</div>
-            <div id="test-skin" style="font-size:10px;color:#B0958F">Analyse de composition</div>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:center;gap:6px;margin-top:8px" id="test-dots">
-        <div style="width:6px;height:6px;border-radius:50%;background:#C4726A;transition:all .3s"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:rgba(196,114,106,.3);transition:all .3s"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:rgba(196,114,106,.3);transition:all .3s"></div>
-      </div>
+    <!-- 3. COMMENT ÇA MARCHE (remplace les témoignages : aucun avis client réel à ce jour) -->
+    <div style="margin-bottom:22px;background:rgba(255,255,255,.85);border-radius:16px;padding:14px 16px;border:1px solid rgba(196,114,106,.12)">
+      <div id="how-title" style="font-size:9px;font-weight:700;color:rgba(196,114,106,.85);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:8px">Comment ça marche</div>
+      <div id="how-text" style="font-size:13px;color:#3D2B1F;line-height:1.6;text-align:center">Chaque produit est analysé ingrédient par ingrédient, puis comparé à ton profil : type de peau, allergies déclarées, grossesse ou allaitement.</div>
     </div>
 
     <!-- 4. BOUTONS D'ACTION -->
@@ -4432,33 +4417,6 @@ function finishOnboarding() {
 // inventés. Diffuser de faux avis de consommateurs est une pratique commerciale
 // trompeuse (art. L121-4 28° du Code de la consommation). Ils sont remplacés par
 // des faits vérifiables sur le fonctionnement de l'application.
-var _TESTS = [
-  {av:"✓", color:"linear-gradient(135deg,#5E8C6A,#3E5E48)", text:"Chaque produit est analysé ingrédient par ingrédient, pas selon sa marque.", name:"Comment ça marche", skin:"Analyse de composition"},
-  {av:"⚖", color:"linear-gradient(135deg,#C4726A,#A85A52)", text:"95 substances allergisantes détectées, conformément au règlement européen 2023/1545.", name:"Conformité", skin:"Annexe III à jour"},
-  {av:"⛔", color:"linear-gradient(135deg,#B4544B,#8B3030)", text:"Les substances interdites à la vente dans l'UE sont signalées, y compris sur d'anciens stocks.", name:"Sécurité", skin:"Lilial et Lyral"}
-];
-var _testIdx = 0;
-function _rotateTest() {
-  _testIdx = (_testIdx+1) % _TESTS.length;
-  var t = _TESTS[_testIdx];
-  var el = document.getElementById("test-text");
-  var av = document.getElementById("test-av");
-  var nm = document.getElementById("test-name");
-  var sk = document.getElementById("test-skin");
-  var dots = document.querySelectorAll("#test-dots div");
-  if (!el) return;
-  el.style.opacity = "0";
-  setTimeout(function(){
-    el.textContent = t.text;
-    if (av) { av.textContent = t.av; av.style.background = t.color; }
-    if (nm) nm.textContent = t.name;
-    if (sk) sk.textContent = t.skin;
-    dots.forEach(function(d,i){ d.style.background = i===_testIdx?"#C4726A":"rgba(196,114,106,.3)"; });
-    el.style.opacity = "1";
-  }, 200);
-}
-setInterval(_rotateTest, 4000);
-
 function applyWelcomeLang(){
   const l = T[LANG]||T.fr;
   // Welcome
@@ -4466,6 +4424,10 @@ function applyWelcomeLang(){
   if(heroT) heroT.innerHTML = LANG==='en'?'Analyze your skin<br>in 60 seconds':'Analyse ta peau<br>en 60 secondes';
   const heroD = document.getElementById('welcome-tagline');
   if(heroD) heroD.textContent = LANG==='en'?'Discover your perfect routine, personalized for your skin type, age and budget.':'Découvre ta routine parfaite, personnalisée selon ton type de peau, ton âge et ton budget.';
+  const howT = document.getElementById('how-title');
+  if(howT) howT.textContent = LANG==='en'?'How it works':'Comment ça marche';
+  const howD = document.getElementById('how-text');
+  if(howD) howD.textContent = LANG==='en'?'Each product is analysed ingredient by ingredient, then matched against your profile: skin type, declared allergies, pregnancy or breastfeeding.':'Chaque produit est analysé ingrédient par ingrédient, puis comparé à ton profil : type de peau, allergies déclarées, grossesse ou allaitement.';
   const badge = document.getElementById('welcome-badge');
   if(badge) badge.textContent = 'Skincare Intelligence';
   const btnStart = document.getElementById('btn-start-text');
@@ -5756,125 +5718,6 @@ function showRoutineWelcome(callback){
   }, 5400);
 }
 
-// ── AVIS COMMUNAUTÉ : avis déterministes par produit (cohérents entre les visites) ──
-var COMMUNITY_REVIEWS_FR = [
-  { name:"Léa", age:"26-35", peau:"mixte",   note:5, txt:"Vraiment top, ma peau est nettement plus claire après 3 semaines." },
-  { name:"Camille", age:"18-25", peau:"grasse", note:4, txt:"Bon produit, l'effet matifiant marche bien sur ma peau grasse." },
-  { name:"Sarah", age:"26-35", peau:"sensible", note:5, txt:"Aucune réaction sur ma peau sensible, et le résultat est là." },
-  { name:"Inès", age:"18-25", peau:"mixte", note:4, txt:"Texture agréable, pas grasse. Je le recommande." },
-  { name:"Manon", age:"36-45", peau:"seche", note:5, txt:"Vraiment hydratant, ma peau ne tiraille plus le matin." },
-  { name:"Yasmine", age:"26-35", peau:"acne", note:5, txt:"Mes boutons ont diminué en 2 semaines, je suis bluffée." },
-  { name:"Emma", age:"18-25", peau:"normale", note:4, txt:"Pénètre rapidement, parfait sous le maquillage." },
-  { name:"Chloé", age:"26-35", peau:"mixte", note:4, txt:"Bon rapport qualité-prix, je rachète." },
-  { name:"Anaïs", age:"36-45", peau:"sensible", note:5, txt:"Doux, efficace, sans parfum. Idéal pour moi." },
-  { name:"Nora", age:"26-35", peau:"taches", note:4, txt:"Mes taches s'estompent doucement, je continue." },
-  { name:"Julie", age:"36-45", peau:"rides", note:5, txt:"Effet repulpant visible au bout d'1 mois." },
-  { name:"Maya", age:"18-25", peau:"grasse", note:4, txt:"Effet propre sans assécher, vraiment bien." }
-];
-var COMMUNITY_REVIEWS_EN = [
-  { name:"Lea", age:"26-35", peau:"mixte",   note:5, txt:"Truly great, my skin is much clearer after 3 weeks." },
-  { name:"Camille", age:"18-25", peau:"grasse", note:4, txt:"Good product, mattifying effect works well on my oily skin." },
-  { name:"Sarah", age:"26-35", peau:"sensible", note:5, txt:"No reaction on my sensitive skin, and the result is there." },
-  { name:"Ines", age:"18-25", peau:"mixte", note:4, txt:"Nice texture, not greasy. I recommend it." },
-  { name:"Manon", age:"36-45", peau:"seche", note:5, txt:"Really hydrating, my skin no longer feels tight." },
-  { name:"Yasmine", age:"26-35", peau:"acne", note:5, txt:"My breakouts decreased within 2 weeks, I'm amazed." },
-  { name:"Emma", age:"18-25", peau:"normale", note:4, txt:"Absorbs quickly, perfect under makeup." },
-  { name:"Chloe", age:"26-35", peau:"mixte", note:4, txt:"Good value for money, I'll buy it again." },
-  { name:"Anais", age:"36-45", peau:"sensible", note:5, txt:"Gentle, effective, fragrance-free. Perfect for me." },
-  { name:"Nora", age:"26-35", peau:"taches", note:4, txt:"My spots are slowly fading, I'm sticking with it." },
-  { name:"Julie", age:"36-45", peau:"rides", note:5, txt:"Visible plumping effect after a month." },
-  { name:"Maya", age:"18-25", peau:"grasse", note:4, txt:"Clean feeling without drying out, really good." }
-];
-
-// Hash déterministe d'une string -> int
-function _reviewHash(str){
-  var h = 0;
-  for (var i = 0; i < str.length; i++) {
-    h = ((h << 5) - h) + str.charCodeAt(i);
-    h |= 0;
-  }
-  return Math.abs(h);
-}
-
-function renderCommunityReviews(s, isEN){
-  var pool = isEN ? COMMUNITY_REVIEWS_EN : COMMUNITY_REVIEWS_FR;
-  // Sélection déterministe basée sur la clé du produit
-  var seed = _reviewHash(s.key || s.nom || 'x');
-  // Priorité aux avis qui matchent le type de peau ou les concerns de l'utilisateur
-  var skin = (ST.skinType || '').toLowerCase();
-  var concerns = ST.concerns || [];
-  var matchPool = pool.filter(function(r){
-    if (skin && r.peau === skin) return true;
-    if (concerns.indexOf(r.peau) !== -1) return true;
-    return false;
-  });
-  var basePool = matchPool.length >= 2 ? matchPool : pool;
-  // Sélectionner 2 avis distincts
-  var i1 = seed % basePool.length;
-  var i2 = (seed * 7 + 3) % basePool.length;
-  if (i2 === i1) i2 = (i1 + 1) % basePool.length;
-  var picks = [basePool[i1], basePool[i2]];
-  // Calculer une note moyenne déterministe (réaliste : 4.2 - 4.8)
-  var avg = (((seed % 7) / 10) + 4.2).toFixed(1);
-  var totalReviews = 30 + (seed % 240); // entre 30 et 269
-
-  var stars = function(n){
-    var out = '';
-    for (var i = 1; i <= 5; i++) {
-      out += '<span style="color:'+(i<=n?'#F5A623':'#E0D5CC')+';font-size:11px">★</span>';
-    }
-    return out;
-  };
-
-  var title = isEN ? 'Community reviews' : 'Avis communauté';
-  var verified = isEN ? 'Verified' : 'Vérifié';
-  var samePeau = isEN ? 'Same skin type' : 'Même type de peau';
-
-  var items = picks.map(function(r){
-    return ''
-      +'<div style="padding:10px 12px;background:#FBF7F4;border-radius:10px;margin-top:6px">'
-        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-          +'<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C4726A,#A85A52);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+r.name.charAt(0)+'</div>'
-          +'<div style="font-size:11px;font-weight:700;color:#3D2B1F">'+r.name+'</div>'
-          +'<div style="font-size:9px;color:#8B6F5E">· '+r.age+'</div>'
-          +'<div style="margin-left:auto">'+stars(r.note)+'</div>'
-        +'</div>'
-        +'<div style="font-size:11px;color:#5A4A42;line-height:1.5;font-style:italic">"'+r.txt+'"</div>'
-        +'<div style="display:flex;gap:6px;margin-top:4px">'
-          +'<span style="font-size:9px;color:#2E7D32;background:#E8F5E9;padding:1px 6px;border-radius:8px;font-weight:600">✓ '+verified+'</span>'
-          +(skin && r.peau === skin ? '<span style="font-size:9px;color:#C4726A;background:#FDF0E6;padding:1px 6px;border-radius:8px;font-weight:600">'+samePeau+'</span>' : '')
-        +'</div>'
-      +'</div>';
-  }).join('');
-
-  return ''
-    +'<div style="margin-top:12px;padding-top:12px;border-top:1px solid #F0E8E5">'
-      +'<button type="button" onclick="toggleReviews(\''+s.key+'\')" id="reviews-toggle-'+s.key+'" '
-        +'style="width:100%;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;gap:8px">'
-        +'<div style="display:flex;align-items:center;gap:8px">'
-          +'<div style="font-size:10px;font-weight:700;color:#9A8B7C;text-transform:uppercase;letter-spacing:.5px">💬 '+title+'</div>'
-          +'<div style="display:flex;align-items:center;gap:4px">'
-            +stars(Math.round(parseFloat(avg)))
-            +'<span style="font-size:11px;font-weight:700;color:#3D2B1F;margin-left:4px">'+avg+'</span>'
-            +'<span style="font-size:10px;color:#8B6F5E">('+totalReviews+')</span>'
-          +'</div>'
-        +'</div>'
-        +'<span id="reviews-chevron-'+s.key+'" style="font-size:14px;color:#C4726A;transition:transform .2s ease;display:inline-block">▾</span>'
-      +'</button>'
-      +'<div id="reviews-body-'+s.key+'" style="display:none;margin-top:8px">'+items+'</div>'
-    +'</div>';
-}
-
-// Replier / déplier la liste des avis pour un produit
-function toggleReviews(key){
-  var body = document.getElementById('reviews-body-' + key);
-  var chevron = document.getElementById('reviews-chevron-' + key);
-  if (!body) return;
-  var isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'block';
-  if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-}
-
 // ══════════ CARNATION (PHOTOTYPE) : CONSEIL TACHES ET SOLAIRE ══════════
 // Repose sur des données dermatologiques établies : le mécanisme dominant de l'hyperpigmentation
 // et la stratégie photoprotectrice changent nettement selon le phototype. Les phototypes clairs
@@ -6164,8 +6007,6 @@ function renderResult(){
           : ``
         }
 
-        <!-- 3. AVIS COMMUNAUTÉ (juste après Mon Skin Match + Yuka) -->
-        ${renderCommunityReviews(s, isEN)}
 
         <!-- 4. SÉPARATION + ACTIONS SECONDAIRES -->
         <div style="border-top:1px solid #F0E8E5;margin-top:14px;padding-top:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -12857,11 +12698,6 @@ function cancelChallenge(id) {
   renderDashboard();
 }
 
-var COMM_POSTS = [
-  // Fil communautaire désactivé : les publications étaient fictives.
-];
-var SKIN_FILTERS=[{key:null,lbl:'Tous'},{key:'mixte',lbl:'Mixte'},{key:'grasse',lbl:'Grasse'},{key:'seche',lbl:'Sèche'},{key:'sensible',lbl:'Sensible'},{key:'normale',lbl:'Normale'}];
-var _skinFilter=null;
 </script>
 
 <!-- ══ MODALE CGU OVERLAY ══ -->
