@@ -1,2 +1,10 @@
 # Local Netlify folder
 .netlify
+
+# Ne jamais versionner de clé ni de dépendances
+config.js
+.env
+functions/node_modules/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

@@ -6,11 +6,11 @@
 <!-- CSP : restreint les sources autorisées pour script, style, img, frame, etc. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://apis.google.com https://www.googleapis.com https://generativelanguage.googleapis.com;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://apis.google.com https://www.googleapis.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https:;
   font-src 'self' data: https://fonts.gstatic.com;
-  connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.openweathermap.org https://api.open-meteo.com https://geocoding-api.open-meteo.com https://world.openfoodfacts.org https://world.openbeautyfacts.org https://*.openbeautyfacts.org;
+  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.openweathermap.org https://api.open-meteo.com https://geocoding-api.open-meteo.com https://world.openfoodfacts.org https://world.openbeautyfacts.org https://*.openbeautyfacts.org;
   media-src 'self' blob:;
   frame-src https://www.youtube.com https://www.tiktok.com https://*.firebaseapp.com;
   object-src 'none';
@@ -65,9 +65,6 @@
 <title>SkinMatch — Your Skin, Your Routine</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
-<!-- Clé API chargée depuis un fichier local NON versionné (voir .gitignore).
-     Sans ce fichier, les fonctions IA sont simplement désactivées : rien ne casse. -->
-<script src="config.js" onerror="console.info('config.js absent : fonctions IA désactivées')"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -3009,30 +3006,34 @@ function compatExplainHTML(key, skin, concern, age, allergies, isEN) {
 
 
 
-async function normalizeAutreWithAI(autreTexte, type) {
-  // Appel à Claude pour analyser le texte libre
-  var systemPrompt = type === 'concern'
-    ? "Tu es un expert skincare. L'utilisateur décrit un problème de peau en texte libre. Retourne UNIQUEMENT une liste JSON des clés correspondantes parmi : acne, taches, rides, pores, rougeurs, cernes, eclat, deshydratation, imperfections, sensibilite. Exemple: [\"rougeurs\",\"sensibilite\"]. Si aucune correspondance, retourne []."
-    : "Tu es un expert cosmétique. L'utilisateur décrit une allergie en texte libre. Retourne UNIQUEMENT une liste JSON des catégories correspondantes parmi : Parfums / Fragrances, Parabènes, Alcool, Sulfates (SLS/SLES), Silicones, Huiles essentielles, Acide salicylique, Rétinol, Vitamine C, Acides (AHA/BHA), Methylisothiazolinone (MIT), Methylchloroisothiazolinone (MCIT), Phénoxyéthanol, Limonène, Linalool, Géraniol, Citronellol, Citral, Eugénol, Coumarine, Lanoline, Propylène Glycol, Bisabolol, Oxybenzone (filtre UV), Octocrylène (filtre UV). Exemple: [\"Parfums / Fragrances\"]. Si aucune correspondance, retourne [].";
+// ── IA (Gemini) : appels via le proxy serveur functions/index.js ──
+// La clé d'API n'est plus jamais envoyée au navigateur. Le proxy exige un utilisateur
+// Firebase connecté et applique un quota quotidien ; sans compte, l'IA est simplement
+// indisponible et l'app utilise ses correspondances par mots-clés.
+var SKINMATCH_AI_URL = "https://europe-west1-skin-match-c7189.cloudfunctions.net/gemini";
 
+async function _aiCall(task, payload) {
+  var user = window._currentUser;
+  if (!user || !SKINMATCH_AI_URL || document.title.indexOf("Pharmacie") > -1) return { error: "auth" };
   try {
-    var GEMINI_KEY = (window.SKINMATCH_GEMINI_KEY || ""); // définie dans config.js, jamais versionnée
-    if (!GEMINI_KEY) return null;   // pas de clé : on n'appelle pas l'API
-    var response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_KEY, {
+    var token = await user.getIdToken();
+    var body = Object.assign({ task: task }, payload);
+    var r = await fetch(SKINMATCH_AI_URL, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt + "\n\nTexte utilisateur: " + autreTexte }] }],
-        generationConfig: { maxOutputTokens: 200, temperature: 0.1 }
-      })
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify(body)
     });
-    var data = await response.json();
-    var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "[]";
-    text = text.replace(/```json|```/g, "").trim();
-    return JSON.parse(text);
-  } catch(e) {
-    return [];
+    var data = await r.json().catch(function(){ return {}; });
+    if (!r.ok) return { error: data.error || ("http_" + r.status) };
+    return data;
+  } catch (e) {
+    return { error: "network" };
   }
+}
+
+async function normalizeAutreWithAI(autreTexte, type) {
+  var res = await _aiCall("normalize", { type: type === "concern" ? "concern" : "allergy", text: String(autreTexte || "").slice(0, 200) });
+  return res && Array.isArray(res.keys) ? res.keys : null;
 }
 
 function normalizeAutreConcerns(concerns) {
@@ -4811,74 +4812,45 @@ function resetScan() {
 
 function analyzeSkin() {
     if (!scanBase64) return;
-    if (!_canScan('skin')) { _showScanPaywall('skin'); return; }
     var isEN = LANG === "en";
+    // L'analyse passe par le proxy, qui exige un compte (quota par utilisateur).
+    if (!window._currentUser) { _showLoginRequired('scan'); return; }
+    if (!_canScan('skin')) { _showScanPaywall('skin'); return; }
     document.getElementById("scan-product-result").style.display = "block";
     document.getElementById("scan-loading").style.display = "block";
     document.getElementById("scan-analysis").style.display = "none";
     document.getElementById("scan-btn").disabled = true;
     document.getElementById("scan-btn-text").textContent = isEN ? "Analyzing..." : "Analyse en cours...";
+    var prev = document.getElementById("scan-error-msg");
+    if (prev) prev.style.display = "none";
 
-    var promptEN = "You are a professional dermatologist. Analyze this face photo and respond ONLY with a valid JSON object, no markdown, no explanation:\n{\"skinType\":\"dry|oily|combination|normal|sensitive\",\"skinTypeLabel\":\"string\",\"confidence\":\"High|Medium|Low\",\"description\":\"2-3 sentences about the skin\",\"concerns\":[\"concern1\"],\"advice\":\"one expert tip\",\"prefilledConcerns\":[\"acne|taches|rides|pores|rougeurs|cernes|eclat|deshydratation|imperfections|sensibilite\"]}";
-
-    var promptFR = "Tu es un dermatologue professionnel. Analyse cette photo de visage et reponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans explication:\n{\"skinType\":\"seche|grasse|mixte|normale|sensible\",\"skinTypeLabel\":\"string\",\"confidence\":\"Elevee|Moyenne|Faible\",\"description\":\"2-3 phrases sur la peau\",\"concerns\":[\"probleme1\"],\"advice\":\"un conseil expert\",\"prefilledConcerns\":[\"acne|taches|rides|pores|rougeurs|cernes|eclat|deshydratation|imperfections|sensibilite\"]}";
-
-    var prompt = isEN ? promptEN : promptFR;
-
-    var GEMINI_KEY = (window.SKINMATCH_GEMINI_KEY || ""); // définie dans config.js, jamais versionnée
-    if (!GEMINI_KEY) return;   // pas de clé : on n'appelle pas l'API
-    fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_KEY, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            contents: [{
-                parts: [
-                    { inline_data: { mime_type: "image/jpeg", data: scanBase64 } },
-                    { text: prompt }
-                ]
-            }],
-            generationConfig: { maxOutputTokens: 1000, temperature: 0.1 }
-        })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        console.log("Gemini response:", JSON.stringify(data).substring(0, 500));
-        var rawText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "";
-        if (!rawText && data.error) { throw new Error("Gemini: " + data.error.message + " (code:" + data.error.code + ")"); }
-        if (!rawText) { throw new Error("Réponse vide. Data: " + JSON.stringify(data).substring(0,200)); }
-        var analysis;
-        try {
-            var clean = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-            analysis = JSON.parse(clean);
-        } catch(e) {
-            var match = rawText.match(/\{[\s\S]*\}/);
-            if (match) {
-                analysis = JSON.parse(match[0]);
-            } else {
-                throw new Error("Invalid JSON");
-            }
-        }
-        _incrementScan("skin"); scanResult = analysis;
-        showScanResult(analysis);
-    })
-    .catch(function(err) {
-        console.error("Scan error:", err);
-        console.error("Scan error detail:", JSON.stringify(err));
-        document.getElementById("scan-loading").style.display = "none";
-        document.getElementById("scan-btn").disabled = false;
-        document.getElementById("scan-btn-text").textContent = isEN ? "Retry" : "Réessayer";
-        // Afficher un message d'erreur contextuel au lieu d'une alert
-        var errDiv = document.getElementById("scan-error-msg");
-        if (!errDiv) {
-            errDiv = document.createElement("div");
-            errDiv.id = "scan-error-msg";
-            errDiv.style.cssText = "background:#FFF0F0;border:1px solid #F5C0C0;border-radius:14px;padding:14px 16px;margin-bottom:12px;font-size:12px;line-height:1.6;color:#C62828";
-            var scanBtn = document.getElementById("scan-btn");
-            scanBtn.parentNode.insertBefore(errDiv, scanBtn);
-        }
-        errDiv.innerHTML = "⚠️ <strong>Erreur :</strong> " + err.message;
-        errDiv.style.display = "block";
+    _aiCall("skin", { image: scanBase64, lang: isEN ? "en" : "fr" }).then(function(res) {
+        if (!res || res.error || !res.skinType) { _showScanError(res && res.error, isEN); return; }
+        _incrementScan("skin"); scanResult = res;
+        showScanResult(res);
     });
+}
+
+function _showScanError(code, isEN) {
+    var MSG = {
+        auth:    isEN ? "Sign in to use the photo analysis." : "Connecte-toi pour utiliser l'analyse photo.",
+        quota:   isEN ? "Daily analysis limit reached. Try again tomorrow." : "Limite d'analyses du jour atteinte. Réessaie demain.",
+        network: isEN ? "No connection. Check your network and retry." : "Pas de connexion. Vérifie ton réseau et réessaie.",
+        invalid_output: isEN ? "The photo could not be analysed. Try a well-lit, front-facing photo." : "La photo n'a pas pu être analysée. Essaie une photo de face, bien éclairée."
+    };
+    document.getElementById("scan-loading").style.display = "none";
+    document.getElementById("scan-btn").disabled = false;
+    document.getElementById("scan-btn-text").textContent = isEN ? "Retry" : "Réessayer";
+    var errDiv = document.getElementById("scan-error-msg");
+    if (!errDiv) {
+        errDiv = document.createElement("div");
+        errDiv.id = "scan-error-msg";
+        errDiv.style.cssText = "background:#FFF0F0;border:1px solid #F5C0C0;border-radius:14px;padding:14px 16px;margin-bottom:12px;font-size:12px;line-height:1.6;color:#C62828";
+        var scanBtn = document.getElementById("scan-btn");
+        scanBtn.parentNode.insertBefore(errDiv, scanBtn);
+    }
+    errDiv.textContent = "⚠️ " + (MSG[code] || (isEN ? "Analysis unavailable right now. Please retry later." : "Analyse indisponible pour le moment. Réessaie plus tard."));
+    errDiv.style.display = "block";
 }
 
 function showScanResult(a) {
@@ -4896,7 +4868,7 @@ function showScanResult(a) {
     if (a.concerns && a.concerns.length > 0) {
         document.getElementById("scan-concerns-wrap").style.display = "block";
         document.getElementById("scan-concerns-list").innerHTML = a.concerns.map(function(c) {
-            return "<span style=\"background:#FDF0E6;color:#8B6F47;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600\">" + c + "</span>";
+            return "<span style=\"background:#FDF0E6;color:#8B6F47;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600\">" + _escHtml(c) + "</span>";
         }).join("");
     }
 }
@@ -6375,7 +6347,7 @@ function showWhyAI(key, nom, marque) {
   if (concerns.length > 0) {
     html += "<div style=\"margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);display:flex;flex-wrap:wrap;gap:6px\">";
     concerns.forEach(function(c) {
-      html += "<span style=\"background:rgba(255,255,255,.15);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600\">" + c + "</span>";
+      html += "<span style=\"background:rgba(255,255,255,.15);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600\">" + _escHtml(c) + "</span>";
     });
     html += "</div>";
   }

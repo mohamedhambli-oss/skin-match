@@ -1,7 +1,14 @@
 {
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": ["node_modules", "test", ".git", "*.log"]
+    }
+  ],
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "config.example.js"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "functions/**", "*.log"],
     "headers": [
       { "source": "sw.js", "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
