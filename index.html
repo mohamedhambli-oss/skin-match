@@ -6128,7 +6128,7 @@ function toggleShare(){
     prodsEl.innerHTML = steps.slice(0,5).map(function(s, i) {
       return "<div class='sc-prod'>" +
         "<div class='sc-prod-n'>0"+(i+1)+"</div>" +
-        "<div class='sc-prod-name'>"+s.nom+"</div>" +
+        "<div class='sc-prod-name'>"+_escHtml(s.nom)+"</div>" +
         "<div class='sc-prod-price'>"+(s.prix?(parseFloat(String(s.prix).replace(/[^0-9.]/g,""))||0)+"€":"")+"</div>" +
         "</div>";
     }).join("");
@@ -7219,7 +7219,18 @@ function afficherProduitPharmacie(code, it) {
     '</div>';
 }
 
+// Échappe une valeur avant insertion dans du HTML. Toute donnée venant d'Open Beauty Facts,
+// de Firestore, d'une URL ou d'une saisie doit passer par ici avant innerHTML.
+function _escHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
 async function onBarcodeDetected(code) {
+  // Un code-barres EAN/UPC ne contient que des chiffres : tout le reste est rejeté.
+  code = String(code == null ? "" : code).replace(/\D/g, "").slice(0, 14);
+  if (!code) return;
   stopBarcodeCamera();
   if (!_canScan('product')) { _showScanPaywall('product'); return; }
   var guide = document.getElementById("barcode-guide");
@@ -7263,7 +7274,7 @@ async function onBarcodeDetected(code) {
   // 3. Fallback Open Beauty Facts API
   showBarcodeLoading(code);
   try {
-    var resp = await fetch("https://world.openbeautyfacts.org/api/v2/product/" + code + ".json?fields=product_name,brands,categories_tags,ingredients_text,ingredients_text_fr");
+    var resp = await fetch("https://world.openbeautyfacts.org/api/v2/product/" + encodeURIComponent(code) + ".json?fields=product_name,brands,categories_tags,ingredients_text,ingredients_text_fr");
     var data = await resp.json();
     if (data.status === 1 && data.product && data.product.product_name) {
       var productName = data.product.product_name;
@@ -7475,13 +7486,13 @@ function showBarcodeNotFound(code) {
       "<div style=\"text-align:center;margin-bottom:16px\">" +
         "<div style=\"font-size:36px;margin-bottom:8px\">🔍</div>" +
         "<div style=\"font-size:14px;font-weight:700;color:#3D2B1F;margin-bottom:4px\">" + (isEN ? "Product not found" : "Produit non trouv&eacute;") + "</div>" +
-        "<div style=\"font-size:11px;color:#8B6F5E;font-family:monospace;background:#F5F0ED;padding:4px 10px;border-radius:8px;display:inline-block;margin-bottom:12px\">" + code + "</div>" +
+        "<div style=\"font-size:11px;color:#8B6F5E;font-family:monospace;background:#F5F0ED;padding:4px 10px;border-radius:8px;display:inline-block;margin-bottom:12px\">" + _escHtml(code) + "</div>" +
       "</div>" +
       "<div style=\"background:#FDF8F5;border-radius:14px;padding:14px;margin-bottom:14px\">" +
         "<div style=\"font-size:12px;font-weight:700;color:#C4726A;margin-bottom:8px\">✨ " + (isEN ? "Add this product to help others!" : "Ajoute ce produit pour aider la communauté !") + "</div>" +
         "<input id=\"contrib-name\" type=\"text\" placeholder=\"" + (isEN ? "Product name (ex: CeraVe Foaming Gel)" : "Nom du produit (ex: CeraVe Gel Moussant)") + "\" style=\"width:100%;box-sizing:border-box;padding:11px 14px;border-radius:12px;border:1.5px solid var(--bdr);font-size:14px;font-family:inherit;outline:none;margin-bottom:8px\">" +
         "<input id=\"contrib-brand\" type=\"text\" placeholder=\"" + (isEN ? "Brand (ex: CeraVe)" : "Marque (ex: CeraVe)") + "\" style=\"width:100%;box-sizing:border-box;padding:11px 14px;border-radius:12px;border:1.5px solid var(--bdr);font-size:14px;font-family:inherit;outline:none;margin-bottom:12px\">" +
-        "<button onclick=\"submitBarcodeContrib('" + code + "')\" style=\"width:100%;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit\">" +
+        "<button onclick=\"submitBarcodeContrib('" + _escHtml(code) + "')\" style=\"width:100%;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit\">" +
           (isEN ? "Submit this product 🙌" : "Soumettre ce produit 🙌") +
         "</button>" +
       "</div>" +
@@ -7491,9 +7502,17 @@ function showBarcodeNotFound(code) {
     "</div>";
 }
 
+// Les valeurs restent en mémoire au lieu d'être recopiées dans un attribut onclick.
+var _pendingContrib = null;
+function _submitPendingContrib() {
+  if (_pendingContrib) submitBarcodeContrib(_pendingContrib.code, _pendingContrib.name, _pendingContrib.brand);
+}
+
 function showBarcodeExternalResult(code, name, brand, inci) {
   var resultDiv = document.getElementById("scan-product-result");
   if (!resultDiv) return;
+  name = String(name || ""); brand = String(brand || "");
+  _pendingContrib = { code: code, name: name, brand: brand };
   var isEN = LANG === "en";
 
   // ── Analyse réglementaire de la liste INCI (annexe III, règlement 2023/1545) ──
@@ -7550,8 +7569,8 @@ function showBarcodeExternalResult(code, name, brand, inci) {
       "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:14px\">" +
         "<div style=\"font-size:36px\">🧴</div>" +
         "<div>" +
-          "<div style=\"font-size:14px;font-weight:700;color:#3D2B1F\">" + name + "</div>" +
-          (brand ? "<div style=\"font-size:12px;color:#8B6F5E\">" + brand + "</div>" : "") +
+          "<div style=\"font-size:14px;font-weight:700;color:#3D2B1F\">" + _escHtml(name) + "</div>" +
+          (brand ? "<div style=\"font-size:12px;color:#8B6F5E\">" + _escHtml(brand) + "</div>" : "") +
         "</div>" +
       "</div>" +
       inciBloc +
@@ -7561,7 +7580,7 @@ function showBarcodeExternalResult(code, name, brand, inci) {
                   "ℹ️ Ce produit a été trouvé dans la base Open Beauty Facts, mais il n'est pas encore dans notre système de routine personnalisée.") + 
         "</div>" +
       "</div>" +
-      "<button onclick=\"submitBarcodeContrib('" + code + "', '" + name.replace(/'/g, "") + "', '" + brand.replace(/'/g, "") + "')\" style=\"width:100%;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px\">" +
+      "<button onclick=\"_submitPendingContrib()\" style=\"width:100%;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px\">" +
         (isEN ? "Add to SkinMatch database 🙌" : "Ajouter à la base SkinMatch 🙌") +
       "</button>" +
       "<button onclick=\"resetBarcodeScanner()\" style=\"width:100%;padding:12px;border-radius:50px;border:1.5px solid var(--acc);background:transparent;color:var(--acc2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit\">" +
@@ -7573,8 +7592,10 @@ function showBarcodeExternalResult(code, name, brand, inci) {
 async function submitBarcodeContrib(code, prefillName, prefillBrand) {
   var nameEl = document.getElementById("contrib-name");
   var brandEl = document.getElementById("contrib-brand");
-  var name = prefillName || (nameEl ? nameEl.value.trim() : "");
-  var brand = prefillBrand || (brandEl ? brandEl.value.trim() : "");
+  var name = String(prefillName || (nameEl ? nameEl.value.trim() : "")).slice(0, 120);
+  var brand = String(prefillBrand || (brandEl ? brandEl.value.trim() : "")).slice(0, 80);
+  code = String(code == null ? "" : code).replace(/\D/g, "").slice(0, 14);
+  if (!code) return;
   
   if (!name) {
     if (nameEl) nameEl.style.borderColor = "#C62828";
@@ -7608,8 +7629,8 @@ async function submitBarcodeContrib(code, prefillName, prefillBrand) {
         "<div style=\"font-size:40px;margin-bottom:10px\">🙌</div>" +
         "<div style=\"font-size:14px;font-weight:700;color:#2E7D32;margin-bottom:6px\">" + (LANG === "en" ? "Thank you!" : "Merci !") + "</div>" +
         "<div style=\"font-size:12px;color:#388E3C;margin-bottom:16px\">" + 
-          (LANG === "en" ? name + " has been added. The next user who scans this product will find it directly!" : 
-                           name + " a été ajouté. Le prochain utilisateur qui scannera ce produit le trouvera directement !") + 
+          (LANG === "en" ? _escHtml(name) + " has been added. The next user who scans this product will find it directly!" : 
+                           _escHtml(name) + " a été ajouté. Le prochain utilisateur qui scannera ce produit le trouvera directement !") + 
         "</div>" +
         "<button onclick=\"resetBarcodeScanner()\" style=\"padding:12px 24px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit\">" +
           (LANG === "en" ? "Scan another product" : "Scanner un autre produit") +
@@ -12180,12 +12201,14 @@ function _checkSharedRoutine() {
     if (!sharedResult) return;
 
     // Stocker les données partagées
-    ST.skinType = sd.skin || 'mixte';
-    ST.ageGroup = sd.age || '26-35';
-    ST.budget = sd.budget || 'moyen';
-    ST.concerns = sd.concerns || [];
+    var _oneOf = function(v, list, def){ return list.indexOf(v) > -1 ? v : def; };
+    var _CONCERNS = ['acne','taches','rides','pores','rougeurs','cernes','eclat','deshydratation','imperfections','sensibilite'];
+    ST.skinType = _oneOf(sd.skin, ['seche','grasse','mixte','normale','sensible'], 'mixte');
+    ST.ageGroup = _oneOf(sd.age, ['18-25','26-35','36-45','46+'], '26-35');
+    ST.budget = _oneOf(sd.budget, ['low','mid','high','mix'], 'mid');
+    ST.concerns = Array.isArray(sd.concerns) ? sd.concerns.filter(function(c){ return _CONCERNS.indexOf(c) > -1; }) : [];
     ST.result = sharedResult;
-    window._sharedBy = sd.sharedBy || '';
+    window._sharedBy = String(sd.sharedBy || '').slice(0, 40);
     window._isSharedView = true;
 
     // Afficher la carte de la routine partagée directement
@@ -12222,7 +12245,7 @@ function _checkSharedRoutine() {
     var prodsEl = document.getElementById('shc-products');
     if (prodsEl) {
       prodsEl.innerHTML = steps.slice(0,5).map(function(s,i){
-        return "<div class='sc-prod'><div class='sc-prod-n'>0"+(i+1)+"</div><div class='sc-prod-name'>"+s.nom+"</div><div class='sc-prod-price'>"+(s.prix?'~'+s.prix+'€':'')+"</div></div>";
+        return "<div class='sc-prod'><div class='sc-prod-n'>0"+(i+1)+"</div><div class='sc-prod-name'>"+_escHtml(s.nom)+"</div><div class='sc-prod-price'>"+(s.prix?'~'+s.prix+'€':'')+"</div></div>";
       }).join('');
     }
 
@@ -13553,8 +13576,8 @@ function runManualSearch() {
     var prix = Math.round(parseFloat(String(m.p.prix||0).replace(/[^0-9.]/g,''))||0);
     var item = document.createElement('div');
     item.style.cssText = 'background:#FAF4F2;border-radius:12px;padding:12px 14px;cursor:pointer;border:1px solid rgba(196,114,106,.12);display:flex;align-items:center;gap:12px;margin-bottom:8px';
-    item.innerHTML = '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#3D2B1F">' + m.p.nom +
-      '</div><div style="font-size:11px;color:#8B6F5E;margin-top:2px">' + m.p.marque + '</div></div>' +
+    item.innerHTML = '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#3D2B1F">' + _escHtml(m.p.nom) +
+      '</div><div style="font-size:11px;color:#8B6F5E;margin-top:2px">' + _escHtml(m.p.marque) + '</div></div>' +
       '<div style="font-family:Georgia,serif;font-size:15px;font-weight:700;color:#C4726A">' + (prix?'~'+prix+'€':'') + '</div>' +
       '<span style="color:#C4726A;font-size:11px;font-weight:700">→</span>';
     item.addEventListener('click', (function(k){ return function(){ if(typeof simulateScanWithKey==='function') simulateScanWithKey(k); }; })(m.key));
