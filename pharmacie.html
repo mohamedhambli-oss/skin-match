@@ -7030,7 +7030,18 @@ if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
 
 // Config partagée du scanner caméra : évite la duplication (et les divergences) entre
 // startBarcodeCamera() et flipBarcodeCamera(), et corrige la non-détection des codes-barres.
-function _barcodeScanConfig() {
+// Options du constructeur Html5Qrcode : c'est ici (et non dans start()) que la bibliothèque
+// lit les formats et l'usage du détecteur natif BarcodeDetector.
+function _barcodeScannerOptions() {
+  var F = Html5QrcodeSupportedFormats;
+  return {
+    verbose: false,
+    useBarCodeDetectorIfSupported: true,
+    formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39]
+  };
+}
+
+function _barcodeScanConfig(facingMode) {
   return {
     fps: 12,
     // Zone de scan large et basse (pas carrée) : un code-barres 1D est bien plus large que haut,
@@ -7042,15 +7053,9 @@ function _barcodeScanConfig() {
       };
     },
     aspectRatio: 1.777,
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
-      Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39
-    ],
-    // Sur les navigateurs compatibles (Chrome Android notamment), bascule sur l'API native
-    // BarcodeDetector qui est nettement plus fiable que le décodeur JS embarqué pour les
-    // codes-barres 1D — c'est le principal correctif à la non-détection.
-    experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+    // Résolution demandée ici : start() n'accepte qu'UNE clé ({facingMode}) en premier argument,
+    // et rejetait l'appel quand width/height y étaient ajoutés — la caméra ne démarrait jamais.
+    videoConstraints: _barcodeVideoConstraints(facingMode || 'environment')
   };
 }
 
@@ -7085,16 +7090,19 @@ function startBarcodeCamera() {
     else container.appendChild(readerDiv);
   }
   try {
-    window._html5Scanner = new Html5Qrcode("reader", { verbose: false });
+    window._html5Scanner = new Html5Qrcode("reader", _barcodeScannerOptions());
     window._html5Scanner.start(
-      _barcodeVideoConstraints("environment"),
-      _barcodeScanConfig(),
+      { facingMode: "environment" },
+      _barcodeScanConfig("environment"),
       function(code) { onBarcodeDetected(code); },
       function() {}
     ).then(function() {
       if (guide) guide.textContent = isEN ? 'Point at barcode' : 'Pointe vers le code-barres';
     }).catch(function(err) {
-      if (guide) guide.textContent = isEN ? 'Camera denied' : 'Caméra refusée — autorise dans les réglages';
+      var denied = /NotAllowed|Permission/i.test(String(err && (err.name || err)));
+      if (guide) guide.textContent = denied
+        ? (isEN ? 'Camera denied — allow it in your settings' : 'Caméra refusée — autorise-la dans les réglages')
+        : (isEN ? 'Camera unavailable — use a photo or search by name' : 'Caméra indisponible — utilise une photo ou la recherche par nom');
       console.warn('Scanner:', err);
     });
   } catch(e) {
@@ -7180,10 +7188,10 @@ function flipBarcodeCamera() {
   var newFacing = window._currentFacing;
   try {
     window._html5Scanner.stop().then(function() {
-      window._html5Scanner = new Html5Qrcode("reader", { verbose: false });
+      window._html5Scanner = new Html5Qrcode("reader", _barcodeScannerOptions());
       window._html5Scanner.start(
-        _barcodeVideoConstraints(newFacing),
-        _barcodeScanConfig(),
+        { facingMode: newFacing },
+        _barcodeScanConfig(newFacing),
         function(code) { onBarcodeDetected(code); },
         function() {}
       ).catch(function(err) {
@@ -7728,7 +7736,12 @@ function scanBarcodeFromFile(input) {
       });
     } else {
       URL.revokeObjectURL(url);
-      showToast("BarcodeDetector non disponible sur cet appareil.", {type:"error"});
+      // Pas de détecteur natif (iPhone, Firefox…) : décodeur JavaScript de html5-qrcode.
+      var tmp = document.getElementById('reader-file-tmp');
+      if (!tmp) { tmp = document.createElement('div'); tmp.id = 'reader-file-tmp'; tmp.style.display = 'none'; document.body.appendChild(tmp); }
+      new Html5Qrcode('reader-file-tmp', _barcodeScannerOptions()).scanFile(file, false)
+        .then(function(code){ onBarcodeDetected(code); })
+        .catch(function(){ showToast(LANG === 'en' ? 'No barcode found in this image.' : 'Aucun code-barres détecté dans cette image.', {type:'warning'}); });
     }
   };
   img.src = url;
