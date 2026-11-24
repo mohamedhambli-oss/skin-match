@@ -11514,7 +11514,12 @@ function startDiagFromProfile() {
 // ══ NAVIGATION BAS ══
 var NAV_SCREENS = ['welcome','result','settings','scan-product','articles','dashboard'];
 
+// Offre payante et parrainage : désactivés tant que le paiement n'existe pas.
+// Passer à true une fois Stripe branché et l'offre stockée côté serveur (pas en localStorage).
+var FEATURE_PREMIUM = false;
+
 function navTo(screen) {
+  if (!FEATURE_PREMIUM && (screen === 'abonnement' || screen === 'parrainage')) screen = 'settings';
   // Arrêter caméras si on quitte
   if (typeof stopCamera === 'function') stopCamera();
   if (typeof stopBarcodeCamera === 'function') stopBarcodeCamera();
@@ -11671,6 +11676,7 @@ function renderSettings() {
 
   var sections = [
     {
+      hidden: !FEATURE_PREMIUM,
       title: isEN ? '✨ Premium' : '✨ Premium',
       items: [
         { label: isEN ? '🎁 Refer a friend' : '🎁 Parrainer une amie', value: referCount > 0 ? (referCount + ' ✓') : (isEN ? 'Earn months free' : 'Gagne des mois gratuits'), action: "navTo('parrainage')" },
@@ -11728,6 +11734,7 @@ function renderSettings() {
       ]
     },
   ];
+  sections = sections.filter(function(s){ return !s.hidden; });
 
   var html = '';
   sections.forEach(function(section) {
@@ -12231,21 +12238,15 @@ var _NOTIF_EVENT = {
   fr: [
     { emoji: '💡', title: 'Astuce du jour', body: 'Le SPF se réapplique toutes les 2h en extérieur. Beaucoup l\'oublient !' },
     { emoji: '🔬', title: 'Le savais-tu ?', body: 'Mélanger rétinol et vitamine C peut irriter ta peau. À séparer matin/soir.' },
-    { emoji: '🎁', title: 'Bonus parrainage', body: 'Invite 1 amie cette semaine = 1 mois Premium gratuit ✨' },
     { emoji: '📊', title: 'Ta progression', body: 'Tu suis ta routine depuis {streak} jours. Belle régularité !' },
     { emoji: '🆕', title: 'Nouvel article', body: 'On vient de publier un article sur la niacinamide. À lire dans Conseils !' },
-    { emoji: '⭐', title: 'Top du moment', body: 'Le sérum vitamine C est le plus aimé de la semaine. À découvrir.' },
-    { emoji: '🌟', title: 'Communauté', body: '127 personnes ont commencé une routine cette semaine. Tu fais partie du mouvement.' },
     { emoji: '📷', title: 'Suivi photo', body: 'Pris ta photo de la semaine ? Compare ton avant/après dans Mon espace.' }
   ],
   en: [
     { emoji: '💡', title: 'Tip of the day', body: 'SPF needs reapplying every 2h outdoors. Most people forget!' },
     { emoji: '🔬', title: 'Did you know?', body: 'Mixing retinol and vitamin C can irritate your skin. Use them at different times.' },
-    { emoji: '🎁', title: 'Referral bonus', body: 'Invite 1 friend this week = 1 month Premium free ✨' },
     { emoji: '📊', title: 'Your progress', body: 'You\'ve followed your routine for {streak} days. Great work!' },
     { emoji: '🆕', title: 'New article', body: 'We just published a niacinamide deep-dive. Check Articles!' },
-    { emoji: '⭐', title: 'Trending now', body: 'Vitamin C serum is the most-loved product this week. Take a look.' },
-    { emoji: '🌟', title: 'Community', body: '127 people started a routine this week. You\'re part of the movement.' },
     { emoji: '📷', title: 'Photo tracking', body: 'Did you take your weekly photo? Compare your before/after in My space.' }
   ]
 };
@@ -12749,7 +12750,7 @@ function _getScanData() {
 }
 function _saveScanData(d){try{localStorage.setItem('skinmatch_scans',JSON.stringify(d));}catch(e){}}
 function _incrementScan(t){var d=_getScanData();d[t]=(d[t]||0)+1;_saveScanData(d);}
-function _canScan(t){var d=_getScanData();var lim=t==='product'?SCAN_PRODUCT_LIMIT:SCAN_SKIN_LIMIT;return(d[t]||0)<lim;}
+function _canScan(t){if(!FEATURE_PREMIUM)return true;var d=_getScanData();var lim=t==='product'?SCAN_PRODUCT_LIMIT:SCAN_SKIN_LIMIT;return(d[t]||0)<lim;}
 
 // ── SCAN PAYWALL ──
 function _closeScanPaywall(){var e=document.getElementById('skinmatch-paywall');if(e)e.remove();}
