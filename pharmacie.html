@@ -7350,15 +7350,35 @@ async function onBarcodeDetected(code) {
   var guide = document.getElementById("barcode-guide");
   if (guide) guide.textContent = "✅ Code détecté : " + code;
 
-  // 1. Chercher dans notre DB locale
+  // 1. Notre base : fiche complète (composition, compatibilité, allergènes)
   var found = searchByBarcode(code);
   if (found) {
     _incrementScan("product"); simulateScanWithKey(found);
     return;
   }
 
-  // 1 bis. Index des références en stock à la pharmacie : reconnaissance sans fiche complète
+  // 2. Produits ajoutés par les utilisateurs et rattachés à une fiche de notre base
+  var firestoreKey = await searchBarcodeInFirestore(code);
+  if (firestoreKey && DB[firestoreKey]) {
+    _incrementScan("product"); simulateScanWithKey(firestoreKey);
+    return;
+  }
+
+  // 3. Open Beauty Facts : liste d'ingrédients → analyse des allergènes (règlement 2023/1545).
+  //    Passe AVANT l'index pharmacie, qui ne connaît que le nom du produit.
+  showBarcodeLoading(code);
+  var obf = await _fetchOpenBeautyFacts(code);
+  if (obf && obf.inci.length > 10) {
+    _incrementScan("product"); showBarcodeExternalResult(code, obf.name, obf.brand, obf.inci);
+    return;
+  }
+
+  // 4. Index de la pharmacie (en stock, puis catalogue complet) : produit reconnu, sans composition
   var itPh = chercherIndexPharmacie(code);
+  if (!itPh) {
+    var full = await chargerIndexPharmaComplet();
+    if (full) itPh = full[code] || null;
+  }
   if (itPh) {
     _incrementScan("product");
     if (typeof go === "function") go("scan-product");
@@ -7366,40 +7386,31 @@ async function onBarcodeDetected(code) {
     return;
   }
 
-  // 1 ter. Index complet du catalogue parapharmacie, chargé à la demande
-  var full = await chargerIndexPharmaComplet();
-  if (full) {
-    var itF = full[String(code).replace(/\D/g, "")];
-    if (itF) {
-      _incrementScan("product");
-      if (typeof go === "function") go("scan-product");
-      afficherProduitPharmacie(code, itF);
-      return;
-    }
-  }
-
-  // 2. Chercher dans Firestore (produits ajoutés par les utilisateurs)
-  var firestoreKey = await searchBarcodeInFirestore(code);
-  if (firestoreKey) {
-    _incrementScan("product"); simulateScanWithKey(firestoreKey);
-    return;
-  }
-
-  // 3. Fallback Open Beauty Facts API
-  showBarcodeLoading(code);
-  try {
-    var resp = await fetch("https://world.openbeautyfacts.org/api/v2/product/" + encodeURIComponent(code) + ".json?fields=product_name,brands,categories_tags,ingredients_text,ingredients_text_fr");
-    var data = await resp.json();
-    if (data.status === 1 && data.product && data.product.product_name) {
-      var productName = data.product.product_name;
-      var brand = data.product.brands || "";
-      var inci = data.product.ingredients_text_fr || data.product.ingredients_text || "";
-      _incrementScan("product"); showBarcodeExternalResult(code, productName, brand, inci);
-    } else {
-      showBarcodeNotFound(code);
-    }
-  } catch(e) {
+  // 5. Connu d'Open Beauty Facts sans ingrédients, sinon introuvable
+  if (obf && obf.name) {
+    _incrementScan("product"); showBarcodeExternalResult(code, obf.name, obf.brand, obf.inci);
+  } else {
     showBarcodeNotFound(code);
+  }
+}
+
+// Fiche Open Beauty Facts (nom, marque, ingrédients), ou null. Délai max 6 s : hors ligne
+// ou réseau lent, on se rabat sur l'index pharmacie au lieu de bloquer l'écran.
+async function _fetchOpenBeautyFacts(code) {
+  var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 6000) : null;
+  try {
+    var resp = await fetch("https://world.openbeautyfacts.org/api/v2/product/" + encodeURIComponent(code) +
+      ".json?fields=product_name,product_name_fr,brands,ingredients_text,ingredients_text_fr", ctrl ? { signal: ctrl.signal } : {});
+    var data = await resp.json();
+    if (data.status !== 1 || !data.product) return null;
+    var p = data.product;
+    return { name: String(p.product_name_fr || p.product_name || ""), brand: String(p.brands || ""),
+             inci: String(p.ingredients_text_fr || p.ingredients_text || "") };
+  } catch (e) {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -7425,20 +7436,6 @@ function showBarcodeLoading(code) {
 }
 
 function searchByBarcode(code) {
-  // 0. Vérifier le cache local community_eans
-  try {
-    var localEans = JSON.parse(localStorage.getItem("skinmatch_community_eans") || "{}");
-    if (localEans[code] && localEans[code].nom) {
-      // Produit communautaire local — chercher par nom dans la DB
-      var nomLower = localEans[code].nom.toLowerCase();
-      for (var k in DB) {
-        if (DB[k].nom && DB[k].nom.toLowerCase().includes(nomLower.substring(0, 10))) {
-          return k;
-        }
-      }
-    }
-  } catch(e) {}
-
   // Table EAN → clé DB
   var EAN_MAP = {
     "0070501007002": "ng-bha",
@@ -7587,7 +7584,15 @@ function searchByBarcode(code) {
     "4005900020888": "euc-aquaphor",
     "4005900653727": "euc-dermopure",
   };
-  return EAN_MAP[code] || null;
+  // La table ci-dessus ne couvre qu'une partie du catalogue : les codes-barres enregistrés dans
+  // les fiches elles-mêmes (DB / INCI_DB) n'étaient jamais consultés — 216 fiches sur 221
+  // étaient introuvables au scan.
+  // Le code enregistré dans la fiche fait foi : la table, écrite à la main, renvoyait vers un
+  // autre produit pour au moins 4 codes (ex. nettoyant CeraVe → gel La Roche-Posay), donc vers
+  // d'autres ingrédients et d'autres allergènes.
+  var fromDB = _searchDBByEAN(code);
+  if (fromDB) return fromDB;
+  return (EAN_MAP[code] && DB[EAN_MAP[code]]) ? EAN_MAP[code] : null;
 }
 
 function showBarcodeNotFound(code) {
