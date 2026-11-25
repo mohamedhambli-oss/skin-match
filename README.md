@@ -18,6 +18,15 @@ filtres grossesse et allaitement. Deux versions :
 | Le catalogue depuis Open Beauty Facts | — | `python3 tools/import_obf.py` puis `tools/build_data.py` |
 | Le proxy IA ou le nettoyage de compte | `functions/` | `firebase deploy --only functions` |
 | Les règles de sécurité Firestore | `firestore.rules` | `firebase deploy --only firestore:rules` |
+| Le tableau de bord (indicateurs) | `admin.html` (affichage), `functions/stats-core.js` (calculs) | `firebase deploy --only functions` |
+
+## Tableau de bord
+
+`admin.html` : utilisateurs actifs (7 et 30 jours), inscriptions, rétention par semaine
+d'inscription, taux de réaction par produit (retours de tolérance anonymes). Accès réservé :
+compte à e-mail vérifié listé dans `ADMIN_EMAILS` (fichier `functions/.env`, non commité,
+par exemple `ADMIN_EMAILS=moi@exemple.fr`). La fonction `stats` ne lit que des dates
+d'inscription et d'activité, jamais de données de santé, et ne renvoie que des agrégats.
 
 **Ne jamais modifier `index.html` ni `pharmacie.html` à la main** : ils sont générés depuis
 `src/skinmatch.html`. Le code commun n'y figure qu'une fois ; les passages propres à une
@@ -27,9 +36,9 @@ version sont encadrés par `@@si public@@ … @@sinon@@ … @@fin@@` ou `@@si bo
 ## Tests
 
 - Proxy IA : `cd functions && npm test`
-- Règles Firestore et nettoyage de compte (émulateur, Java requis) : `cd firestore-tests && npm test`
+- Règles Firestore, nettoyage de compte et tableau de bord (émulateurs, Java requis) : `cd firestore-tests && npm test`
 
 ## Publication
 
-Sites Netlify : publier `index.html`, `pharmacie.html`, `sw.js`, les manifestes, `_headers`,
+Sites Netlify : publier `index.html`, `pharmacie.html`, `admin.html`, `sw.js`, les manifestes, `_headers`,
 les icônes, `vendor/` et `data/products.js` + `data/catalogue.json` (pas le tableur ni `src/`).

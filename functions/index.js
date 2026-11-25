@@ -14,6 +14,7 @@ const { defineSecret, defineString } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const core = require("./gemini-core");
+const stats = require("./stats-core");
 
 admin.initializeApp();
 
@@ -25,6 +26,7 @@ const ALLOWED_ORIGINS = [
   "https://skin-match-c7189.web.app",
   "https://skin-match-c7189.firebaseapp.com",
   "https://mohamedhambli-oss.github.io",
+  "https://skin-match-test.netlify.app",
   /^http:\/\/localhost(:\d+)?$/
 ];
 
@@ -83,6 +85,42 @@ exports.gemini = onRequest({
   } catch (e) {
     logger.error("gemini_fetch_failed", { message: e.message });
     res.status(502).json({ error: "upstream" });
+  }
+});
+
+// Tableau de bord (admin.html) : indicateurs agrégés, réservés aux administrateurs.
+// Liste des e-mails autorisés (e-mail vérifié obligatoire), réglée au déploiement :
+//   ADMIN_EMAILS=moi@exemple.fr,associe@exemple.fr   (fichier functions/.env, non commité)
+// Seuls des champs non sensibles sont lus : dates d'inscription et d'activité.
+const ADMIN_EMAILS = defineString("ADMIN_EMAILS", { default: "" });
+exports.stats = onRequest({
+  region: "europe-west1",
+  cors: ALLOWED_ORIGINS,
+  maxInstances: 2,
+  timeoutSeconds: 60,
+  memory: "512MiB"
+}, async (req, res) => {
+  if (req.method !== "GET") { res.status(405).json({ error: "method" }); return; }
+  const m = String(req.get("Authorization") || "").match(/^Bearer (.+)$/);
+  if (!m) { res.status(401).json({ error: "auth" }); return; }
+  let token;
+  try { token = await admin.auth().verifyIdToken(m[1]); }
+  catch (e) { res.status(401).json({ error: "auth" }); return; }
+  if (!stats.isAdmin(token, ADMIN_EMAILS.value())) { res.status(403).json({ error: "forbidden" }); return; }
+
+  try {
+    const db = admin.firestore();
+    const [u, r] = await Promise.all([
+      db.collection("users").select("createdAt", "lastSeen", "activeWeeks", "updatedAt").get(),
+      db.collection("tolerance_reports").select("k", "v", "s", "g", "sem").get()
+    ]);
+    const users = u.docs.map((d) => ({ createdAt: d.get("createdAt"), lastSeen: d.get("lastSeen"),
+      activeWeeks: d.get("activeWeeks"), hasRoutine: !!d.get("updatedAt") }));
+    res.set("Cache-Control", "private, no-store");
+    res.json(stats.computeStats({ users, reports: r.docs.map((d) => d.data()), now: new Date() }));
+  } catch (e) {
+    logger.error("stats_failed", { message: e.message });
+    res.status(500).json({ error: "internal" });
   }
 });
 

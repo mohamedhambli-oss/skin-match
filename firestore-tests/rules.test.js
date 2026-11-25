@@ -94,3 +94,10 @@ test("tolerance : champ du profil et rapports anonymes encadrés", async () => {
   await assertFails(addDoc(collection(db, "tolerance_reports"), { ...ok, mois: "2026-11-25" }));
   await assertFails(getDocs(collection(db, "tolerance_reports")));                          // pas de lecture
 });
+
+test("activité : jour et semaines bornés", async () => {
+  const db = alice();
+  await assertSucceeds(setDoc(doc(db, "users/alice"), { ...profile, lastSeen: "2026-11-25", activeWeeks: ["2026-11-23"] }));
+  await assertFails(setDoc(doc(db, "users/alice"), { lastSeen: "hier" }, { merge: true }));
+  await assertFails(setDoc(doc(db, "users/alice"), { activeWeeks: new Array(27).fill("2026-11-23") }, { merge: true }));
+});
