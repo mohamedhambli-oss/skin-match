@@ -28,10 +28,17 @@ compte à e-mail vérifié listé dans `ADMIN_EMAILS` (fichier `functions/.env`,
 par exemple `ADMIN_EMAILS=moi@exemple.fr`). La fonction `stats` ne lit que des dates
 d'inscription et d'activité, jamais de données de santé, et ne renvoie que des agrégats.
 
-**Ne jamais modifier `index.html` ni `pharmacie.html` à la main** : ils sont générés depuis
-`src/skinmatch.html`. Le code commun n'y figure qu'une fois ; les passages propres à une
+**Ne jamais modifier `index.html`, `pharmacie.html` ni `confidentialite.html` à la main** : ils sont générés depuis
+`src/skinmatch.html` (`confidentialite.html` est la politique de confidentialité de l'app, en
+page web autonome pour Google Play). Le code commun n'y figure qu'une fois ; les passages propres à une
 version sont encadrés par `@@si public@@ … @@sinon@@ … @@fin@@` ou `@@si borne@@ … @@fin@@`.
 `python3 tools/build_pages.py --check` vérifie que les pages publiées sont à jour.
+
+## Google Play
+
+Guide pas à pas, textes de la fiche, réponses aux formulaires et visuels : `store/GOOGLE_PLAY.md`.
+Pages web exigées par Google : `confidentialite.html`, `suppression-compte.html`.
+Liaison application ↔ site : `python3 tools/assetlinks.py <paquet> <empreintes SHA-256>`.
 
 ## Tests
 
@@ -40,5 +47,6 @@ version sont encadrés par `@@si public@@ … @@sinon@@ … @@fin@@` ou `@@si bo
 
 ## Publication
 
-Sites Netlify : publier `index.html`, `pharmacie.html`, `admin.html`, `sw.js`, les manifestes, `_headers`,
+Sites Netlify : publier `index.html`, `pharmacie.html`, `admin.html`, `confidentialite.html`,
+`suppression-compte.html`, `.well-known/` (une fois l'app Android créée), `store/captures/` (cités par le manifeste), `sw.js`, les manifestes, `_headers`,
 les icônes, `vendor/` et `data/products.js` + `data/catalogue.json` (pas le tableur ni `src/`).

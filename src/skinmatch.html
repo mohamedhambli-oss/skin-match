@@ -1124,6 +1124,10 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
         <button class="btn-o" onclick="resetScan()" style="font-size:12px">
           <span id="scan-retry-btn">Reprendre une photo</span>
         </button>
+        <!-- Exigence Google Play (contenus générés par IA) : pouvoir signaler une réponse inappropriée. -->
+        <button onclick="reportAIResult()" style="display:block;margin:10px auto 0;background:none;border:none;color:#9A8178;font-size:11.5px;text-decoration:underline;cursor:pointer;font-family:inherit">
+          <span id="scan-report-btn">Signaler un problème avec cette analyse</span>
+        </button>
       </div>
     </div>
 
@@ -1666,7 +1670,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Compte, profil et routine : jusqu'à la suppression de votre compte. La suppression efface ces données immédiatement, et nos sauvegardes sous 30 jours.</li><li>Données de santé : jusqu'au retrait de votre consentement ou à la suppression du compte.</li><li>Compteur d'utilisation de l'IA : réinitialisé chaque jour, supprimé avec le compte.</li><li>Codes-barres proposés : supprimés avec le compte s'ils n'ont pas été validés ; sinon conservés de façon anonyme dans la base produits.</li><li>Mesure d'audience : 14 mois au plus.</li><li>Données stockées sur l'appareil : jusqu'à ce que vous les effaciez (Paramètres ou suppression du compte).</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">6. Vos droits</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité, ainsi que du droit de retirer votre consentement à tout moment, sans que cela remette en cause les traitements déjà effectués.</p>
-    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Télécharger mes données</strong> (portabilité) et <strong>Supprimer mon compte</strong> : dans les Paramètres.</li><li><strong>Retirer un consentement</strong> (données de santé, IA, météo, mesure d'audience) : Paramètres › Confidentialité.</li><li>Toute autre demande : <a href="mailto:contact@skinmatch.app" style="color:#C4726A">contact@skinmatch.app</a>. Réponse sous un mois.</li></ul>
+    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Télécharger mes données</strong> (portabilité) et <strong>Supprimer mon compte</strong> : dans les Paramètres. La suppression est aussi possible sans l'application, sur la page <a href="suppression-compte.html" target="_blank" rel="noopener" style="color:#C4726A">Supprimer mon compte</a>.</li><li><strong>Retirer un consentement</strong> (données de santé, IA, météo, mesure d'audience) : Paramètres › Confidentialité.</li><li>Toute autre demande : <a href="mailto:contact@skinmatch.app" style="color:#C4726A">contact@skinmatch.app</a>. Réponse sous un mois.</li></ul>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Vous pouvez introduire une réclamation auprès de la CNIL (<a href="https://www.cnil.fr" target="_blank" rel="noopener" style="color:#C4726A">cnil.fr</a>).</p>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">7. Cookies et stockage local</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">L'application utilise le stockage local de votre appareil pour fonctionner (routine, préférences, journal, photos) : ce stockage est strictement nécessaire et ne requiert pas de consentement. Google Analytics dépose des cookies de mesure d'audience uniquement si vous les acceptez ; vous pouvez changer d'avis dans Paramètres › Confidentialité.</p>
@@ -4616,6 +4620,7 @@ function showScanResult(a) {
     document.getElementById("scan-confidence").textContent = (LANG === "en" ? "Confidence: " : "Confiance : ") + a.confidence;
     document.getElementById("scan-description").textContent = a.description;
     document.getElementById("scan-advice").textContent = "💡 " + a.advice;
+    var rep = document.getElementById("scan-report-btn"); if (rep) rep.textContent = LANG === "en" ? "Report a problem with this analysis" : "Signaler un problème avec cette analyse";
 
     if (a.concerns && a.concerns.length > 0) {
         document.getElementById("scan-concerns-wrap").style.display = "block";
@@ -4623,6 +4628,17 @@ function showScanResult(a) {
             return "<span style=\"background:#FDF0E6;color:#8B6F47;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600\">" + _escHtml(c) + "</span>";
         }).join("");
     }
+}
+
+// Signalement d'une analyse IA inappropriée ou erronée : message prérempli, envoyé par la personne
+// elle-même depuis sa messagerie. La photo n'est jamais jointe (elle n'est pas conservée).
+function reportAIResult() {
+  var isEN = LANG === 'en';
+  var a = scanResult || {};
+  var corps = (isEN ? 'What is wrong with this analysis?\n\n\n---\nAI analysis shown:\n' : 'Qu\'est-ce qui ne va pas dans cette analyse ?\n\n\n---\nAnalyse affichée par l\'IA :\n') +
+    [a.skinTypeLabel || a.skinType || '', a.description || '', a.advice || ''].join('\n').slice(0, 1200);
+  location.href = 'mailto:contact@skinmatch.app?subject=' + encodeURIComponent(isEN ? 'Report: AI skin analysis' : 'Signalement : analyse de peau par IA') +
+    '&body=' + encodeURIComponent(corps);
 }
 
 function applyScanResult() {
