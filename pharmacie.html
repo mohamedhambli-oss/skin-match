@@ -13828,19 +13828,21 @@ if (typeof window.go === "function") {
 
 <script>
 /* ══════════════════════════════════════════════════════════════════════════
-   MODE BORNE — Pharmacie Raymond Poincaré
-   Version destinée à la tablette mise à disposition des clientes.
+   MODE BORNE — tablette en libre-service en pharmacie
+   Version destinée à la tablette mise à disposition des clientes, configurable par officine
+   (nom, code PIN d'administration, produits en rayon).
    Différences avec l'application grand public :
      · pas d'espace personnel, pas de scan de code-barres, pas de compte
      · remise à zéro automatique entre deux clientes (données de santé)
      · question d'intention d'achat en fin de parcours
      · espace avis
-     · statistiques agrégées consultables via ?admin=1
+     · statistiques agrégées, protégées par un code PIN (?admin=1 ou 5 appuis dans le coin supérieur droit)
    ══════════════════════════════════════════════════════════════════════════ */
 (function(){
 "use strict";
 
 var STATS_KEY = "pharma_stats";
+var CONFIG_KEY = "borne_config";
 var INACTIVITE_MS = 3 * 60 * 1000;   // 3 minutes sans interaction → session suivante
 
 /* ── Statistiques : agrégats anonymes, aucune donnée personnelle ── */
@@ -13872,7 +13874,7 @@ function ev(nom, detail){
    session. Seules les statistiques agrégées sont conservées. */
 function reinitialiser(recharger){
   try {
-    var garder = [STATS_KEY, "skinmatch_lang"];
+    var garder = [STATS_KEY, CONFIG_KEY, "skinmatch_lang"];
     var aSupprimer = [];
     for (var i = 0; i < localStorage.length; i++) {
       var k = localStorage.key(i);
@@ -14101,7 +14103,7 @@ function vueAdmin(){
   '<div style="max-width:680px;margin:0 auto;padding:18px 15px 60px;font-family:Outfit,system-ui,sans-serif;color:#3D2B1F">' +
   '<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #3D2B1F;padding-bottom:10px;margin-bottom:16px">' +
     '<div><div style="font-family:Georgia,serif;font-size:22px;font-weight:700">Statistiques de la borne</div>' +
-    '<div style="font-size:11px;color:#8B6F5E">Données locales à cette tablette · ' + nbSess + ' sessions</div></div>' +
+    '<div style="font-size:11px;color:#8B6F5E">' + esc(((lireConfig() || {}).nom || 'Officine non configurée')) + ' · données locales à cette tablette · ' + nbSess + ' sessions</div></div>' +
     '<button onclick="location.href=location.pathname" style="padding:7px 13px;border:1px solid #EDD9D4;background:#fff;border-radius:50px;font-size:12px;cursor:pointer;font-family:inherit">Retour</button>' +
   '</div>' +
 
@@ -14144,6 +14146,7 @@ function vueAdmin(){
         (a.txt ? '<div style="color:#5A4A44;margin-top:2px">' + esc(a.txt) + '</div>' : '') + '</div>';
     }).join('') : '<div style="font-size:13px;color:#B0958F">Aucun avis pour le moment.</div>')) +
 
+  '<button onclick="window._borneReglages()" style="width:100%;padding:14px;border:1.5px solid #3D2B1F;border-radius:12px;background:#fff;color:#3D2B1F;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">Réglages de l\'officine (nom, code PIN, produits en rayon)</button>' +
   '<button onclick="window._borneCSV()" style="width:100%;padding:14px;border:none;border-radius:12px;background:#3D2B1F;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">Exporter tout en CSV</button>' +
   '<button onclick="window._borneMail()" style="width:100%;padding:13px;border:1.5px solid #EDD9D4;border-radius:12px;background:#fff;color:#3D2B1F;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">M\'envoyer le résumé par e-mail</button>' +
   '<button onclick="if(confirm(\'Effacer toutes les statistiques ?\')){localStorage.removeItem(\'' + STATS_KEY + '\');location.reload();}" style="width:100%;padding:12px;border:1.5px solid #F0E8E5;border-radius:12px;background:#fff;color:#B0958F;font-size:13px;font-family:inherit;cursor:pointer">Réinitialiser</button>' +
@@ -14192,9 +14195,180 @@ window._borneCSV = function(){
   var b = new Blob(["\ufeff" + l.join("\n")], { type:"text/csv;charset=utf-8" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(b);
-  a.download = "borne-pharmacie-" + new Date().toISOString().slice(0,10) + ".csv";
+  a.download = "borne-" + String(((lireConfig() || {}).nom) || "pharmacie").toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + new Date().toISOString().slice(0,10) + ".csv";
   a.click();
 };
+
+
+/* ══════════ CONFIGURATION DE L'OFFICINE ══════════
+   Chaque pharmacie configure sa borne au premier lancement : nom, ville, code PIN
+   d'administration et, si elle le souhaite, la liste des codes-barres en rayon.
+   Stockée sur la tablette (clé borne_config), conservée entre deux clientes.
+   Le PIN protège la vue des statistiques contre la curiosité des visiteurs ; il est
+   stocké haché. Ce n'est pas un coffre-fort : les statistiques restent anonymes. */
+function lireConfig(){ try { return JSON.parse(localStorage.getItem(CONFIG_KEY)) || null; } catch(e){ return null; } }
+function ecrireConfig(c){ try { localStorage.setItem(CONFIG_KEY, JSON.stringify(c)); } catch(e){} }
+
+async function hacherPin(pin){
+  var txt = "skinmatch-borne:" + pin;
+  try {
+    var b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2, "0"); }).join("");
+  } catch(e){
+    var h = 5381; for (var i = 0; i < txt.length; i++) h = ((h << 5) + h + txt.charCodeAt(i)) | 0;
+    return "d" + (h >>> 0).toString(16);
+  }
+}
+
+// Codes-barres collés depuis le logiciel de la pharmacie : on garde toutes les suites de 8 à 14 chiffres.
+function extraireCodes(texte){
+  var vus = {}, out = [];
+  (String(texte || "").match(/\d{8,14}/g) || []).forEach(function(c){
+    var k = c.replace(/^0+/, ""); if (!vus[k]) { vus[k] = 1; out.push(k); }
+  });
+  return out;
+}
+var _stock = null;
+function stockSet(){
+  if (_stock) return _stock;
+  var c = lireConfig(); _stock = {};
+  ((c && c.stock) || []).forEach(function(k){ _stock[k] = 1; });
+  return _stock;
+}
+function enRayon(key){
+  var p = (typeof DB !== "undefined") && DB[key];
+  if (!p || !p.ean) return false;
+  return !!stockSet()[String(p.ean).replace(/^0+/, "")];
+}
+function _nb(n, un, plusieurs){ return n + " " + (n > 1 ? plusieurs : un); }
+function nbFichesEnRayon(codes){
+  if (typeof DB === "undefined") return 0;
+  var s = {}; codes.forEach(function(k){ s[k] = 1; });
+  return Object.keys(DB).filter(function(k){ return DB[k].ean && s[String(DB[k].ean).replace(/^0+/, "")]; }).length;
+}
+
+/* Fenêtre modale tactile (pas de prompt() : illisible et bloquant sur tablette) */
+function modale(html){
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(61,43,31,.72);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML = '<div style="background:#FDF8F5;border-radius:20px;padding:24px;width:100%;max-width:420px;font-family:Outfit,system-ui,sans-serif;color:#3D2B1F;max-height:92vh;overflow:auto">' + html + '</div>';
+  document.body.appendChild(ov);
+  return ov;
+}
+var CHAMP = "width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid #EDD9D4;border-radius:12px;font-size:16px;font-family:inherit;margin:6px 0 12px;background:#fff;color:#3D2B1F";
+var BTN = "width:100%;padding:14px;border:none;border-radius:12px;background:#3D2B1F;color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer";
+
+function ecranInstallation(){
+  var ov = modale(
+    '<div style="font-family:Georgia,serif;font-size:22px;font-weight:700;margin-bottom:4px">Installer la borne SkinMatch</div>' +
+    '<div style="font-size:13px;color:#8B6F5E;margin-bottom:14px">Ces réglages restent sur cette tablette.</div>' +
+    '<label style="font-size:13px;font-weight:600">Nom de la pharmacie</label><input id="cfg-nom" autocomplete="off" style="' + CHAMP + '" placeholder="Pharmacie du Centre">' +
+    '<label style="font-size:13px;font-weight:600">Ville (facultatif)</label><input id="cfg-ville" autocomplete="off" style="' + CHAMP + '">' +
+    '<label style="font-size:13px;font-weight:600">Code PIN d\'administration (4 à 8 chiffres)</label><input id="cfg-pin" type="password" inputmode="numeric" autocomplete="off" style="' + CHAMP + '">' +
+    '<label style="font-size:13px;font-weight:600">Confirmer le code PIN</label><input id="cfg-pin2" type="password" inputmode="numeric" autocomplete="off" style="' + CHAMP + '">' +
+    '<div id="cfg-err" style="color:#B4544B;font-size:13px;min-height:18px;margin-bottom:8px"></div>' +
+    '<button id="cfg-ok" style="' + BTN + '">Enregistrer</button>' +
+    '<div style="font-size:12px;color:#8B6F5E;margin-top:12px;line-height:1.45">Pour ouvrir l\'administration ensuite : touchez 5 fois rapidement le coin supérieur droit de l\'écran, puis saisissez le code PIN.</div>');
+  ov.querySelector("#cfg-ok").onclick = async function(){
+    var nom = ov.querySelector("#cfg-nom").value.trim().slice(0, 80);
+    var pin = ov.querySelector("#cfg-pin").value.trim(), pin2 = ov.querySelector("#cfg-pin2").value.trim();
+    var err = ov.querySelector("#cfg-err");
+    if (!nom) { err.textContent = "Indiquez le nom de la pharmacie."; return; }
+    if (!/^\d{4,8}$/.test(pin)) { err.textContent = "Le code PIN doit comporter 4 à 8 chiffres."; return; }
+    if (pin !== pin2) { err.textContent = "Les deux codes PIN ne correspondent pas."; return; }
+    ecrireConfig({ nom: nom, ville: ov.querySelector("#cfg-ville").value.trim().slice(0, 60),
+                   pin: await hacherPin(pin), stock: [], creee: new Date().toISOString() });
+    location.href = location.pathname;
+  };
+}
+
+function demanderPin(suite){
+  var c = lireConfig();
+  if (!c || !c.pin) { ecranInstallation(); return; }
+  var ov = modale(
+    '<div style="font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:10px">Administration</div>' +
+    '<label style="font-size:13px;font-weight:600">Code PIN</label><input id="pin-in" type="password" inputmode="numeric" autocomplete="off" style="' + CHAMP + '">' +
+    '<div id="pin-err" style="color:#B4544B;font-size:13px;min-height:18px;margin-bottom:8px"></div>' +
+    '<div style="display:flex;gap:10px"><button id="pin-x" style="' + BTN + ';background:#fff;color:#3D2B1F;border:1.5px solid #EDD9D4">Annuler</button>' +
+    '<button id="pin-ok" style="' + BTN + '">Ouvrir</button></div>');
+  var essais = 0;
+  ov.querySelector("#pin-x").onclick = function(){ ov.remove(); if (/[?&]admin=1/.test(location.search)) location.href = location.pathname; };
+  ov.querySelector("#pin-ok").onclick = async function(){
+    if (await hacherPin(ov.querySelector("#pin-in").value.trim()) === c.pin) { ov.remove(); suite(); return; }
+    essais++;
+    ov.querySelector("#pin-err").textContent = essais >= 5 ? "Trop d'essais. Réessayez dans une minute." : "Code incorrect.";
+    if (essais >= 5) { ov.querySelector("#pin-ok").disabled = true; setTimeout(function(){ ov.remove(); }, 60000); }
+  };
+  setTimeout(function(){ var i = ov.querySelector("#pin-in"); if (i) i.focus(); }, 50);
+}
+
+// 5 appuis rapides dans le coin supérieur droit (64 × 64 px) ouvrent l'administration.
+// Aucun élément n'est ajouté : les appuis normaux à cet endroit fonctionnent toujours.
+(function(){
+  var appuis = [];
+  document.addEventListener("pointerdown", function(e){
+    if (e.clientX < window.innerWidth - 64 || e.clientY > 64) return;
+    var t = Date.now(); appuis = appuis.filter(function(x){ return t - x < 3000; }); appuis.push(t);
+    if (appuis.length >= 5) { appuis = []; demanderPin(vueAdmin); }
+  }, true);
+})();
+
+// Réglages de l'officine, depuis l'administration
+window._borneReglages = function(){
+  var c = lireConfig() || {};
+  var ov = modale(
+    '<div style="font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:10px">Réglages de l\'officine</div>' +
+    '<label style="font-size:13px;font-weight:600">Nom de la pharmacie</label><input id="rg-nom" style="' + CHAMP + '" value="' + esc(c.nom || "") + '">' +
+    '<label style="font-size:13px;font-weight:600">Ville</label><input id="rg-ville" style="' + CHAMP + '" value="' + esc(c.ville || "") + '">' +
+    '<label style="font-size:13px;font-weight:600">Produits en rayon : collez les codes-barres</label>' +
+    '<div style="font-size:12px;color:#8B6F5E">Un code par ligne, ou l\'export de votre logiciel de gestion : seuls les codes-barres sont lus. Laissez vide pour ne rien signaler.</div>' +
+    '<textarea id="rg-stock" rows="5" style="' + CHAMP + ';font-size:14px;font-family:monospace" placeholder="3337875597197&#10;3282770390414"></textarea>' +
+    '<div id="rg-info" style="font-size:13px;color:#5E8C6A;margin-bottom:10px">' + ((c.stock || []).length ? (_nb(c.stock.length, "code-barres en rayon", "codes-barres en rayon") + ", dont " + _nb(nbFichesEnRayon(c.stock), "avec une fiche SkinMatch", "avec une fiche SkinMatch") + ".") : "Aucun produit en rayon enregistré.") + '</div>' +
+    '<label style="font-size:13px;font-weight:600">Nouveau code PIN (facultatif)</label><input id="rg-pin" type="password" inputmode="numeric" autocomplete="off" style="' + CHAMP + '">' +
+    '<div id="rg-err" style="color:#B4544B;font-size:13px;min-height:18px;margin-bottom:8px"></div>' +
+    '<div style="display:flex;gap:10px"><button id="rg-x" style="' + BTN + ';background:#fff;color:#3D2B1F;border:1.5px solid #EDD9D4">Fermer</button><button id="rg-ok" style="' + BTN + '">Enregistrer</button></div>');
+  var ta = ov.querySelector("#rg-stock");
+  ta.addEventListener("input", function(){
+    var codes = extraireCodes(ta.value);
+    ov.querySelector("#rg-info").textContent = codes.length ? (_nb(codes.length, "code-barres lu", "codes-barres lus") + ", dont " + _nb(nbFichesEnRayon(codes), "avec une fiche SkinMatch", "avec une fiche SkinMatch") + ".") : "Aucun code-barres lu.";
+  });
+  ov.querySelector("#rg-x").onclick = function(){ ov.remove(); };
+  ov.querySelector("#rg-ok").onclick = async function(){
+    var pin = ov.querySelector("#rg-pin").value.trim();
+    if (pin && !/^\d{4,8}$/.test(pin)) { ov.querySelector("#rg-err").textContent = "Le code PIN doit comporter 4 à 8 chiffres."; return; }
+    var nom = ov.querySelector("#rg-nom").value.trim().slice(0, 80);
+    if (!nom) { ov.querySelector("#rg-err").textContent = "Indiquez le nom de la pharmacie."; return; }
+    c.nom = nom; c.ville = ov.querySelector("#rg-ville").value.trim().slice(0, 60);
+    if (ta.value.trim()) c.stock = extraireCodes(ta.value);
+    if (pin) c.pin = await hacherPin(pin);
+    ecrireConfig(c); _stock = null; ov.remove(); vueAdmin();
+  };
+};
+
+// Badge « En rayon » sur la vignette des produits disponibles dans l'officine
+if (typeof window.imgHtml === "function") {
+  var _img = window.imgHtml;
+  window.imgHtml = function(key){
+    var h = _img.apply(this, arguments);
+    if (!enRayon(key)) return h;
+    var i = h.lastIndexOf("</div>");
+    return h.slice(0, i) + '<span style="position:absolute;left:4px;bottom:4px;z-index:2;background:#2E7D32;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px">En rayon</span>' + h.slice(i);
+  };
+}
+
+// Nom de l'officine sur l'accueil et dans le titre de la page
+function afficherOfficine(){
+  var c = lireConfig(); if (!c || !c.nom) return;
+  document.title = "SkinMatch — " + c.nom;
+  var intro = document.getElementById("borne-intro");
+  if (intro && !document.getElementById("borne-officine")) {
+    var d = document.createElement("div");
+    d.id = "borne-officine";
+    d.style.cssText = "font-size:12px;font-weight:700;color:#C4726A;letter-spacing:.3px;margin-bottom:6px";
+    d.textContent = c.nom + (c.ville ? " · " + c.ville : "");
+    intro.insertBefore(d, intro.firstChild);
+  }
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    PARCOURS BORNE : le questionnaire est l'entrée obligatoire.
@@ -14310,7 +14484,7 @@ function brancherAcces(){
   var o = window[nom];
   window[nom] = function(ecran){
     var r = o.apply(this, arguments);
-    if (ecran === "welcome") setTimeout(majAccueil, 60);
+    if (ecran === "welcome") setTimeout(function(){ majAccueil(); afficherOfficine(); }, 60);
     return r;
   };
 });
@@ -14344,8 +14518,11 @@ document.addEventListener("touchend", function(e){
 
 /* ── Démarrage ── */
 if (/[?&]admin=1/.test(location.search)) {
-  setTimeout(vueAdmin, 400);
+  setTimeout(function(){ demanderPin(vueAdmin); }, 400);
 } else {
+  window.addEventListener("load", function(){ setTimeout(function(){
+    if (!lireConfig()) ecranInstallation(); else afficherOfficine();
+  }, 350); });
   compter("sessions");
   relancerMinuteur();
   brancherAcces();
