@@ -2439,11 +2439,7 @@ function analyseINCI(texte, allergiesUtilisateur) {
 
   // Croisement avec les allergies déclarées par l'utilisateur
   var perso = (allergiesUtilisateur || []).filter(function(a){
-@@si public@@
-    return a && a !== "Aucune allergie connue" && a !== "No known allergies";
-@@sinon@@
     return a && a !== "Aucune allergie connue" && a !== "No known allergies" && a !== "Ninguna alergia conocida";
-@@fin@@
   });
   res.conflits = res.allergenes.filter(function(a){
     return perso.some(function(p){
@@ -2536,15 +2532,6 @@ function scoreCompat(key, skin, concern, age, allergies) {
   // ── 1. Exclusions de sécurité (elles écrasent tout le reste) ──
   var inciProd = (typeof INCI_DB !== "undefined") ? INCI_DB[key] : null;
   var AMAP = {
-@@si public@@
-    'Parfums / Fragrances':'parfum','Fragrances / Perfumes':'parfum',
-    'Parabènes':'paraben','Parabens':'paraben','Alcool':'alcohol','Alcohol':'alcohol',
-    'Sulfates (SLS/SLES)':'sulfate','Silicones':'silicone',
-    'Rétinol':'retinol','Retinol':'retinol','Vitamine C':'vitc','Vitamin C':'vitc',
-    'Acide salicylique':'salicylic','Salicylic acid':'salicylic',
-    'Acides (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
-    'Huiles essentielles':'parfum','Essential oils':'parfum'
-@@sinon@@
     'Parfums / Fragrances':'parfum','Perfumes / Fragancias':'parfum','Fragrances / Perfumes':'parfum',
     'Parabènes':'paraben','Parabenos':'paraben','Parabens':'paraben','Alcool':'alcohol','Alcohol ':'alcohol','Alcohol':'alcohol',
     'Sulfates (SLS/SLES)':'sulfate','Sulfatos (SLS/SLES)':'sulfate','Silicones':'silicone','Siliconas':'silicone',
@@ -2552,7 +2539,6 @@ function scoreCompat(key, skin, concern, age, allergies) {
     'Acide salicylique':'salicylic','Ácido salicílico':'salicylic','Salicylic acid':'salicylic',
     'Acides (AHA/BHA)':'aha_bha','Ácidos (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
     'Huiles essentielles':'parfum','Aceites esenciales':'parfum','Essential oils':'parfum'
-@@fin@@
   };
   var bloquants = [];
   (allergies || []).forEach(function(a){
@@ -2798,31 +2784,16 @@ function build(){
 
   // Mapping allergie → champ INCI_DB
   const ALLERGY_INCI_MAP_BUILD = {
-@@si public@@
-    'Parfums / Fragrances':'parfum','Fragrances / Perfumes':'parfum',
-    'Parabènes':'paraben','Parabens':'paraben',
-    'Alcool':'alcohol','Alcohol':'alcohol',
-    'Sulfates (SLS/SLES)':'sulfate',
-    'Silicones':'silicone',
-@@sinon@@
     'Parfums / Fragrances':'parfum','Perfumes / Fragancias':'parfum','Fragrances / Perfumes':'parfum',
     'Parabènes':'paraben','Parabenos':'paraben','Parabens':'paraben',
     'Alcool':'alcohol','Alcohol ':'alcohol','Alcohol':'alcohol',
     'Sulfates (SLS/SLES)':'sulfate','Sulfatos (SLS/SLES)':'sulfate',
     'Silicones':'silicone','Siliconas':'silicone',
-@@fin@@
     'Rétinol':'retinol','Retinol':'retinol',
-@@si public@@
-    'Vitamine C':'vitc','Vitamin C':'vitc',
-    'Acide salicylique':'salicylic','Salicylic acid':'salicylic',
-    'Acides (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
-    'Huiles essentielles':'parfum','Essential oils':'parfum',
-@@sinon@@
     'Vitamine C':'vitc','Vitamina C':'vitc','Vitamin C':'vitc',
     'Acide salicylique':'salicylic','Ácido salicílico':'salicylic','Salicylic acid':'salicylic',
     'Acides (AHA/BHA)':'aha_bha','Ácidos (AHA/BHA)':'aha_bha','Acids (AHA/BHA)':'aha_bha',
     'Huiles essentielles':'parfum','Aceites esenciales':'parfum','Essential oils':'parfum',
-@@fin@@
   };
 
   // Filtre allergies : exclure les produits qui contiennent un allergène déclaré
@@ -4007,12 +3978,10 @@ function finishOnboarding() {
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
-@@si borne@@
 // Les témoignages de clientes affichés ici étaient des textes de remplissage
 // inventés. Diffuser de faux avis de consommateurs est une pratique commerciale
 // trompeuse (art. L121-4 28° du Code de la consommation). Ils sont remplacés par
 // des faits vérifiables sur le fonctionnement de l'application.
-@@fin@@
 function applyWelcomeLang(){
   const l = T[LANG]||T.fr;
   // Welcome
