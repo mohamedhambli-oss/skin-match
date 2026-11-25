@@ -4,7 +4,7 @@ const test = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const { initializeTestEnvironment, assertSucceeds, assertFails } = require("@firebase/rules-unit-testing");
-const { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, where } = require("firebase/firestore");
+const { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, where, addDoc } = require("firebase/firestore");
 
 let env;
 const NOW = new Date().toISOString();
@@ -81,4 +81,16 @@ test("ai_usage et collections inconnues : refusés", async () => {
   await assertFails(setDoc(doc(alice(), "anything/x"), { a: 1 }));
   await assertSucceeds(deleteDoc(doc(alice(), "routines/alice")));
   await assertFails(deleteDoc(doc(bob(), "routines/alice")));
+});
+
+test("tolerance : champ du profil et rapports anonymes encadrés", async () => {
+  const db = alice();
+  await assertSucceeds(setDoc(doc(db, "users/alice"), { ...profile, tolerance: { "cv-gel": { v: "reaction", s: ["rougeurs"] } } }));
+  const ok = { k: "cv-gel", e: "3337875597197", v: "reaction", s: ["rougeurs"], g: "legere", skin: "mixte", age: "26-35", conc: "acne", sem: 2, mois: "2026-11" };
+  await assertSucceeds(addDoc(collection(db, "tolerance_reports"), ok));
+  await assertFails(addDoc(collection(guest(), "tolerance_reports"), ok));                 // compte requis
+  await assertFails(addDoc(collection(db, "tolerance_reports"), { ...ok, uid: "alice" }));  // aucun identifiant
+  await assertFails(addDoc(collection(db, "tolerance_reports"), { ...ok, v: "super" }));
+  await assertFails(addDoc(collection(db, "tolerance_reports"), { ...ok, mois: "2026-11-25" }));
+  await assertFails(getDocs(collection(db, "tolerance_reports")));                          // pas de lecture
 });

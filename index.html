@@ -68,7 +68,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAnalytics, logEvent, setUserId, setUserProperties, setAnalyticsCollectionEnabled } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
@@ -143,6 +143,7 @@
   window._query = query;
   window._where = where;
   window._getDocs = getDocs;
+  window._addDoc = addDoc;
   window._firebaseReady = true;
 
   // Traiter un éventuel retour de connexion Google par redirect (mobile)
@@ -1555,7 +1556,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">1. Responsable du traitement</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Le responsable du traitement est l'éditeur de SkinMatch : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : raison sociale, forme juridique, adresse du siège]</mark>. Contact pour toute question sur vos données : <a href="mailto:contact@skinmatch.app" style="color:#C4726A">contact@skinmatch.app</a>.</p>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">2. Données traitées et bases légales</h3>
-    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Compte</strong> (prénom, e-mail, mot de passe chiffré par Firebase) — exécution du service (art. 6.1.b RGPD).</li><li><strong>Profil peau et routine</strong> (type de peau, tranche d'âge, préoccupations, budget, produits retenus) — exécution du service.</li><li><strong>Données de santé</strong> : grossesse ou allaitement, allergies, carnation (phototype). Elles servent à écarter les produits déconseillés. Elles ne sont enregistrées dans votre compte qu'avec votre <strong>consentement explicite</strong> (art. 9.2.a RGPD) ; sans lui, elles restent sur votre appareil.</li><li><strong>Cycle menstruel</strong> : stocké uniquement sur votre appareil, jamais transmis.</li><li><strong>Photos de peau</strong> (suivi avant/après) : stockées uniquement sur votre appareil.</li><li><strong>Analyse par IA</strong> : la photo ou le texte libre que vous soumettez est transmis à Google (API Gemini), avec votre consentement (art. 6.1.a). SkinMatch ne conserve ni la photo ni le texte ; seul un compteur d'utilisation quotidien est enregistré.</li><li><strong>Mesure d'audience</strong> (Google Analytics : pages vues, événements, type d'appareil), uniquement si vous l'acceptez — consentement.</li><li><strong>Conseils météo</strong> : position arrondie à environ 10 km, envoyée à Open-Meteo, uniquement si vous activez la fonction — consentement.</li><li><strong>Codes-barres proposés</strong> (code, nom et marque du produit, identifiant de compte) — intérêt légitime à enrichir la base produits.</li><li><strong>Préférences</strong> (langue, pays, notifications) : stockées sur votre appareil.</li></ul>
+    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Compte</strong> (prénom, e-mail, mot de passe chiffré par Firebase) — exécution du service (art. 6.1.b RGPD).</li><li><strong>Profil peau et routine</strong> (type de peau, tranche d'âge, préoccupations, budget, produits retenus) — exécution du service.</li><li><strong>Données de santé</strong> : grossesse ou allaitement, allergies, carnation (phototype). Elles servent à écarter les produits déconseillés. Elles ne sont enregistrées dans votre compte qu'avec votre <strong>consentement explicite</strong> (art. 9.2.a RGPD) ; sans lui, elles restent sur votre appareil.</li><li><strong>Cycle menstruel</strong> : stocké uniquement sur votre appareil, jamais transmis.</li><li><strong>Photos de peau</strong> (suivi avant/après) : stockées uniquement sur votre appareil.</li><li><strong>Retours de tolérance</strong> (produit bien toléré, sans effet, ou réaction et ses symptômes) : sur votre appareil ; dans votre compte seulement avec votre consentement aux données de santé. Ils servent à ne plus vous recommander un produit qui vous a fait réagir. Si vous cochez la case de partage anonyme, le retour est enregistré sans identifiant ni e-mail (produit, symptômes, type de peau, tranche d'âge, préoccupation principale, mois) afin d'améliorer les recommandations ; n'étant rattaché à aucun compte, il ne peut plus être supprimé ensuite.</li><li><strong>Analyse par IA</strong> : la photo ou le texte libre que vous soumettez est transmis à Google (API Gemini), avec votre consentement (art. 6.1.a). SkinMatch ne conserve ni la photo ni le texte ; seul un compteur d'utilisation quotidien est enregistré.</li><li><strong>Mesure d'audience</strong> (Google Analytics : pages vues, événements, type d'appareil), uniquement si vous l'acceptez — consentement.</li><li><strong>Conseils météo</strong> : position arrondie à environ 10 km, envoyée à Open-Meteo, uniquement si vous activez la fonction — consentement.</li><li><strong>Codes-barres proposés</strong> (code, nom et marque du produit, identifiant de compte) — intérêt légitime à enrichir la base produits.</li><li><strong>Préférences</strong> (langue, pays, notifications) : stockées sur votre appareil.</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">3. Destinataires et sous-traitants</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Vos données ne sont ni vendues ni louées. Elles sont traitées par :</p>
     <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Google Ireland Ltd / Google LLC — Firebase (authentification, base de données Firestore, fonctions serveur), Google Analytics et API Gemini. Région de la base Firestore : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : région du projet Firebase, à lire dans la console Firestore]</mark>.</li><li>Netlify, Inc. (États-Unis) — hébergement du site : reçoit l'adresse IP et les informations techniques de chaque visite. Transferts encadrés par les clauses contractuelles types de la Commission européenne.</li><li>Open Beauty Facts — reçoit le code-barres scanné (aucune donnée personnelle).</li><li>Open-Meteo — reçoit la position arrondie si les conseils météo sont activés.</li><li>Fournisseurs techniques (Google Fonts, cdnjs) — reçoivent l'adresse IP lors du chargement des polices et bibliothèques.</li></ul>
@@ -2609,6 +2610,8 @@ function build(){
   // Filtre allergies : exclure les produits qui contiennent un allergène déclaré
   const hasAllergen = (key) => {
     if (!DB[key]) return false;
+    // Réaction signalée par l'utilisatrice (retours de tolérance, app grand public)
+    if (typeof window._smReaction === 'function' && window._smReaction(key)) return true;
     const userAllergies = ST.allergies || [];
     if (userAllergies.length === 0) return false;
     // 1) Détection fine (allergènes parfum réglementés, conservateurs, filtres UV, "Autre:") — prioritaire
@@ -10370,6 +10373,8 @@ async function setHealthConsent(accept) {
   var ref = window._doc(window._db, 'users', window._currentUser.uid);
   var upd = { healthConsentAt: accept ? new Date().toISOString() : null,
               healthConsentVersion: accept ? HEALTH_CONSENT_VERSION : null };
+  // Retours de tolérance (données de santé) : envoyés avec l'accord, retirés sans lui.
+  if (typeof _tolGet === 'function') upd.tolerance = accept ? _tolGet('skinmatch_tolerance') : {};
   try {
     if (!accept) {
       // Retrait : profil et routine réécrits sans les données de santé (updateDoc remplace le champ entier).
@@ -11438,6 +11443,166 @@ function submitFeedback(key, type, btn) {
   setTimeout(function() { toast.style.opacity = '1'; }, 10);
   setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 2500);
 }
+
+// ══════════ RETOURS DE TOLÉRANCE ══════════
+// « Ce produit m'a convenu / j'ai eu une réaction » : la seule donnée que ni les marques
+// ni les autres applications n'ont. Demandé 14 jours après l'enregistrement d'une routine,
+// ou après un 👎. Une réaction exclut le produit des recommandations suivantes.
+//   · sur l'appareil : toujours (skinmatch_tolerance) ;
+//   · dans le compte : seulement avec l'accord « données de santé » ;
+//   · partage anonyme (sans identifiant ni e-mail) : case à cocher, décochée par défaut.
+var TOL_KEY = 'skinmatch_tolerance', TOL_START = 'skinmatch_tolerance_start', TOL_ASKED = 'skinmatch_tolerance_asked';
+var TOL_DAYS = 14;
+var TOL_SYMPTOMES = [['rougeurs', 'Rougeurs', 'Redness'], ['brulures', 'Picotements, brûlures', 'Stinging, burning'],
+  ['demangeaisons', 'Démangeaisons', 'Itching'], ['boutons', 'Boutons, imperfections', 'Breakouts'],
+  ['secheresse', 'Sécheresse, tiraillements', 'Dryness, tightness'], ['gonflement', 'Gonflement', 'Swelling']];
+function _tolGet(k) { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } }
+function _tolSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+// Utilisé par build() : un produit qui a provoqué une réaction n'est plus recommandé.
+window._smReaction = function (key) { var t = _tolGet(TOL_KEY)[key]; return !!(t && t.v === 'reaction'); };
+
+function _tolTrack(keys) {
+  var st = _tolGet(TOL_START), now = new Date().toISOString(), changed = false;
+  (keys || []).forEach(function (k) { if (k && !st[k]) { st[k] = now; changed = true; } });
+  if (changed) _tolSet(TOL_START, st);
+}
+function _tolWeeks(key) {
+  var d = Date.parse(_tolGet(TOL_START)[key] || '');
+  return isNaN(d) ? null : Math.max(1, Math.round((Date.now() - d) / 6048e5));
+}
+function toleranceDue() {
+  var st = _tolGet(TOL_START), ans = _tolGet(TOL_KEY), now = Date.now();
+  return Object.keys(st).filter(function (k) {
+    return DB[k] && !ans[k] && now - Date.parse(st[k]) >= TOL_DAYS * 864e5;
+  }).sort(function (a, b) { return Date.parse(st[a]) - Date.parse(st[b]); });
+}
+
+// Une routine enregistrée = des produits réellement utilisés à partir d'aujourd'hui.
+if (typeof saveRoutineToFirestore === 'function') {
+  var _tolSave = saveRoutineToFirestore;
+  saveRoutineToFirestore = window.saveRoutineToFirestore = function (routineData) {
+    _tolTrack(((routineData && routineData.products) || []).map(function (p) { return p.key; }));
+    return _tolSave.apply(this, arguments);
+  };
+}
+// Un 👎 peut cacher une réaction : on pose la question.
+if (typeof submitFeedback === 'function') {
+  var _tolFb = submitFeedback;
+  submitFeedback = window.submitFeedback = function (key, type) {
+    var r = _tolFb.apply(this, arguments);
+    if (type === 'dislike' && DB[key]) setTimeout(function () { askTolerance(key, { fromDislike: true }); }, 400);
+    return r;
+  };
+}
+
+function askTolerance(key, opts) {
+  opts = opts || {};
+  var p = DB[key]; if (!p) return;
+  var isEN = LANG === 'en', w = _tolWeeks(key);
+  var prod = _escHtml(p.marque + ' ' + p.nom);
+  var ov = document.createElement('div');
+  ov.id = 'tol-modal';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(61,43,31,.7);z-index:99997;display:flex;align-items:center;justify-content:center;padding:20px';
+  var B = 'display:block;width:100%;padding:13px 14px;margin-bottom:9px;border-radius:14px;border:1.5px solid #EDD9D4;background:#fff;color:#3D2B1F;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left';
+  var q = opts.fromDislike
+    ? (isEN ? 'What did not suit you with ' : 'Qu\'est-ce qui ne t\'a pas convenu avec ') + '<strong>' + prod + '</strong> ?'
+    : (isEN ? 'After ' + (w || 2) + ' weeks, how did your skin tolerate ' : 'Après ' + (w || 2) + ' semaines, comment ta peau a-t-elle toléré ') + '<strong>' + prod + '</strong> ?';
+  ov.innerHTML = '<div style="background:#FDF8F5;border-radius:22px;padding:22px;max-width:400px;width:100%;max-height:90vh;overflow:auto;font-family:inherit">' +
+    '<div style="font-size:15px;color:#3D2B1F;line-height:1.5;margin-bottom:14px">' + q + '</div>' +
+    '<div id="tol-step1">' +
+      (opts.fromDislike ? '' : '<button data-v="ok" style="' + B + '">✅ ' + (isEN ? 'Well tolerated' : 'Bien toléré') + '</button>') +
+      '<button data-v="neutre" style="' + B + '">😐 ' + (isEN ? 'No visible effect' : 'Pas d\'effet visible') + '</button>' +
+      '<button data-v="reaction" style="' + B + '">⚠️ ' + (isEN ? 'A skin reaction' : 'Une réaction de la peau') + '</button>' +
+      (opts.fromDislike ? '<button data-v="autre" style="' + B + '">💬 ' + (isEN ? 'Something else (texture, smell, price)' : 'Autre chose (texture, odeur, prix)') + '</button>' : '') +
+      '<button data-v="plus-tard" style="' + B + ';border:none;background:none;color:#8B6F5E;text-align:center">' + (isEN ? 'Later' : 'Plus tard') + '</button>' +
+    '</div><div id="tol-step2" hidden></div></div>';
+  document.body.appendChild(ov);
+  var close = function () { ov.remove(); };
+  ov.querySelectorAll('#tol-step1 button').forEach(function (b) {
+    b.onclick = function () {
+      var v = b.dataset.v;
+      if (v === 'plus-tard' || v === 'autre') { close(); return; }
+      if (v === 'reaction') { _tolReactionForm(ov, key, close); return; }
+      _tolFinish(ov, key, { v: v, s: [], g: '', d: new Date().toISOString(), sem: w }, close);
+    };
+  });
+}
+
+function _tolReactionForm(ov, key, close) {
+  var isEN = LANG === 'en';
+  var s2 = ov.querySelector('#tol-step2');
+  ov.querySelector('#tol-step1').hidden = true; s2.hidden = false;
+  s2.innerHTML = '<div style="font-size:13px;font-weight:700;color:#3D2B1F;margin-bottom:8px">' + (isEN ? 'What did you notice?' : 'Qu\'as-tu remarqué ?') + '</div>' +
+    TOL_SYMPTOMES.map(function (x) {
+      return '<label style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px;color:#3D2B1F"><input type="checkbox" value="' + x[0] + '" style="width:20px;height:20px;accent-color:#C4726A">' + (isEN ? x[2] : x[1]) + '</label>';
+    }).join('') +
+    '<div style="font-size:13px;font-weight:700;color:#3D2B1F;margin:10px 0 6px">' + (isEN ? 'How strong?' : 'Intensité') + '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+      '<label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #EDD9D4;border-radius:12px;font-size:14px"><input type="radio" name="tol-g" value="legere" checked style="accent-color:#C4726A">' + (isEN ? 'Mild' : 'Légère') + '</label>' +
+      '<label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #EDD9D4;border-radius:12px;font-size:14px"><input type="radio" name="tol-g" value="forte" style="accent-color:#C4726A">' + (isEN ? 'Strong' : 'Forte') + '</label>' +
+    '</div>' +
+    '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#F5F0ED;border-radius:12px;font-size:12.5px;color:#5A4A42;line-height:1.45;margin-bottom:12px"><input type="checkbox" id="tol-share" style="width:20px;height:20px;flex-shrink:0;accent-color:#C4726A">' +
+      (isEN ? 'Share this report anonymously (no name, no e-mail) to improve recommendations for people with the same skin.'
+            : 'Partager ce retour anonymement (ni nom ni e-mail) pour améliorer les recommandations des personnes qui ont la même peau.') + '</label>' +
+    '<button id="tol-ok" style="width:100%;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">' + (isEN ? 'Save' : 'Enregistrer') + '</button>';
+  s2.querySelector('#tol-ok').onclick = function () {
+    var s = Array.from(s2.querySelectorAll('input[type=checkbox][value]:checked')).map(function (i) { return i.value; });
+    var g = (s2.querySelector('input[name=tol-g]:checked') || {}).value || 'legere';
+    _tolFinish(ov, key, { v: 'reaction', s: s, g: g, d: new Date().toISOString(), sem: _tolWeeks(key) }, close, s2.querySelector('#tol-share').checked);
+  };
+}
+
+function _tolFinish(ov, key, rec, close, share) {
+  var isEN = LANG === 'en';
+  var all = _tolGet(TOL_KEY); all[key] = rec; _tolSet(TOL_KEY, all);
+  // Compte : uniquement avec l'accord « données de santé »
+  if (window._currentUser && window._firebaseReady && typeof hasHealthConsent === 'function' && hasHealthConsent()) {
+    window._setDoc(window._doc(window._db, 'users', window._currentUser.uid), { tolerance: all }, { merge: true }).catch(function () {});
+  }
+  // Partage anonyme : aucun identifiant, date au mois près, profil réduit
+  if (share && window._currentUser && window._firebaseReady && window._addDoc) {
+    window._addDoc(window._collection(window._db, 'tolerance_reports'), {
+      k: key, e: String(DB[key].ean || ''), v: rec.v, s: rec.s, g: rec.g || '',
+      skin: ST.skinType || '', age: ST.ageGroup || '', conc: (ST.concerns || [])[0] || '',
+      sem: rec.sem || 0, mois: new Date().toISOString().slice(0, 7)
+    }).catch(function () {});
+  }
+  var box = ov.firstElementChild, html;
+  if (rec.v === 'reaction') {
+    var urgent = rec.s.indexOf('gonflement') > -1;
+    html = '<div style="font-size:16px;font-weight:700;color:#3D2B1F;margin-bottom:8px">' + (isEN ? 'Noted. This product will no longer be recommended to you.' : 'C\'est noté. Ce produit ne te sera plus recommandé.') + '</div>' +
+      '<div style="font-size:13px;color:#5A4A42;line-height:1.55;margin-bottom:12px">' +
+        (isEN ? 'Stop using it and rinse with water. If the reaction is strong, spreads, or affects the eyes or lips, see a doctor or a pharmacist.'
+              : 'Arrête de l\'utiliser et rince à l\'eau claire. Si la réaction est forte, s\'étend, ou touche les yeux ou les lèvres, consulte un médecin ou un pharmacien.') + '</div>' +
+      (urgent ? '<div style="font-size:13px;font-weight:700;color:#B4282E;background:#FCEEEE;border-radius:12px;padding:10px 12px;margin-bottom:12px">' +
+        (isEN ? 'Swelling of the face or trouble breathing: call 112 immediately.' : 'Gonflement du visage, de la gorge ou difficulté à respirer : appelle immédiatement le 15 (ou le 112).') + '</div>' : '') +
+      (rec.g === 'forte' || urgent ? '<div style="font-size:12.5px;color:#5A4A42;line-height:1.5;margin-bottom:12px">' +
+        (isEN ? 'You can report a cosmetic side effect to the authorities: ' : 'Tu peux déclarer cet effet indésirable aux autorités sanitaires (cosmétovigilance) : ') +
+        '<a href="https://signalement.social-sante.gouv.fr" target="_blank" rel="noopener" style="color:#C4726A">signalement.social-sante.gouv.fr</a></div>' : '') +
+      (typeof replaceProduct === 'function' ? '<button id="tol-alt" style="width:100%;padding:13px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px">' + (isEN ? 'See an alternative' : 'Voir une alternative') + '</button>' : '');
+  } else {
+    html = '<div style="font-size:16px;font-weight:700;color:#3D2B1F;margin-bottom:12px">' + (isEN ? 'Thank you, noted!' : 'Merci, c\'est noté !') + '</div>';
+  }
+  box.innerHTML = html + '<button id="tol-close" style="width:100%;padding:12px;border-radius:50px;border:1.5px solid #EDD9D4;background:#fff;color:#3D2B1F;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">' + (isEN ? 'Close' : 'Fermer') + '</button>';
+  box.querySelector('#tol-close').onclick = close;
+  var alt = box.querySelector('#tol-alt');
+  if (alt) alt.onclick = function () { close(); replaceProduct(key); };
+}
+
+// Une question par jour au plus, quand l'app est ouverte et qu'aucune fenêtre n'est affichée.
+function checkToleranceDue() {
+  try {
+    var today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(TOL_ASKED) === today) return;
+    if (document.getElementById('tol-modal') || document.querySelector('div[style*="position:fixed;inset:0"]')) return;
+    if (['lang', 'onboarding'].indexOf(ST.screen) > -1) return;
+    var due = toleranceDue();
+    if (!due.length) return;
+    localStorage.setItem(TOL_ASKED, today);
+    askTolerance(due[0]);
+  } catch (e) {}
+}
+window.addEventListener('load', function () { setTimeout(checkToleranceDue, 7000); });
 
 // Init — attendre Firebase avant d'afficher
 var _savedLang = localStorage.getItem('skinmatch_lang');
