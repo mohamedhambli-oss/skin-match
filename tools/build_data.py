@@ -24,6 +24,22 @@ BOOLS = {'vegan': 'vegan', 'clean': 'clean', 'teinte': 'teinte', 'fiche_incomple
 FLAGS = ['retinol', 'parfum', 'paraben', 'alcohol', 'sulfate', 'silicone', 'vitc', 'salicylic', 'aha_bha']
 REQUIRED = ['id', 'marque', 'nom', 'moment']
 
+# Ingrédients qui rendent un drapeau « contient_… » obligatoirement OUI. Si le tableur indique NON
+# alors que la composition contient l'ingrédient, le drapeau est corrigé (et signalé) : une
+# allergie ou une intolérance déclarée ne doit jamais laisser passer ce produit.
+# (Le contraire n'est pas corrigé : les compositions saisies sont parfois partielles.)
+FLAG_RX = {
+    'retinol': r'retinol|retinal\b|retinaldehyde|retinyl',
+    'parfum': r'\bparfum\b|\bfragrance\b',
+    'paraben': r'paraben',
+    'alcohol': r'alcohol denat|\bethanol\b',
+    'sulfate': r'lauryl sulfate|laureth sulfate',
+    'silicone': r'dimethicone|siloxane|methicone',
+    'vitc': r'ascorbic|ascorbyl',
+    'salicylic': r'salicylic',
+    'aha_bha': r'glycolic|lactic acid|salicylic|mandelic|gluconolactone',
+}
+
 
 def s(v):
     return '' if v is None else str(v).strip()
@@ -62,9 +78,18 @@ def main():
             errors.append(f'Produits ligne {n} : code-barres « {row.get("code_barres")} » invalide')
         if ean:
             p['ean'] = ean
-            if norm(ean) in seen_ean:
-                warnings.append(f'code-barres {ean} sur « {seen_ean[norm(ean)]} » et « {k} »')
-            seen_ean.setdefault(norm(ean), k)
+        # Autres codes-barres du même produit (autres contenances, anciens emballages), séparés par « ; »
+        autres = [re.sub(r'\D', '', x) for x in s(row.get('autres_codes')).split(';') if x.strip()]
+        for a in autres:
+            if not 8 <= len(a) <= 14:
+                errors.append(f'Produits ligne {n} : autre code « {a} » invalide')
+        autres = [a for a in autres if 8 <= len(a) <= 14 and norm(a) != norm(ean)]
+        if autres:
+            p['eans'] = autres
+        for code in ([ean] if ean else []) + autres:
+            if norm(code) in seen_ean:
+                errors.append(f'code-barres {code} sur « {seen_ean[norm(code)]} » et « {k} » (fusionner les fiches)')
+            seen_ean.setdefault(norm(code), k)
         for col, key in TEXTS.items():
             if s(row.get(col)):
                 p[key] = s(row.get(col))
@@ -87,6 +112,11 @@ def main():
             warnings.append(f'« {k} » : composition absente ou très courte')
         DB[k] = p
         flags = {f: s(row.get('contient_' + f)).upper() for f in FLAGS}
+        comp_txt = ' '.join(p['comp']).lower()
+        for f in FLAGS:
+            if flags[f] == 'NON' and re.search(FLAG_RX[f], comp_txt):
+                flags[f] = 'OUI'
+                warnings.append(f'« {k} » : contient_{f} corrigé en OUI (présent dans la composition)')
         if any(v in ('OUI', 'NON') for v in flags.values()):
             INCI_DB[k] = {f: v == 'OUI' for f, v in flags.items()}
             if ean:

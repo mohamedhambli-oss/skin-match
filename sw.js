@@ -1,7 +1,7 @@
 // SkinMatch — service worker
 // Doit être servi comme un vrai fichier depuis la même origine : un service worker
 // enregistré depuis une URL blob: est refusé par les navigateurs.
-const VERSION = 'sm-v11';
+const VERSION = 'sm-v12';
 const CACHE_APP  = VERSION + '-app';
 const CACHE_DATA = VERSION + '-data';
 

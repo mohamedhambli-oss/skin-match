@@ -2760,21 +2760,26 @@ function build(){
     if (detectFineAllergens(key, userAllergies).hit) return true;
     // 2) Vérifier via INCI_DB (9 drapeaux)
     const inciProd = INCI_DB[key];
-    if (inciProd) {
-      return userAllergies.some(function(allergy) {
+    if (inciProd && userAllergies.some(function(allergy) {
         if (allergy === 'Aucune allergie connue' || allergy === 'No known allergies') return false;
         const field = ALLERGY_INCI_MAP_BUILD[allergy];
         return field && inciProd[field] === true;
-      });
-    }
-    // Fallback sur comp[]
+      })) return true;
+    // 3) Et TOUJOURS la composition elle-même : un drapeau « NON » erroné dans les données
+    //    (vu sur 16 fiches, dont 2 contenant du rétinol) ne doit jamais suffire à laisser passer.
     const p = DB[key];
     const allText = ((p.comp||[]).join(' ') + ' ' + (p.ak||[]).join(' ')).toLowerCase();
     const ALLERGY_MAP_FALLBACK = {
       'Parfums / Fragrances':['parfum','fragrance'],
       'Parabènes':['paraben'],'Alcool':['alcohol denat'],
-      'Rétinol':['retinol','retinyl'],'Vitamine C':['ascorbic acid'],
-      'Acide salicylique':['salicylic acid'],'Acides (AHA/BHA)':['glycolic acid','lactic acid','salicylic acid'],
+      'Rétinol':['retinol','retinyl','retinal'],'Retinol':['retinol','retinyl','retinal'],
+      'Vitamine C':['ascorbic','ascorbyl'],'Vitamin C':['ascorbic','ascorbyl'],'Vitamina C':['ascorbic','ascorbyl'],
+      'Acide salicylique':['salicylic'],'Salicylic acid':['salicylic'],'Ácido salicílico':['salicylic'],
+      'Acides (AHA/BHA)':['glycolic','lactic acid','salicylic','mandelic','gluconolactone'],
+      'Acids (AHA/BHA)':['glycolic','lactic acid','salicylic','mandelic','gluconolactone'],
+      'Ácidos (AHA/BHA)':['glycolic','lactic acid','salicylic','mandelic','gluconolactone'],
+      'Fragrances / Perfumes':['parfum','fragrance'],'Perfumes / Fragancias':['parfum','fragrance'],
+      'Parabens':['paraben'],'Parabenos':['paraben'],'Alcohol':['alcohol denat'],
     };
     return userAllergies.some(function(allergy) {
       if (allergy === 'Aucune allergie connue' || allergy === 'No known allergies') return false;
@@ -13106,7 +13111,7 @@ function _searchDBByEAN(code) {
     if (!p) continue;
     // Les codes-barres sont stockés tantôt dans DB, tantôt dans INCI_DB :
     // ne consulter que DB rendait 12 produits introuvables au scan.
-    var cands = [p.ean, p.barcode, p.code];
+    var cands = [p.ean, p.barcode, p.code].concat(p.eans || []);   // eans : autres contenances / emballages
     if (typeof INCI_DB !== "undefined" && INCI_DB[key]) cands.push(INCI_DB[key].ean);
     for (var i = 0; i < cands.length; i++) {
       if (cands[i] && String(cands[i]).replace(/\D/g, "") === code) return key;
@@ -14403,16 +14408,21 @@ function stockSet(){
   ((c && c.stock) || []).forEach(function(k){ _stock[k] = 1; });
   return _stock;
 }
+// Tous les codes-barres d'une fiche : principal + autres contenances / emballages.
+function codesFiche(p){
+  return [p.ean].concat(p.eans || []).filter(Boolean).map(function(c){ return String(c).replace(/^0+/, ""); });
+}
 function enRayon(key){
   var p = (typeof DB !== "undefined") && DB[key];
-  if (!p || !p.ean) return false;
-  return !!stockSet()[String(p.ean).replace(/^0+/, "")];
+  if (!p) return false;
+  var st = stockSet();
+  return codesFiche(p).some(function(c){ return !!st[c]; });
 }
 function _nb(n, un, plusieurs){ return n + " " + (n > 1 ? plusieurs : un); }
 function nbFichesEnRayon(codes){
   if (typeof DB === "undefined") return 0;
   var s = {}; codes.forEach(function(k){ s[k] = 1; });
-  return Object.keys(DB).filter(function(k){ return DB[k].ean && s[String(DB[k].ean).replace(/^0+/, "")]; }).length;
+  return Object.keys(DB).filter(function(k){ return codesFiche(DB[k]).some(function(c){ return s[c]; }); }).length;
 }
 
 /* Fenêtre modale tactile (pas de prompt() : illisible et bloquant sur tablette) */
@@ -14549,7 +14559,7 @@ async function genererFichesStock(){
   var cat = await chargerCatalogue();
   if (!cat) return 0;
   var dansDB = {};
-  Object.keys(DB).forEach(function(k){ if (DB[k].ean) dansDB[String(DB[k].ean).replace(/^0+/, "")] = 1; });
+  Object.keys(DB).forEach(function(k){ codesFiche(DB[k]).forEach(function(c){ dansDB[c] = 1; }); });
   var n = 0;
   Object.keys(stock).forEach(function(e){
     var it = cat[e];
