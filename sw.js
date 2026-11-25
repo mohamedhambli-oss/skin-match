@@ -1,12 +1,12 @@
 // SkinMatch — service worker
 // Doit être servi comme un vrai fichier depuis la même origine : un service worker
 // enregistré depuis une URL blob: est refusé par les navigateurs.
-const VERSION = 'sm-v7';
+const VERSION = 'sm-v8';
 const CACHE_APP  = VERSION + '-app';
 const CACHE_DATA = VERSION + '-data';
 
 // Coquille de l'application, mise en cache à l'installation.
-const SHELL = ['./', './index.html', './pharmacie.html', './manifest.json',
+const SHELL = ['./', './index.html', './pharmacie.html', './data/products.js', './manifest.json',
                './manifest-pharmacie.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -61,14 +61,15 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Index des codes-barres : volumineux et stable, cache d'abord.
-  if (url.pathname.endsWith('pharma-index.json')) {
-    e.respondWith(
-      caches.match(req).then((hit) => hit || fetch(req).then((r) => {
-        if (r.ok) { const copy = r.clone(); caches.open(CACHE_DATA).then((c) => c.put(req, copy)); }
-        return r;
-      }))
-    );
+  // Base produits (data/products.js, data/catalogue.json) : générée depuis le tableur et
+  // mise à jour à chaque publication. Réponse immédiate depuis le cache, rafraîchie en
+  // arrière-plan (la version suivante sert au prochain lancement) ; réseau si absent.
+  if (url.origin === location.origin && /\/data\/(products\.js|catalogue\.json)$/.test(url.pathname)) {
+    e.respondWith(caches.open(CACHE_DATA).then((c) => c.match(req).then((hit) => {
+      const net = fetch(req).then((r) => { if (r.ok) c.put(req, r.clone()); return r; });
+      if (hit) { net.catch(() => null); return hit; }
+      return net;
+    })));
     return;
   }
 

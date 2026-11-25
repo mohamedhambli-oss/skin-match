@@ -23,7 +23,9 @@
       "functions/**",
       "*.log",
       "firestore-tests/**",
-      "firestore.rules"
+      "firestore.rules",
+      "tools/**",
+      "data/produits.xlsx"
     ],
     "headers": [
       {
@@ -40,11 +42,11 @@
         ]
       },
       {
-        "source": "pharma-index.json",
+        "source": "data/@(products.js|catalogue.json)",
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "public, max-age=86400"
+            "value": "no-cache"
           }
         ]
       },
