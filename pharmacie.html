@@ -41,10 +41,12 @@
     window.console.debug = noop;
   }
 })();
-    // Forcer le bon URL pour la PWA
-    if (window.location.pathname === '/skinnmatch' || window.location.pathname === '/skinnmatch/index.html') {
-      window.location.replace('/skinnmatch/');
-    }
+    // Adresse publique de l'app, calculée depuis la page : les liens partagés restent
+    // valides quel que soit l'hébergeur ou le nom de domaine (Netlify, site de test, domaine).
+    // Depuis la borne (pharmacie.html), on renvoie vers l'app grand public du même dossier.
+    window._appBaseUrl = function () {
+      return location.origin + location.pathname.replace(/[^\/]*$/, '');
+    };
   </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light only">
@@ -5728,7 +5730,7 @@ function closeShareModal() {
 
 function shareRoutineLink() {
   var isEN = LANG === "en";
-  var appUrl = "https://mohamedhambli-oss.github.io/skinnmatch/";
+  var appUrl = window._appBaseUrl();
   var shareUrl = window._shareEncoded ? appUrl + "#r=" + window._shareEncoded : appUrl;
   var userName = window._currentUser
     ? (window._currentUser.displayName || window._currentUser.email.split("@")[0])
@@ -6390,7 +6392,7 @@ function shareRoutine() {
   // Créer un texte de partage attractif
   var skinLabel = (T[LANG]||T.fr).skin_labels[ST.skinType] || ST.skinType || '';
   var productNames = r.steps.slice(0, 3).map(s => '✨ ' + s.nom + ' — ' + s.marque).join('\n');
-  var appUrl = 'https://mohamedhambli-oss.github.io/skinnmatch';
+  var appUrl = window._appBaseUrl();
   
   var shareText = LANG === 'en'
     ? '🌸 My SkinMatch routine for ' + skinLabel + ' skin:\n\n' + productNames + '\n\n🔗 Get your free personalized routine: ' + appUrl
@@ -7768,7 +7770,7 @@ function shareScan() {
   var score = scoreEl ? scoreEl.textContent : '?';
   var nom = nameEl ? nameEl.textContent : '';
   var marque = brandEl ? brandEl.textContent : '';
-  var text = '🎯 Mon score SkinMatch pour ' + nom + ' de ' + marque + ' : ' + score + '/100\n\nObtiens ta routine personnalisée gratuite → https://mohamedhambli-oss.github.io/skinnmatch';
+  var text = '🎯 Mon score SkinMatch pour ' + nom + ' de ' + marque + ' : ' + score + '/100\n\nObtiens ta routine personnalisée gratuite → ' + window._appBaseUrl();
   if (navigator.share) {
     navigator.share({title: 'Mon score SkinMatch', text: text});
   } else if (navigator.clipboard) {
@@ -11130,7 +11132,7 @@ function shareReferralLink() {
   var code = getReferralCode();
   track('referral_shared', { code: code });
   var isEN = LANG === 'en';
-  var url = 'https://mohamedhambli-oss.github.io/skinnmatch/?ref=' + code;
+  var url = window._appBaseUrl() + '?ref=' + code;
   var text = isEN
     ? "I'm using SkinMatch to find my perfect skincare routine! Use my code " + code + " to get 7 days of Premium free: "
     : "J'utilise SkinMatch pour trouver ma routine skincare parfaite ! Utilise mon code " + code + " pour avoir 7 jours Premium gratuits : ";
@@ -11485,8 +11487,8 @@ function _scheduleDailyNotif(hh, mm, buildMsgFn) {
         var m = buildMsgFn();
         new Notification(m.title, {
           body: m.body,
-          icon: '/skinnmatch/icon-192.png',
-          badge: '/skinnmatch/icon-192.png',
+          icon: 'icon-192.png',
+          badge: 'icon-192.png',
           tag: 'sm-daily-' + hh
         });
       } catch(e) {}
@@ -11497,7 +11499,7 @@ function _scheduleDailyNotif(hh, mm, buildMsgFn) {
           var m = buildMsgFn();
           new Notification(m.title, {
             body: m.body,
-            icon: '/skinnmatch/icon-192.png',
+            icon: 'icon-192.png',
             tag: 'sm-daily-' + hh
           });
         } catch(e) {}
