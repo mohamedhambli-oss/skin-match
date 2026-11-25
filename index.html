@@ -10,17 +10,15 @@
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https:;
   font-src 'self' data: https://fonts.gstatic.com;
-  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.openweathermap.org https://api.open-meteo.com https://geocoding-api.open-meteo.com https://world.openfoodfacts.org https://world.openbeautyfacts.org https://*.openbeautyfacts.org;
+  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.open-meteo.com https://world.openbeautyfacts.org https://*.openbeautyfacts.org;
   media-src 'self' blob:;
   frame-src https://www.youtube.com https://www.tiktok.com https://*.firebaseapp.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
-  frame-ancestors 'none';
   upgrade-insecure-requests
 ">
-<!-- Empêche le clickjacking : l'app ne peut pas être chargée dans un iframe externe -->
-<meta http-equiv="X-Frame-Options" content="DENY">
+<!-- Anti-clickjacking (frame-ancestors, X-Frame-Options) : en-têtes HTTP envoyés par l'hébergeur (_headers). -->
 <!-- Empêche les navigateurs de deviner le type de contenu (MIME sniffing) -->
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <!-- Politique de référent : ne pas exposer l'URL complète aux sites tiers -->
@@ -1560,7 +1558,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Compte</strong> (prénom, e-mail, mot de passe chiffré par Firebase) — exécution du service (art. 6.1.b RGPD).</li><li><strong>Profil peau et routine</strong> (type de peau, tranche d'âge, préoccupations, budget, produits retenus) — exécution du service.</li><li><strong>Données de santé</strong> : grossesse ou allaitement, allergies, carnation (phototype). Elles servent à écarter les produits déconseillés. Elles ne sont enregistrées dans votre compte qu'avec votre <strong>consentement explicite</strong> (art. 9.2.a RGPD) ; sans lui, elles restent sur votre appareil.</li><li><strong>Cycle menstruel</strong> : stocké uniquement sur votre appareil, jamais transmis.</li><li><strong>Photos de peau</strong> (suivi avant/après) : stockées uniquement sur votre appareil.</li><li><strong>Analyse par IA</strong> : la photo ou le texte libre que vous soumettez est transmis à Google (API Gemini), avec votre consentement (art. 6.1.a). SkinMatch ne conserve ni la photo ni le texte ; seul un compteur d'utilisation quotidien est enregistré.</li><li><strong>Mesure d'audience</strong> (Google Analytics : pages vues, événements, type d'appareil), uniquement si vous l'acceptez — consentement.</li><li><strong>Conseils météo</strong> : position arrondie à environ 10 km, envoyée à Open-Meteo, uniquement si vous activez la fonction — consentement.</li><li><strong>Codes-barres proposés</strong> (code, nom et marque du produit, identifiant de compte) — intérêt légitime à enrichir la base produits.</li><li><strong>Préférences</strong> (langue, pays, notifications) : stockées sur votre appareil.</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">3. Destinataires et sous-traitants</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Vos données ne sont ni vendues ni louées. Elles sont traitées par :</p>
-    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Google Ireland Ltd / Google LLC — Firebase (authentification, base de données Firestore, fonctions serveur, hébergement), Google Analytics et API Gemini. Région de la base Firestore : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : région du projet Firebase, à lire dans la console Firestore]</mark>.</li><li>Open Beauty Facts — reçoit le code-barres scanné (aucune donnée personnelle).</li><li>Open-Meteo — reçoit la position arrondie si les conseils météo sont activés.</li><li>Fournisseurs techniques (Google Fonts, cdnjs) — reçoivent l'adresse IP lors du chargement des polices et bibliothèques.</li></ul>
+    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Google Ireland Ltd / Google LLC — Firebase (authentification, base de données Firestore, fonctions serveur), Google Analytics et API Gemini. Région de la base Firestore : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : région du projet Firebase, à lire dans la console Firestore]</mark>.</li><li>Netlify, Inc. (États-Unis) — hébergement du site : reçoit l'adresse IP et les informations techniques de chaque visite. Transferts encadrés par les clauses contractuelles types de la Commission européenne.</li><li>Open Beauty Facts — reçoit le code-barres scanné (aucune donnée personnelle).</li><li>Open-Meteo — reçoit la position arrondie si les conseils météo sont activés.</li><li>Fournisseurs techniques (Google Fonts, cdnjs) — reçoivent l'adresse IP lors du chargement des polices et bibliothèques.</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">4. Transferts hors de l'Union européenne</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Certains services de Google peuvent traiter des données aux États-Unis. Ces transferts reposent sur le cadre de protection des données UE–États-Unis (Data Privacy Framework) auquel Google LLC est certifiée, complété par les clauses contractuelles types de la Commission européenne.</p>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Les données transmises à l'API Gemini dans le cadre de l'offre payante ne sont pas utilisées par Google pour entraîner ses modèles.</p>
@@ -1660,7 +1658,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     Contact : <a href="mailto:contact@skinmatch.app" style="color:#C4726A">contact@skinmatch.app</a></p>
 
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">Hébergeur</h3>
-    <p style="font-size:13px;line-height:1.7;color:#5A4A42"><strong>Google Firebase Hosting</strong> — Google Ireland Ltd, Gordon House, Barrow Street, Dublin 4, Irlande.</p>
+    <p style="font-size:13px;line-height:1.7;color:#5A4A42"><strong>Netlify, Inc.</strong> — 101 2nd Street, San Francisco, CA 94105, États-Unis.</p>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Services : <strong>Google Firebase</strong> (authentification, base de données, fonctions serveur) et <strong>API Gemini</strong> — Google Ireland Ltd.</p>
 
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">Propriété intellectuelle</h3>
