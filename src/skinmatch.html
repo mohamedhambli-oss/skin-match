@@ -3017,6 +3017,12 @@ function build(){
   // tierce ne doit pas l'exclure de la routine. Avant, `(s.yuka||0)` le ramenait à 0
   // et le reléguait silencieusement dans les alternatifs.
   const noteOk = (s) => typeof s.yuka !== "number" || s.yuka >= 50;
+  // Routine importée depuis la borne (QR code) : on reprend exactement les produits choisis
+  // en pharmacie ; le reste (textes, compatibilité, total) est calculé comme d'habitude.
+  if (Array.isArray(window._smImportSteps)) {
+    steps.length = 0;
+    window._smImportSteps.forEach(function(t){ if (DB[t[0]]) steps.push(mk(t[0], t[1], t[2])); });
+  }
   const mainSteps = steps.filter(noteOk);
   const lowYukaSteps = steps.filter(function(s){ return !noteOk(s); });
   // Trier la routine principale selon l'ordre d'application skincare
@@ -11886,6 +11892,70 @@ function buildFromKeys(keys) {
   return {steps:steps, totalPrix:totalPrix, intro:intro, conseil:'La constance, pas la perfection, transforme ta peau.'};
 }
 
+@@si public@@
+// ── Routine créée sur la borne d'une pharmacie, récupérée par QR code ──
+// Le QR code contient les réponses et les produits choisis en officine, dans la partie « # »
+// de l'adresse : elle n'est jamais envoyée au serveur. Tout est vérifié avant usage.
+function _importBorne(sd) {
+  var oneOf = function(v, list, def){ return list.indexOf(v) > -1 ? v : def; };
+  var CONC = ['acne','taches','rides','pores','rougeurs','cernes','eclat','deshydratation','imperfections','sensibilite'];
+  if (!localStorage.getItem('skinmatch_lang')) { try { localStorage.setItem('skinmatch_lang', LANG); localStorage.setItem('skinmatch_region', REGION); } catch(e){} }
+  if (typeof initQuestions === 'function') initQuestions();
+  ST.skinType  = oneOf(sd.s, ['seche','grasse','mixte','normale','sensible'], 'mixte');
+  ST.ageGroup  = oneOf(sd.a, ['18-25','26-35','36-45','46+'], '26-35');
+  ST.budget    = oneOf(sd.b, ['low','mid','high','mix'], 'mid');
+  ST.routine   = oneOf(sd.r, ['simple','specifique','complete'], 'simple');
+  ST.pregnancy = oneOf(sd.p, ['non','enceinte','allaitante','nsp'], null);
+  ST.phototype = oneOf(sd.f, ['I-II','III-IV','V-VI','nsp'], null);
+  ST.concerns  = Array.isArray(sd.c) ? sd.c.filter(function(c){ return CONC.indexOf(c) > -1; }).slice(0, 5) : [];
+  var AL = ((T[LANG] || T.fr).allergies || []).slice(0, -1);          // sans « Autre… »
+  ST.allergies = Array.isArray(sd.al) ? sd.al.filter(function(i){ return i === (i|0) && i >= 0 && i < AL.length; })
+                                              .map(function(i){ return AL[i]; }) : [];
+  // Produits du rayon sans fiche dans l'application : fiche minimale (nom, marque, usage).
+  var own = function(o, k){ return Object.prototype.hasOwnProperty.call(o, k); };
+  var txt = function(s, n){ return String(s == null ? '' : s).replace(/[<>&"'`$\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, n); };
+  var g = (sd.g && typeof sd.g === 'object') ? sd.g : {};
+  Object.keys(g).slice(0, 12).forEach(function(k){
+    var x = g[k];
+    if (!/^gen-[0-9]{8,14}$/.test(k) || own(DB, k) || !Array.isArray(x)) return;
+    var usage = txt(x[3], 60);
+    DB[k] = { nom: txt(x[1], 120) || 'Produit', marque: txt(x[2], 80), usage: usage, texture: '',
+              moment: /^Protection solaire/.test(usage) ? 'AM' : 'AM+PM', ak: [], comp: [], pq: '', app: '',
+              ben: 'Produit conseillé en pharmacie. Fiche simplifiée : vérifie la composition sur l\'emballage.',
+              ean: k.slice(4), source: 'auto', incomplet: true };
+    if (typeof INCI_DB !== 'undefined' && !INCI_DB[k]) INCI_DB[k] = {};
+  });
+  var MOM = ['AM','PM','AM+PM'];
+  var steps = (Array.isArray(sd.st) ? sd.st : []).slice(0, 10).filter(function(t){
+    return Array.isArray(t) && typeof t[0] === 'string' && own(DB, t[0]) && typeof t[1] === 'string' && t[1].length <= 30 && MOM.indexOf(t[2]) > -1;
+  });
+  if (!steps.length) return false;
+  window._smImportSteps = steps;
+  try { ST.result = build(); } finally { delete window._smImportSteps; }
+  if (!ST.result || !ST.result.steps || !ST.result.steps.length) return false;
+  var officine = txt(sd.ph, 60);
+  window._fromBorne = officine || true;
+  try { track('borne_import', { steps: ST.result.steps.length }); } catch(e){}
+  go('result'); if (typeof updateNav === 'function') updateNav('result');
+  renderResult();
+  var isEN = LANG === 'en';
+  var rc = document.getElementById('result-content');
+  if (rc && !document.getElementById('borne-import-banner')) {
+    var d = document.createElement('div');
+    d.id = 'borne-import-banner';
+    d.style.cssText = 'background:#FDF1EE;border:1.5px solid #F2C4BC;border-radius:16px;padding:14px 16px;margin:12px 0 4px;font-size:13.5px;color:#3D2B1F;line-height:1.5';
+    d.innerHTML = '<div style="font-weight:700;margin-bottom:4px">🏥 ' + (isEN ? 'Routine created at the pharmacy' : 'Routine créée en pharmacie') +
+      (officine ? ' · ' + _escHtml(officine) : '') + '</div>' +
+      '<div style="color:#5A4A42">' + (isEN ? 'Create your free account to keep it, track your skin and get reminders.'
+                                            : 'Crée ton compte gratuit pour la garder, suivre l\'évolution de ta peau et recevoir des rappels.') + '</div>' +
+      '<button id="borne-import-save" style="margin-top:10px;width:100%;padding:12px;border:none;border-radius:50px;background:#C4726A;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">' +
+      (isEN ? 'Save my routine' : 'Garder ma routine') + '</button>';
+    rc.insertBefore(d, rc.firstChild);
+    d.querySelector('#borne-import-save').onclick = function(){ if (typeof saveAndConfirm === 'function') saveAndConfirm(); };
+  }
+  return true;
+}
+@@fin@@
 function _checkSharedRoutine() {
   try {
     var hash = window.location.hash;
@@ -11893,6 +11963,7 @@ function _checkSharedRoutine() {
     var encoded = hash.replace('#r=', '');
     if (!encoded) return;
     var sd = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (sd && sd.o === 'b') { if (typeof _importBorne === 'function') _importBorne(sd); return; }
     if (!sd || !sd.products || !sd.products.length) return;
     var sharedResult = buildFromKeys(sd.products);
     if (!sharedResult) return;
@@ -14327,10 +14398,75 @@ if (typeof window.renderResult === "function") {
   var _rr = window.renderResult;
   window.renderResult = function(){
     var r = _rr.apply(this, arguments);
-    compter("routines"); injecter("routine", "");
+    compter("routines"); injecter("routine", ""); injecterQR();
     return r;
   };
 }
+/* ── QR code : la cliente emporte sa routine sur son téléphone ──
+   Le code ouvre l'application grand public avec la routine dans la partie « # » de l'adresse,
+   qui n'est jamais envoyée à un serveur. Rien n'est conservé sur la tablette. */
+function payloadRoutine(){
+  if (typeof ST === "undefined" || !ST.result || !ST.result.steps || !ST.result.steps.length) return null;
+  var AL = ((T[LANG] || T.fr).allergies || []);
+  var g = {};
+  var st = ST.result.steps.slice(0, 10).map(function(s){
+    if (/^gen-/.test(s.key) && DB[s.key]) g[s.key] = [DB[s.key].ean || s.key.slice(4), String(DB[s.key].nom || "").slice(0, 60), String(DB[s.key].marque || "").slice(0, 30), DB[s.key].usage || ""];
+    return [s.key, s.etape, s.moment];
+  });
+  var c = lireConfig() || {};
+  return { v:1, o:"b", ph:c.nom || "", s:ST.skinType, a:ST.ageGroup, b:ST.budget, r:ST.routine,
+           p:ST.pregnancy, f:ST.phototype, c:ST.concerns || [],
+           al:(ST.allergies || []).map(function(a){ return AL.indexOf(a); }).filter(function(i){ return i > -1 && i < AL.length - 1; }),
+           st:st, g:g };
+}
+function lienRoutine(){
+  var p = payloadRoutine(); if (!p) return "";
+  try { return window._appBaseUrl() + "#r=" + btoa(unescape(encodeURIComponent(JSON.stringify(p)))); }
+  catch(e){ return ""; }
+}
+var _qrLib = null;
+function chargerQR(){
+  if (window.qrcode) return Promise.resolve(window.qrcode);
+  if (!_qrLib) _qrLib = new Promise(function(ok, ko){
+    var s = document.createElement("script");
+    s.src = "vendor/qrcode-generator-1.4.4.js";
+    s.onload = function(){ window.qrcode ? ok(window.qrcode) : ko(); };
+    s.onerror = function(){ _qrLib = null; ko(); };
+    document.head.appendChild(s);
+  });
+  return _qrLib;
+}
+function injecterQR(){
+  setTimeout(function(){
+    var ecran = document.querySelector("#sc-result .content");
+    var url = lienRoutine();
+    if (!ecran || !url) return;
+    chargerQR().then(function(qrcode){
+      var ancien = document.getElementById("borne-qr");
+      if (ancien) ancien.remove();
+      var q = qrcode(0, "L");   // niveau L : moins de modules, plus facile à lire sur un écran
+      q.addData(url, "Byte"); q.make();
+      // Un nombre entier de pixels par module : un module « à cheval » sur deux pixels devient flou.
+      var cellule = Math.max(3, Math.floor(300 / (q.getModuleCount() + 8)));
+      var d = document.createElement("div");
+      d.id = "borne-qr";
+      d.style.cssText = "background:#fff;border:1.5px solid #EDD9D4;border-radius:20px;padding:20px 18px;margin:14px 0;text-align:center";
+      d.innerHTML =
+        '<div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F;margin-bottom:6px">📱 Emportez votre routine</div>' +
+        '<div style="font-size:13px;color:#8B6F5E;line-height:1.45;margin-bottom:14px">Scannez ce code avec l\'appareil photo de votre téléphone : ' +
+          'votre routine s\'ouvre dans l\'application SkinMatch, gratuite, sans rien installer.</div>' +
+        '<div style="display:inline-block;max-width:100%;line-height:0">' + q.createSvgTag({ cellSize: cellule, margin: 4, alt: "QR code de votre routine" }) + '</div>' +
+        '<div style="font-size:11px;color:#B0958F;line-height:1.4;margin-top:10px">Le code contient vos réponses et vos produits. Ils ne sont envoyés à aucun serveur ' +
+          'et sont effacés de la tablette à la fin de votre passage.</div>';
+      var svg = d.querySelector("svg"); if (svg) { svg.setAttribute("shape-rendering", "crispEdges"); svg.style.maxWidth = "100%"; svg.style.height = "auto"; }
+      var intention = ecran.querySelector("div[id^='borne-int-']");
+      if (intention) ecran.insertBefore(d, intention); else ecran.appendChild(d);
+      ev("qr_affiche");
+    }).catch(function(){});
+  }, 450);
+}
+window._borneLienRoutine = lienRoutine;
+
 if (typeof window.openFindDetail === "function") {
   var _ofd = window.openFindDetail;
   window.openFindDetail = function(key){

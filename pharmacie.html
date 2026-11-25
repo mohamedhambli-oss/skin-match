@@ -2943,6 +2943,12 @@ function build(){
   // tierce ne doit pas l'exclure de la routine. Avant, `(s.yuka||0)` le ramenait à 0
   // et le reléguait silencieusement dans les alternatifs.
   const noteOk = (s) => typeof s.yuka !== "number" || s.yuka >= 50;
+  // Routine importée depuis la borne (QR code) : on reprend exactement les produits choisis
+  // en pharmacie ; le reste (textes, compatibilité, total) est calculé comme d'habitude.
+  if (Array.isArray(window._smImportSteps)) {
+    steps.length = 0;
+    window._smImportSteps.forEach(function(t){ if (DB[t[0]]) steps.push(mk(t[0], t[1], t[2])); });
+  }
   const mainSteps = steps.filter(noteOk);
   const lowYukaSteps = steps.filter(function(s){ return !noteOk(s); });
   // Trier la routine principale selon l'ordre d'application skincare
@@ -11638,6 +11644,7 @@ function _checkSharedRoutine() {
     var encoded = hash.replace('#r=', '');
     if (!encoded) return;
     var sd = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (sd && sd.o === 'b') { if (typeof _importBorne === 'function') _importBorne(sd); return; }
     if (!sd || !sd.products || !sd.products.length) return;
     var sharedResult = buildFromKeys(sd.products);
     if (!sharedResult) return;
@@ -14071,10 +14078,75 @@ if (typeof window.renderResult === "function") {
   var _rr = window.renderResult;
   window.renderResult = function(){
     var r = _rr.apply(this, arguments);
-    compter("routines"); injecter("routine", "");
+    compter("routines"); injecter("routine", ""); injecterQR();
     return r;
   };
 }
+/* ── QR code : la cliente emporte sa routine sur son téléphone ──
+   Le code ouvre l'application grand public avec la routine dans la partie « # » de l'adresse,
+   qui n'est jamais envoyée à un serveur. Rien n'est conservé sur la tablette. */
+function payloadRoutine(){
+  if (typeof ST === "undefined" || !ST.result || !ST.result.steps || !ST.result.steps.length) return null;
+  var AL = ((T[LANG] || T.fr).allergies || []);
+  var g = {};
+  var st = ST.result.steps.slice(0, 10).map(function(s){
+    if (/^gen-/.test(s.key) && DB[s.key]) g[s.key] = [DB[s.key].ean || s.key.slice(4), String(DB[s.key].nom || "").slice(0, 60), String(DB[s.key].marque || "").slice(0, 30), DB[s.key].usage || ""];
+    return [s.key, s.etape, s.moment];
+  });
+  var c = lireConfig() || {};
+  return { v:1, o:"b", ph:c.nom || "", s:ST.skinType, a:ST.ageGroup, b:ST.budget, r:ST.routine,
+           p:ST.pregnancy, f:ST.phototype, c:ST.concerns || [],
+           al:(ST.allergies || []).map(function(a){ return AL.indexOf(a); }).filter(function(i){ return i > -1 && i < AL.length - 1; }),
+           st:st, g:g };
+}
+function lienRoutine(){
+  var p = payloadRoutine(); if (!p) return "";
+  try { return window._appBaseUrl() + "#r=" + btoa(unescape(encodeURIComponent(JSON.stringify(p)))); }
+  catch(e){ return ""; }
+}
+var _qrLib = null;
+function chargerQR(){
+  if (window.qrcode) return Promise.resolve(window.qrcode);
+  if (!_qrLib) _qrLib = new Promise(function(ok, ko){
+    var s = document.createElement("script");
+    s.src = "vendor/qrcode-generator-1.4.4.js";
+    s.onload = function(){ window.qrcode ? ok(window.qrcode) : ko(); };
+    s.onerror = function(){ _qrLib = null; ko(); };
+    document.head.appendChild(s);
+  });
+  return _qrLib;
+}
+function injecterQR(){
+  setTimeout(function(){
+    var ecran = document.querySelector("#sc-result .content");
+    var url = lienRoutine();
+    if (!ecran || !url) return;
+    chargerQR().then(function(qrcode){
+      var ancien = document.getElementById("borne-qr");
+      if (ancien) ancien.remove();
+      var q = qrcode(0, "L");   // niveau L : moins de modules, plus facile à lire sur un écran
+      q.addData(url, "Byte"); q.make();
+      // Un nombre entier de pixels par module : un module « à cheval » sur deux pixels devient flou.
+      var cellule = Math.max(3, Math.floor(300 / (q.getModuleCount() + 8)));
+      var d = document.createElement("div");
+      d.id = "borne-qr";
+      d.style.cssText = "background:#fff;border:1.5px solid #EDD9D4;border-radius:20px;padding:20px 18px;margin:14px 0;text-align:center";
+      d.innerHTML =
+        '<div style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#3D2B1F;margin-bottom:6px">📱 Emportez votre routine</div>' +
+        '<div style="font-size:13px;color:#8B6F5E;line-height:1.45;margin-bottom:14px">Scannez ce code avec l\'appareil photo de votre téléphone : ' +
+          'votre routine s\'ouvre dans l\'application SkinMatch, gratuite, sans rien installer.</div>' +
+        '<div style="display:inline-block;max-width:100%;line-height:0">' + q.createSvgTag({ cellSize: cellule, margin: 4, alt: "QR code de votre routine" }) + '</div>' +
+        '<div style="font-size:11px;color:#B0958F;line-height:1.4;margin-top:10px">Le code contient vos réponses et vos produits. Ils ne sont envoyés à aucun serveur ' +
+          'et sont effacés de la tablette à la fin de votre passage.</div>';
+      var svg = d.querySelector("svg"); if (svg) { svg.setAttribute("shape-rendering", "crispEdges"); svg.style.maxWidth = "100%"; svg.style.height = "auto"; }
+      var intention = ecran.querySelector("div[id^='borne-int-']");
+      if (intention) ecran.insertBefore(d, intention); else ecran.appendChild(d);
+      ev("qr_affiche");
+    }).catch(function(){});
+  }, 450);
+}
+window._borneLienRoutine = lienRoutine;
+
 if (typeof window.openFindDetail === "function") {
   var _ofd = window.openFindDetail;
   window.openFindDetail = function(key){
