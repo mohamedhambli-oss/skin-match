@@ -2323,6 +2323,10 @@ var SKIN_LABELS_SING = { grasse:"grasse", mixte:"mixte", seche:"sèche", sensibl
 // Types antagonistes : proposer un soin pour peau sèche à une peau grasse
 // est une erreur plus lourde qu'une simple inadéquation.
 var SKIN_OPPOSED = { grasse:["seche"], seche:["grasse"] };
+// Types voisins : un soin pour peaux grasses convient à une peau mixte (zone T grasse),
+// un soin pour peaux normales à une peau mixte ou sèche légère, etc. Pénaliser ces cas
+// écartait des soins classiques (Cleanance, Effaclar) pour les peaux mixtes acnéiques.
+var SKIN_ADJACENT = { mixte:["grasse","normale"], grasse:["mixte"], normale:["mixte","seche"], seche:["normale"], sensible:[] };
 
 // Renvoie les types de peau ciblés par un produit, d'après son champ "pq".
 function productSkinTargets(key) {
@@ -2380,6 +2384,9 @@ function scoreCompat(key, skin, concern, age, allergies) {
       add('plus', "Formulé pour les peaux " + (SKIN_LABELS[skin] || skin) + ".", 22);
     } else if (tg.universel) {
       add('plus', "Convient à tous les types de peau.", 8);
+    } else if ((SKIN_ADJACENT[skin] || []).some(function(o){ return tg.types.indexOf(o) > -1; })) {
+      add('plus', "Convient aussi aux peaux " + (SKIN_LABELS[skin] || skin) + " (formulé pour les peaux " +
+          tg.types.map(function(t){ return SKIN_LABELS[t] || t; }).join(", ") + ").", 10);
     } else {
       var opp = (SKIN_OPPOSED[skin] || []).some(function(o){ return tg.types.indexOf(o) > -1; });
       var cibles = tg.types.map(function(t){ return SKIN_LABELS[t] || t; }).join(", ");
@@ -2400,7 +2407,10 @@ function scoreCompat(key, skin, concern, age, allergies) {
           add('plus', "Contient " + act.slice(0,2).join(" et ") + ", qui cible " +
               (def.fr || concern).toLowerCase() + ".", Math.min(18, 9 * act.length));
         } else {
-          add('moins', "Aucun actif de ce produit ne cible " + (def.fr || concern).toLowerCase() + ".", -7);
+          // Un nettoyant, une crème ou un SPF n'a pas pour rôle de traiter le problème :
+          // seule l'absence d'actif ciblé dans un soin de traitement est pénalisée.
+          var traitement = typeof categorizeProduct === 'function' && ['serum','gommage','masque','yeux','patch'].indexOf(categorizeProduct(key)) > -1;
+          if (traitement) add('moins', "Aucun actif de ce produit ne cible " + (def.fr || concern).toLowerCase() + ".", -7);
         }
       }
     } catch(e){}
@@ -2649,8 +2659,11 @@ function build(){
   const safeAvail = (key) => avail(key) && !hasAllergen(key) && isPregnancySafe(key);
   const mk=(key,etape,moment)=>({...DB[key],etape,moment,key,img:IMGS[key],pourquoi:getWhy(key,sk,c[0],ST.ageGroup),compat:getCompat(key,sk,c[0],ST.ageGroup,ST.allergies)});
   // Trouver une alternative sans allergène pour une étape donnée
+  // Choisit le candidat le PLUS compatible (auparavant : le premier trouvé dans la base,
+  // ce qui pouvait donner une crème parfumée à une peau sensible).
   const findSafeAlt = (etape, excludeKey) => {
-    return Object.keys(DB).find(k => 
+    const conc = etape === "Sérum soir" ? (c[1] || c[0]) : c[0];
+    return Object.keys(DB).filter(k => 
       k !== excludeKey && 
       !usedKeys.has(k) && 
       avail(k) && 
@@ -2662,7 +2675,9 @@ function build(){
         etape === "Hydratant" ? "hydrat" : 
         etape === "Protection solaire" ? "spf" : ""
       )
-    ) || null;
+    ).map(k => [k, getCompat(k, sk, conc, ST.ageGroup, ST.allergies)])
+     .sort((x, y) => y[1] - x[1])
+     .map(x => x[0])[0] || null;
   };
 
   // ── Correction d'inadéquation ──
@@ -2744,6 +2759,17 @@ function build(){
       if (s > bestScore) { best = cand; bestScore = s; }
     });
     // On ne remplace que si le gain est net, pour ne pas bouleverser une sélection correcte.
+    const isSerum = etape === "Sérum principal" || etape === "Sérum soir" || etape === "Soin ciblé";
+    if (isSerum && bestScore < 55 && typeof CONCERN_DEF !== "undefined" && typeof _matchConcernActives === "function") {
+      const conc = etape === "Sérum soir" ? (c[1] || c[0]) : c[0];
+      const def = CONCERN_DEF.find(function(d){ return d.id === conc; });
+      if (def) Object.keys(DB).forEach(function(cand){
+        if (cand === key || usedKeys.has(cand) || !safeAvail(cand) || !prixOk(cand)) return;
+        if (categorizeProduct(cand) !== "serum" || !(_matchConcernActives(cand, def) || []).length) return;
+        const s = getCompat(cand, sk, conc, ST.ageGroup, ST.allergies);
+        if (s > bestScore) { best = cand; bestScore = s; }
+      });
+    }
     return (bestScore - base >= 10) ? best : key;
   };
 
