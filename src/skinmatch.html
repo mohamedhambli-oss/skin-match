@@ -50,7 +50,14 @@
       return location.origin + location.pathname.replace(/[^\/]*$/, '');
     };
   </script>
+@@si public@@
+<!-- Zoom autorisé (accessibilité : personnes malvoyantes). Les champs de saisie font 16 px sur
+     mobile, sinon l'iPhone zoome tout seul quand on touche un champ. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+@@sinon@@
+<!-- Borne : zoom bloqué, sinon un écran resté agrandi gênerait la cliente suivante. -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+@@fin@@
 <meta name="color-scheme" content="light only">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23C4726A'/><rect x='5' y='5' width='90' height='90' rx='18' fill='%23D4887F'/><text y='72' x='50' text-anchor='middle' font-size='52' font-weight='700' fill='white' font-family='Georgia,serif'>SM</text></svg>">
 <meta name="supported-color-schemes" content="light">
@@ -178,6 +185,13 @@
   // Observer état connexion
   onAuthStateChanged(auth, (user) => {
     window._currentUser = user;
+    // Premier état connu (connecté ou non) : l'app peut quitter l'écran de démarrage sans
+    // attendre le délai de secours. Appelé une seule fois : les connexions et déconnexions
+    // suivantes ne doivent pas changer d'écran.
+    if (!window._authResolvedOnce && typeof window._onAuthResolved === 'function') {
+      window._authResolvedOnce = true;
+      try { window._onAuthResolved(user); } catch (e) { console.error(e); }
+    }
     if (user) {
       if (window._logEvent) window._logEvent('login', { method: user.providerData?.[0]?.providerId || 'unknown' });
       // Charger profil Firestore
@@ -222,6 +236,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{height:100%;-webkit-text-size-adjust:100%}
+@media (max-width:600px){input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px!important}}
 :root{
   --bg:#FDF8F5;--surf:#FFFFFF;--pri:#3D2B1F;--acc:#D4A5A0;--acc2:#B07C77;
   --mut:#B0958F;--bdr:#EDD9D4;--tag:#FAF0ED;--err:#C0392B;
@@ -770,7 +785,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
       </button>
 @@si borne@@
       <button onclick="setLang('es')" style="width:100%;padding:18px 20px;border-radius:16px;border:none;background:#fff;cursor:pointer;display:flex;align-items:center;gap:16px;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,.12);transition:transform .15s" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-        <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px">🇬🇧</div>
+        <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px">🇪🇸</div>
         <div style="text-align:left">
           <div style="font-size:16px;font-weight:700;color:#3D2B1F;font-family:Georgia,serif">Español</div>
           <div style="font-size:12px;color:#9A8A85;margin-top:2px">España · América Latina</div>
@@ -2739,66 +2754,7 @@ async function normalizeAutreWithAI(autreTexte, type) {
   return res && Array.isArray(res.keys) ? res.keys : null;
 }
 
-function normalizeAutreConcerns(concerns) {
-  // Mapping mots-clés basique comme fallback
-  var CONCERN_MAP = [
-    {keywords:['rosac','couperose','rougeur'],key:'rougeurs'},
-    {keywords:['cicatrice','tache','hyperpigment','melasma'],key:'taches'},
-    {keywords:['ride','ridule','anti-age','vieilliss'],key:'rides'},
-    {keywords:['pore','point noir','comédon'],key:'pores'},
-    {keywords:['acne','bouton','imperfection','kyste'],key:'acne'},
-    {keywords:['cerne','poche','yeux'],key:'cernes'},
-    {keywords:['terne','eclat','luminosit'],key:'eclat'},
-    {keywords:['déshydrat','deshydrat','tiraillement'],key:'deshydratation'},
-    {keywords:['sensib','réactif','irritation','eczema','kératose','psoriasis'],key:'sensibilite'},
-  ];
-  var normalized = concerns.filter(function(c){ return !c.startsWith('Autre:'); });
-  var autreItems = concerns.filter(function(c){ return c.startsWith('Autre:'); });
-  autreItems.forEach(function(autre) {
-    var texte = autre.replace('Autre:', '').trim().toLowerCase();
-    var matched = false;
-    CONCERN_MAP.forEach(function(mapping) {
-      if (!matched && mapping.keywords.some(function(kw){ return texte.includes(kw); })) {
-        if (normalized.indexOf(mapping.key) === -1) normalized.push(mapping.key);
-        matched = true;
-      }
-    });
-    if (!matched) {
-      // Allergie non cosmétique (ex: "crevette") → ignorée
-      console.log('Allergie non reconnue ignorée:', autre);
-    }
-  });
-  return normalized;
-}
 
-function normalizeAutreAllergies(allergies) {
-  var ALLERGY_MAP = [
-    {keywords:['parfum','fragrance','lavande','rose','citrus'],key:'Parfums / Fragrances'},
-    {keywords:['paraben'],key:'Parabènes'},
-    {keywords:['alcool','alcohol','ethanol'],key:'Alcool'},
-    {keywords:['sulfate','sls','sles','lauryl'],key:'Sulfates (SLS/SLES)'},
-    {keywords:['silicone','dimethicone'],key:'Silicones'},
-    {keywords:['retinol','rétinol','retinyl','vitamine a'],key:'Rétinol'},
-    {keywords:['vitamine c','acide ascorbique','ascorbic'],key:'Vitamine C'},
-    {keywords:['salicylique','salicylic'],key:'Acide salicylique'},
-    {keywords:['aha','bha','glycolique','lactique'],key:'Acides (AHA/BHA)'},
-    {keywords:['huile essentielle','menthe','eucalyptus'],key:'Huiles essentielles'},
-  ];
-  var normalized = allergies.filter(function(a){ return !a.startsWith('Autre:'); });
-  var autreItems = allergies.filter(function(a){ return a.startsWith('Autre:'); });
-  autreItems.forEach(function(autre) {
-    var texte = autre.replace('Autre:', '').trim().toLowerCase();
-    var matched = false;
-    ALLERGY_MAP.forEach(function(mapping) {
-      if (!matched && mapping.keywords.some(function(kw){ return texte.includes(kw); })) {
-        if (normalized.indexOf(mapping.key) === -1) normalized.push(mapping.key);
-        matched = true;
-      }
-    });
-    if (!matched) normalized.push(autre);
-  });
-  return normalized;
-}
 
 
 function build(){
@@ -4532,11 +4488,6 @@ function handleScanFile(input) {
     loadScanImage(file);
 }
 
-function handleScanDrop(e) {
-    e.preventDefault();
-    var file = e.dataTransfer.files[0];
-    if (file && file.type.indexOf("image") === 0) loadScanImage(file);
-}
 
 var SCAN_MAX_PX = 1024;
 
@@ -6012,52 +5963,7 @@ function downloadCard() {
       showToast(isEN ? "Failed to generate image." : "Échec génération image.", { type: "error" });
     });
 }
-function _oldToggleShare(){
-  ST.showShare=!ST.showShare;
-  document.getElementById("share-card-wrap").style.display=ST.showShare?"block":"none";
-}
 
-// ─── MODAL ────────────────────────────────────────────────────────────────────
-function toggleYuka(id){
-  const el=document.getElementById(id);
-  if(el)el.style.display=el.style.display==='none'?'block':'none';
-}
-function openModal(key){
-  const p=DB[key];if(!p)return;
-  track('product_viewed', { key: key, marque: p.marque || '', prix: p.prix || '' });
-  const src=IMGS[key]||"";
-  const init=(p.marque||"").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
-  const fallbackImg=`<div class="pif"><div class="bi" style="font-size:32px">${init}</div><div class="bn" style="font-size:11px">${p.marque}</div></div>`;
-  const yc=p.yuka>=75?"ye":p.yuka>=50?"yg":"ym";
-  const buyLabel=p.marque==="Cible Skin"?"Acheter sur Cible Skin →":"Acheter sur Easypara →";
-  const buyNote=p.marque!=="Cible Skin"?`<p class="modal-buy-note">${t('buy_note')}</p>`:"";
-  const isFav = isFavorite(key);
-  document.getElementById("modal-content").innerHTML=`
-    <div class="modal-head">
-      <div><div class="modal-brand">${p.marque}</div><div class="modal-nom">${p.nom}</div></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button onclick="toggleFavorite('${key}')" id="fav-btn-${key}" title="${LANG==='en'?'Add to favorites':'Ajouter aux favoris'}" style="background:${isFav?'#FDEBE5':'transparent'};border:1.5px solid ${isFav?'#C4726A':'#E0D5CC'};color:${isFav?'#C4726A':'#8B6F5E'};width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s">${isFav?'❤️':'🤍'}</button>
-        <button class="modal-close" onclick="closeModal()">×</button>
-      </div>
-    </div>
-    <div class="modal-img" id="modal-img-wrap"></div>
-    <div class="modal-badges">
-      ${p.clean?'<span class="bdg bdg-clean">100% Clean</span>':""}
-      ${p.vegan?'<span class="bdg bdg-vegan">Vegan</span>':""}
-      <span class="bdg bdg-tex">${p.texture}</span>
-      ${p.yuka?yukaBadge(p.yuka,p.yl):""}
-    </div>
-    <div class="ms"><div class="ms-lbl">${LANG==='en'?'For who':'Pour qui'}</div><div class="ms-txt">${p.pq}</div></div>
-    <div class="ms"><div class="ms-lbl">${LANG==='en'?'Benefits':'Bénéfices'}</div><div class="ms-txt">${p.ben}</div></div>
-    <div class="ms"><div class="ms-lbl">${LANG==='en'?'Application':'Application'}</div><div class="ms-txt">${p.app}</div></div>
-    <div class="ms"><div class="ms-lbl">${LANG==='en'?'Usage':'Usage'}</div><div class="ms-txt">${p.usage}</div></div>
-    <div class="ms"><div class="ms-lbl">${LANG==='en'?'Key ingredients':'Actifs clés'}</div><div class="ak-list">${(p.ak||[]).map(a=>`<span class="ak">${a}</span>`).join("")}</div></div>
-    <div class="ms"><div class="ms-lbl">${LANG==='en'?'INCI composition':'Composition INCI'}</div><div class="inci">${(p.comp||[]).join(" · ")}</div></div>
-    <div class="prix-box"><div class="prix-lbl">${LANG==='en'?'Indicative price':'Prix indicatif'}</div><div class="prix-val">${p.prix}</div></div>
-    <a href="${p.link}" target="_blank" class="modal-buy">${buyLabel}</a>
-    ${buyNote}`;
-  document.getElementById("modal-overlay").classList.remove("hidden");
-}
 function showWhyAI(key, nom, marque) {
   var p = DB[key];
   if (!p) return;
@@ -6301,32 +6207,7 @@ function closeVideo() {
     if (modal) modal.style.display = 'none';
 }
 
-function toggleStartBtn() {
-  var cb = document.getElementById('accept-terms');
-  var btn = document.getElementById('btn-start');
-  if (!cb || !btn) return;
-  btn.style.opacity = cb.checked ? '1' : '0.6';
-}
 
-function startDiagnostic() {
-  var cb = document.getElementById('accept-terms');
-  if (!cb || !cb.checked) {
-    showToast(LANG === 'en' 
-      ? 'Please accept the Terms of Use and Privacy Policy to continue.' 
-      : 'Veuillez accepter les Conditions d\'utilisation et la Politique de confidentialité pour continuer.', {type:'warning', duration:4000});
-    return;
-  }
-  ST.user = {name:'', email:''};
-  // Type de peau déjà renseigné dans « Trouver un produit » : on démarre à l'étape 2.
-  if (ST.skinType && !ST.ageGroup) { go('q2'); return; }
-  // Utilisateur connecté avec un profil déjà enregistré : on ne repose pas les questions,
-  // on lui demande simplement de confirmer que rien n'a changé.
-  if (window._currentUser && window._savedRoutine && window._savedRoutine.skinType) {
-    showProfileConfirm();
-    return;
-  }
-  go('q1');
-}
 
 // Écran de confirmation du profil enregistré (évite de reposer 5 questions
 // à quelqu'un dont on connaît déjà les réponses).
@@ -6580,32 +6461,6 @@ function getChatbotResponse(msg) {
   return '🤔 Bonne question ! Pour te donner la meilleure réponse possible, peux-tu me préciser ton type de peau (sèche, grasse, mixte, normale ou sensible) et ton problème principal ? Tu peux aussi faire le analyse SkinMatch pour une routine 100% personnalisée. Je suis là pour t\'aider !';
 }
 
-function shareRoutine() {
-  var r = ST.result;
-  if (!r || !r.steps || r.steps.length === 0) return;
-  
-  // Créer un texte de partage attractif
-  var skinLabel = (T[LANG]||T.fr).skin_labels[ST.skinType] || ST.skinType || '';
-  var productNames = r.steps.slice(0, 3).map(s => '✨ ' + s.nom + ' — ' + s.marque).join('\n');
-  var appUrl = window._appBaseUrl();
-  
-  var shareText = LANG === 'en'
-    ? '🌸 My SkinMatch routine for ' + skinLabel + ' skin:\n\n' + productNames + '\n\n🔗 Get your free personalized routine: ' + appUrl
-    : '🌸 Ma routine SkinMatch pour peau ' + skinLabel + ' :\n\n' + productNames + '\n\n🔗 Obtiens ta routine personnalisée gratuite : ' + appUrl;
-  
-  // Web Share API - fonctionne sur mobile
-  if (navigator.share) {
-    navigator.share({
-      title: 'Ma routine SkinMatch',
-      text: shareText,
-      url: appUrl
-    }).catch(function() {
-      copyShareText(shareText);
-    });
-  } else {
-    copyShareText(shareText);
-  }
-}
 
 function copyShareText(text) {
   if (navigator.clipboard) {
@@ -8124,14 +7979,6 @@ function getBrandStyle(marque) {
   return {bg: c.bg || c.bg, tx: c.tx || c.text || '#FFFFFF'};
 }
 
-function getInitials(nom, marque) {
-  if (marque) {
-    var words = marque.split(' ');
-    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-    return marque.substring(0, 2).toUpperCase();
-  }
-  return (nom || 'SK').substring(0, 2).toUpperCase();
-}
 // Choix du pays : un tap dans la fenêtre des régions.
 // La détection par GPS a été retirée : elle demandait la position exacte au premier
 // lancement et l'envoyait à un service tiers (bigdatacloud), que la CSP bloquait de toute façon.
@@ -8220,10 +8067,6 @@ function buildRegionList() {
   });
 }
 
-function confirmRegion() {
-  if (!selectedRegionValue) return;
-  setRegion(selectedRegionValue);
-}
 
 var REGION_FLAGS = {fr:'🇫🇷',dz:'🇩🇿',ma:'🇲🇦',gb:'🇬🇧',es:'🇪🇸',de:'🇩🇪',be:'🇧🇪',ch:'🇨🇭',other:'🌍'};
 function refreshRegionBadge() {
@@ -10812,65 +10655,6 @@ async function loadSavedRoutine(user) {
   } catch(e) { console.log('loadSavedRoutine error:', e); }
 }
 
-function renderProfile() {
-  var user = window._currentUser;
-  if (!user) { go('login'); return; }
-  
-  var nameEl = document.getElementById('profile-name');
-  var emailEl = document.getElementById('profile-email');
-  var contentEl = document.getElementById('profile-content');
-  
-  if (nameEl) nameEl.textContent = user.displayName || 'Mon profil';
-  if (emailEl) emailEl.textContent = user.email;
-  
-  if (!contentEl) return;
-  
-  var savedRoutine = window._savedRoutine;
-  var html = '';
-  
-  // Infos compte
-  html += '<div style="background:#fff;border-radius:16px;border:1px solid var(--bdr);padding:16px;margin-bottom:14px">';
-  html += '<div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Informations</div>';
-  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
-  html += '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#C4726A,#A85A52);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:20px;font-weight:700;color:#fff;flex-shrink:0">' + (user.displayName ? user.displayName[0].toUpperCase() : '?') + '</div>';
-  html += '<div><div style="font-size:15px;font-weight:700;color:var(--pri)">' + (user.displayName || 'Utilisateur') + '</div>';
-  html += '<div style="font-size:12px;color:var(--mut)">' + user.email + '</div></div></div>';
-  html += '</div>';
-  
-  // Dernière routine sauvegardée
-  if (savedRoutine && savedRoutine.products && savedRoutine.products.length > 0) {
-    var date = savedRoutine.savedAt ? new Date(savedRoutine.savedAt).toLocaleDateString('fr-FR') : '';
-    html += '<div style="background:var(--blush);border-radius:16px;border:1px solid var(--rose);padding:16px;margin-bottom:14px">';
-    html += '<div style="font-size:10px;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🌸 Dernière routine' + (date ? ' · ' + date : '') + '</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
-    if (savedRoutine.skinType) html += '<span style="background:var(--tag);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--acc2)">Peau ' + savedRoutine.skinType + '</span>';
-    if (savedRoutine.budget) html += '<span style="background:var(--tag);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--acc2)">Budget ' + savedRoutine.budget + '</span>';
-    html += '</div>';
-    savedRoutine.products.forEach(function(p) {
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--rose)">';
-      html += '<div><div style="font-size:12px;font-weight:600;color:var(--pri)">' + p.nom + '</div>';
-      html += '<div style="font-size:10px;color:var(--mut)">' + p.marque + '</div></div>';
-      html += '<div style="font-family:Georgia,serif;font-size:13px;font-weight:700;color:#C4726A">' + p.prix + '</div>';
-      html += '</div>';
-    });
-    html += '<button onclick="reloadSavedRoutine()" style="width:100%;margin-top:12px;padding:11px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Revoir ma routine →</button>';
-    html += '</div>';
-  } else {
-    html += '<div style="background:var(--blush);border-radius:16px;border:1px solid var(--rose);padding:20px;margin-bottom:14px;text-align:center">';
-    html += '<div style="font-size:32px;margin-bottom:10px">🌸</div>';
-    html += '<div style="font-size:13px;font-weight:600;color:var(--pri);margin-bottom:6px">' + (LANG==="en" ? "No routine saved yet" : "Pas encore de routine sauvegardée") + '</div>';
-    html += '<div style="font-size:12px;color:var(--mut);margin-bottom:14px">' + (LANG==="en" ? "Analyse your skin to generate your first routine." : "Fais ton analyse pour générer ta première routine.") + '</div>';
-    html += '<button onclick="startDiagFromProfile()" style="padding:11px 24px;border-radius:50px;border:none;background:#C4726A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">' + (LANG==="en" ? "Start analysis" : "Commencer mon analyse") + '</button>';
-    html += '</div>';
-  }
-  
-  // Bouton réglages
-  html += '<button onclick="openSettings()" style="width:100%;padding:13px;border-radius:50px;border:1.5px solid var(--bdr);background:var(--surf);color:var(--pri);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px">⚙️ ' + (LANG==="en" ? "Settings" : "Réglages") + '</button>';
-  // Bouton déconnexion
-  html += '<button onclick="doLogout()" style="width:100%;padding:13px;border-radius:50px;border:1.5px solid var(--acc);background:transparent;color:var(--acc2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px">' + (LANG==="en" ? "Log out" : "Se déconnecter") + '</button>';
-  
-  contentEl.innerHTML = html;
-}
 
 function startDiagFromProfile() {
   // Fermer le profil et lancer le diagnostic
@@ -11035,7 +10819,7 @@ function renderSettings() {
   if (!content) return;
 
   var notifGranted = 'Notification' in window && Notification.permission === 'granted';
-  var currentLang = LANG === 'en' ? '🇬🇧 English' : '🇫🇷 Français';
+  var currentLang = LANG === 'en' ? '🇬🇧 English' : LANG === 'es' ? '🇪🇸 Español' : '🇫🇷 Français';
   var regionFlags = {fr:'🇫🇷 France',dz:'🇩🇿 Algérie',ma:'🇲🇦 Maroc',gb:'🇬🇧 United Kingdom',es:'🇪🇸 España',de:'🇩🇪 Deutschland',be:'🇧🇪 Belgique',ch:'🇨🇭 Suisse',other:'🌍 Autre'};
   var currentRegion = regionFlags[REGION] || '🌍';
 
@@ -11540,31 +11324,7 @@ function reloadSavedRoutine() {
   go('result');
 }
 
-// ══ NOTIFICATIONS ══
-function toggleNotifications() {
-  if (!("Notification" in window)) {
-    showToast(LANG==="en" ? "Notifications not supported." : "Notifications non supportées sur ce navigateur.", {type:"error"});
-    return;
-  }
-  if (Notification.permission === "granted") {
-    showToast(LANG==="en" ? "To disable: Safari Settings > Notifications." : "Pour désactiver : Réglages Safari > Notifications.", {type:"info", duration:5000});
-    return;
-  }
-  requestNotifPermission();
-}
 
-function changeNotifTime(type) {
-  var isEN = LANG === "en";
-  var current = localStorage.getItem("skinmatch_notif_" + type) || (type==="morning" ? "08:00" : "21:00");
-  var newTime = prompt(isEN ? "Enter time (HH:MM):" : "Entrer l'heure (HH:MM) :", current);
-  if (!newTime || !/^\d{2}:\d{2}$/.test(newTime)) return;
-  localStorage.setItem("skinmatch_notif_" + type, newTime);
-  var t = document.createElement("div");
-  t.style.cssText = "position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#2E7D32;color:#fff;padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999";
-  t.textContent = (isEN ? "Updated: " : "Mis a jour : ") + newTime;
-  document.body.appendChild(t);
-  setTimeout(function(){t.remove();}, 2500);
-}
 
 // ════════════ MESSAGES DE NOTIFICATIONS VARIÉS ════════════
 // Au lieu d'envoyer toujours le même message, on alterne pour générer de la curiosité.
@@ -12100,8 +11860,10 @@ function _checkSharedRoutine() {
 }
 
 
-// Timeout 2.5s si Firebase ne répond pas
+// Délai de secours si Firebase ne répond pas (hors ligne, réseau lent). Normalement,
+// _onAuthResolved est appelé avant, dès que Firebase connaît l'état de connexion.
 var _firebaseWait = setTimeout(function() {
+  window._splashFired = true;
   if (_savedLang && _savedRegion) {
     LANG = _savedLang; REGION = _savedRegion;
     initQuestions();
@@ -12118,6 +11880,14 @@ var _firebaseWait = setTimeout(function() {
 
 window._onAuthResolved = function(user) {
   clearTimeout(_firebaseWait);
+  if (window._splashFired) {
+    // Firebase a répondu après le délai de secours : l'utilisatrice est peut-être déjà en train
+    // de remplir le questionnaire. On ne la déplace que si elle est encore sur les écrans d'accueil.
+    if (user && ['lang', 'onboarding'].indexOf(ST.screen) > -1 && LANG && REGION) {
+      loadSavedRoutine(user); initQuestions(); go('welcome'); updateNav('welcome'); setTimeout(applyWelcomeLang, 50);
+    } else if (user) { loadSavedRoutine(user); }
+    return;
+  }
   if (user) {
     loadSavedRoutine(user).then(function() {
       var lang = LANG || localStorage.getItem('skinmatch_lang');
@@ -12325,18 +12095,6 @@ window.addEventListener('beforeinstallprompt', function(e) {
   if (installBtn) installBtn.style.display = 'flex';
 });
 
-function installApp() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(function(choice) {
-    if (choice.outcome === 'accepted') {
-      console.log('SkinMatch installé !');
-      var installBtn = document.getElementById('install-btn');
-      if (installBtn) installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  });
-}
 
 // ── SCAN QUOTAS ──
 var SCAN_PRODUCT_LIMIT = 4;
@@ -12418,14 +12176,6 @@ function incrementStreak() {
   renderDashboard();
 }
 
-function cancelChallenge(id) {
-  var isEN = LANG === 'en';
-  if (!confirm(isEN ? 'Cancel this challenge?' : 'Annuler ce défi ? Ta progression sera perdue.')) return;
-  var data = getDashData();
-  if (data.challenges) delete data.challenges[id];
-  saveDashData(data);
-  renderDashboard();
-}
 
 </script>
 
@@ -13067,81 +12817,6 @@ function openAvoidIngredients() {
 // PAGE "POURQUOI CES PRODUITS ?" — explication détaillée
 // ══════════════════════════════════════════════════════════════
 
-function showProductReasoning(key) {
-  var isEN = LANG === 'en';
-  var r = ST.result;
-  if (!r) return;
-  var step = null;
-  r.steps.forEach(function(s) { if (s.key === key) step = s; });
-  if (!step) return;
-  var p = DB[key] || step;
-
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(61,43,31,.85);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
-  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-
-  var modal = document.createElement('div');
-  modal.style.cssText = 'background:#fff;border-radius:28px 28px 0 0;max-width:460px;width:100%;padding:24px 20px 32px;max-height:85vh;overflow-y:auto';
-
-  // Construire l'explication personnalisée
-  var skinLabels = {grasse:isEN?'oily':'grasse', seche:isEN?'dry':'sèche', mixte:isEN?'combination':'mixte', sensible:isEN?'sensitive':'sensible', normale:isEN?'normal':'normale'};
-  var skinTxt = skinLabels[ST.skinType] || (isEN?'your':'ta');
-  var actifs = (p.ak && p.ak.length) ? p.ak.slice(0,3) : [];
-
-  var html =
-    '<div style="width:36px;height:4px;border-radius:2px;background:#E0D5D2;margin:0 auto 16px"></div>' +
-    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' +
-      '<div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#FBF0ED,#F5E1DC);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">💡</div>' +
-      '<div style="flex:1">' +
-        '<div style="font-family:Georgia,serif;font-size:18px;font-weight:700;color:#3D2B1F;line-height:1.2">' + p.nom + '</div>' +
-        '<div style="font-size:12px;color:#8B6F5E;margin-top:2px">' + p.marque + '</div>' +
-      '</div>' +
-    '</div>';
-
-  // Pourquoi ce produit
-  html +=
-    '<div style="background:#FAF4F2;border-radius:16px;padding:16px;margin-bottom:12px">' +
-      '<div style="font-size:11px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">' + (isEN?'Why this product':'Pourquoi ce produit') + '</div>' +
-      '<div style="font-size:13px;color:#3D2B1F;line-height:1.7">' +
-        (isEN?'Selected for your ' + skinTxt + ' skin' : 'Sélectionné pour ta peau ' + skinTxt) +
-        (ST.concerns && ST.concerns.length ? (isEN?' and your priorities (' + ST.concerns.slice(0,2).join(', ') + ')':' et tes priorités (' + ST.concerns.slice(0,2).join(', ') + ')') : '') +
-        '. ' + (p.pq || p.pourquoi || (isEN?'It addresses your specific needs.':'Il répond à tes besoins spécifiques.')) +
-      '</div>' +
-    '</div>';
-
-  // Actifs principaux
-  if (actifs.length) {
-    html += '<div style="background:#fff;border:1px solid #F0E8E5;border-radius:16px;padding:16px;margin-bottom:12px">' +
-      '<div style="font-size:11px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">' + (isEN?'Key actives':'Actifs principaux') + '</div>';
-    actifs.forEach(function(a) {
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0">' +
-        '<div style="width:6px;height:6px;border-radius:50%;background:#C4726A;flex-shrink:0"></div>' +
-        '<div style="font-size:13px;color:#3D2B1F;font-weight:500">' + a + '</div>' +
-      '</div>';
-    });
-    html += '</div>';
-  }
-
-  // Bénéfices attendus
-  if (p.ben || p.pq) {
-    html += '<div style="background:#fff;border:1px solid #F0E8E5;border-radius:16px;padding:16px;margin-bottom:14px">' +
-      '<div style="font-size:11px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">' + (isEN?'Expected benefits':'Bénéfices attendus') + '</div>' +
-      '<div style="font-size:13px;color:#3D2B1F;line-height:1.7">' + (p.ben || p.pq) + '</div>' +
-    '</div>';
-  }
-
-  // Application
-  if (p.app) {
-    html += '<div style="background:#FFF8F5;border-radius:16px;padding:14px">' +
-      '<div style="font-size:11px;font-weight:700;color:#C4726A;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">' + (isEN?'How to apply':'Comment l\'appliquer') + '</div>' +
-      '<div style="font-size:12px;color:#5A3D2B;line-height:1.6">' + p.app + '</div>' +
-    '</div>';
-  }
-
-  modal.innerHTML = html;
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-}
 
 
 // ══════════════════════════════════════════════════════════════
@@ -13150,21 +12825,6 @@ function showProductReasoning(key) {
 
 window._expressMode = false;
 
-function startExpressDiag() {
-  window._expressMode = true;
-  // Préremplir les défauts pour les questions skippées
-  ST.ageGroup = '25-35';   // âge moyen
-  ST.budget = 'equilibre'; // budget équilibré
-  ST.routineType = 'complete'; // routine complète
-
-  // Lancer le diagnostic
-  if (typeof showTermsModal === 'function') {
-    showTermsModal();
-  } else {
-    go('q1');
-    updateNav(null);
-  }
-}
 
 // Intercepter les transitions q1→q2, q3→q4, q4→q5 en mode express
 (function() {
@@ -13439,11 +13099,6 @@ function _searchDBByEAN(code) {
   return null;
 }
 
-// ── SCROLL SCAN ──
-function _scrollScanToTop() {
-  var sc = document.getElementById('sc-scan-product');
-  if (sc) sc.scrollTop = 0;
-}
 
 
 // ══════════════════════════════════════════════════════════════
