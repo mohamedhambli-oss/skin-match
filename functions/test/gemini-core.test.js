@@ -60,3 +60,12 @@ test("extractText tolère les réponses incomplètes", () => {
   assert.strictEqual(core.extractText({}), "");
   assert.strictEqual(core.extractText({ candidates: [{ content: { parts: [{ text: "ok" }] } }] }), "ok");
 });
+
+test("réflexion désactivée sur Gemini 2.5 Flash, inchangé pour les autres modèles", () => {
+  const skin = core.validateRequest({ task: "skin", image: "QUJD" });
+  const norm = core.validateRequest({ task: "normalize", type: "allergy", text: "parfum" });
+  assert.deepStrictEqual(core.buildGeminiBody(skin, "gemini-2.5-flash").generationConfig.thinkingConfig, { thinkingBudget: 0 });
+  assert.deepStrictEqual(core.buildGeminiBody(norm, "gemini-2.5-flash-lite").generationConfig.thinkingConfig, { thinkingBudget: 0 });
+  assert.strictEqual(core.buildGeminiBody(skin, "gemini-2.5-pro").generationConfig.thinkingConfig, undefined);
+  assert.strictEqual(core.buildGeminiBody(skin).generationConfig.thinkingConfig, undefined);
+});

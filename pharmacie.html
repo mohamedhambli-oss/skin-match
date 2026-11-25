@@ -4392,8 +4392,11 @@ function capturePhoto() {
     var canvas = document.getElementById("scan-canvas");
     if (!video || !canvas || !video.videoWidth) return;
     
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Photo ramenée à 1024 px au plus : assez pour juger la peau, 3 à 4 fois moins de données
+    // envoyées (et facturées) qu'en pleine résolution.
+    var k = Math.min(1, SCAN_MAX_PX / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.round(video.videoWidth * k);
+    canvas.height = Math.round(video.videoHeight * k);
     var ctx = canvas.getContext("2d");
     
     // Miroir si caméra frontale
@@ -4401,9 +4404,9 @@ function capturePhoto() {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    var dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    var dataUrl = canvas.toDataURL("image/jpeg", 0.85);
     scanBase64 = dataUrl.split(",")[1];
     
     document.getElementById("scan-img").src = dataUrl;
@@ -4436,10 +4439,33 @@ function handleScanDrop(e) {
     if (file && file.type.indexOf("image") === 0) loadScanImage(file);
 }
 
+var SCAN_MAX_PX = 1024;
+
+// Photo importée : redessinée en JPEG de 1024 px au plus. Sans cela, une photo de téléphone
+// (3 à 5 Mo, souvent au format HEIC) dépasse la limite du serveur et est refusée, et elle
+// emporte ses métadonnées (dont la position GPS). La copie redessinée n'en contient aucune.
+function _imageReduite(file, done) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+        var k = Math.min(1, SCAN_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.naturalWidth * k));
+        c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        done(c.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); done(null); };
+    img.src = url;
+}
+
 function loadScanImage(file) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var dataUrl = e.target.result;
+    _imageReduite(file, function(dataUrl) {
+        if (!dataUrl) {
+            showToast(LANG === "en" ? "This image format can't be read. Try a JPEG or PNG photo." : "Ce format d'image n'est pas lisible. Essaie avec une photo JPEG ou PNG.", { type: "error" });
+            return;
+        }
         scanBase64 = dataUrl.split(",")[1];
         document.getElementById("scan-img").src = dataUrl;
         document.getElementById("scan-camera-zone").style.display = "none";
@@ -4450,8 +4476,7 @@ function loadScanImage(file) {
         btn.style.opacity = "1";
         document.getElementById("scan-btn-text").textContent = LANG === "en" ? "Analyze my skin" : "Analyser ma peau";
         stopCamera();
-    };
-    reader.readAsDataURL(file);
+    });
 }
 
 function resetScan() {

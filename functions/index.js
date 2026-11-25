@@ -70,7 +70,7 @@ exports.gemini = onRequest({
       encodeURIComponent(GEMINI_MODEL.value()) + ":generateContent", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY.value() },
-      body: JSON.stringify(core.buildGeminiBody(parsed))
+      body: JSON.stringify(core.buildGeminiBody(parsed, GEMINI_MODEL.value()))
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) {
