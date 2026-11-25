@@ -1665,7 +1665,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">L'ensemble du site (textes, design, algorithme, logo « SkinMatch ») est protégé par le droit d'auteur. Toute reproduction est interdite sans autorisation écrite.</p>
 
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">Crédits</h3>
-    <p style="font-size:13px;line-height:1.7;color:#5A4A42">Marques citées (CeraVe, La Roche-Posay, SkinCeuticals, etc.) : propriété de leurs détenteurs respectifs.<br>Données météo : Open-Meteo (open-meteo.com).<br>Authentification : Firebase Auth.</p>
+    <p style="font-size:13px;line-height:1.7;color:#5A4A42">Marques citées (CeraVe, La Roche-Posay, SkinCeuticals, etc.) : propriété de leurs détenteurs respectifs.<br>Données météo : Open-Meteo (open-meteo.com).<br>Compositions et photos de produits : Open Beauty Facts (openbeautyfacts.org), licences ODbL et CC BY-SA.<br>Authentification : Firebase Auth.</p>
 
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">Médiation à la consommation</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">En cas de litige non résolu à l'amiable, vous pouvez recourir gratuitement à un médiateur de la consommation, conformément à l'article L612-1 du Code de la consommation.</p>
@@ -1979,92 +1979,21 @@ const T = {
 };
 
 // ─── IMAGES ───────────────────────────────────────────────────────────────────
+// Photos de produits : uniquement des images sous licence libre (Open Beauty Facts,
+// CC BY-SA, source citée dans les mentions légales). Les images copiées depuis des
+// sites marchands ont été retirées (droits d'auteur) : sans photo, l'app affiche les
+// initiales de la marque. Pour en ajouter : photos personnelles ou fournies par la marque.
 const IMGS = {
-  "acm-depiwhite": "https://www.archange-pharma.com/19720-large_default/acm-depiwhite-m-spf50-creme-protectrice-teintee-40ml.jpg",
-  "acm-novophane": "https://www.archange-pharma.com/22470-large_default/acm-novophane-complement-alimentaire-cheveux-et-ongles-180-gelules.jpg",
-  "ader-dermalibour": "https://www.archange-pharma.com/18287-large_default/aderma-dermalibour-cica-creme-reparatrice.jpg",
-  "ader-exomega": "https://www.archange-pharma.com/5770-large_default/aderma-exomega-control-cr-emolliente-grattage-fl-airless-400ml.jpg",
   "ader-protect": "https://images.openbeautyfacts.org/images/products/328/277/020/2120/front_fr.10.400.jpg",
-  "av-lait": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/2/3282770033168.jpg",
-  "av-tol": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/2/3282770104219.jpg",
-  "bd-hydra": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/4/3401321110064.jpg",
-  "bd-sebgel": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/4/3401321101734.jpg",
-  "bd-sebser": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/4/3401321110033.jpg",
-  "bd-sens": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/4/3401399616740.jpg",
   "bio-life-plankton": "https://images.openbeautyfacts.org/images/products/361/427/160/8932/front_de.4.400.jpg",
-  "cau-resveratrol": "https://www.archange-pharma.com/21457-large_default/caudalie-resveratrol-lift-creme-cachemire-recharge-50ml.jpg",
-  "cau-spf": "https://www.archange-pharma.com/24880-large_default/caudalie-spf50-spray-invisible-haute-protection-150ml.jpg",
   "cau-vinoperfect": "https://images.openbeautyfacts.org/images/products/352/293/000/4622/front_fr.3.400.jpg",
-  "cau-vinosource": "https://www.archange-pharma.com/21969-large_default/caudalie-vinohydra-serum-hyaluronique-30ml.jpg",
-  "cla-double-serum": "https://www.pharmacie-cap3000.com/165068-thickbox_default/clarins-double-serum-50ml.jpg",
   "cla-hydra-essentiel": "https://images.openbeautyfacts.org/images/products/338/081/010/8996/front_fr.5.400.jpg",
-  "cla-multi": "https://static.thcdn.com/productimg/original/14863820-1885275624252428.jpg",
-  "cla-spf": "https://static.thcdn.com/productimg/original/12509356-7495322246642885.jpg",
-  "cs-bleu": "https://www.cibleskin.com/cdn/shop/files/3edce08d5716eb9b930ba24235a46b7eb5c635d7.jpg",
-  "cs-crev": "https://www.cibleskin.com/cdn/shop/files/25774fce1370bb9af8050c5a33a5bf5801ec0782_112db18e-d249-4c66-948d-3da7b71c8557.jpg",
-  "cs-culte": "https://www.cibleskin.com/cdn/shop/files/104d734d1bfda050e60895a37d4d5abf119cda08_c218000d-12b6-40fb-90ea-830df6fb9e95.jpg",
-  "cs-eye": "https://www.cibleskin.com/cdn/shop/files/09319a4e3f4fbadd8919de8d4eee35cac0858e4f.jpg",
-  "cs-mousse": "https://www.cibleskin.com/cdn/shop/files/681ba3cf42a8030d5cb90aa08403c09366110eef.jpg",
-  "cs-power": "https://www.cibleskin.com/cdn/shop/files/1b906a08fd6bbad76d5683570bfb8018d37a61e8.jpg",
-  "cs-skin2": "https://www.cibleskin.com/cdn/shop/files/c06c0c2e6798ced364c6554ab659eecdacb16563.jpg",
-  "cs-u": "https://www.cibleskin.com/cdn/shop/files/c2f30aae745b75f82b7277836403773ba0bd781e.jpg",
-  "cv-crem": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875597404.jpg",
-  "cv-eye": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875521622.jpg",
-  "cv-gel": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875596490.jpg",
-  "cv-mou": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875772756.jpg",
-  "cv-ret": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875772763.jpg",
-  "cv-vitc": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875772749.jpg",
-  "de-eucerin-aqua": "https://www.archange-pharma.com/11944-large_default/eucerin-aquaphor-baume-cutane.jpg",
-  "de-weleda-huile": "https://www.archange-pharma.com/8864-large_default/weleda-soins-corps-huile-massage-perinee-fl-50ml.jpg",
-  "duc-anaphase": "https://www.archange-pharma.com/5471-large_default/ducray-anaphase-shampooing-complement-antichute-cheveux-400ml.jpg",
-  "duc-melascreen": "https://www.archange-pharma.com/21675-large_default/ducray-melascreen-spf50-creme-antitaches-protectrice-50ml.jpg",
-  "dz-avene-spray": "https://www.archange-pharma.com/12196-large_default/avene-brumisateur-eau-thermale-irritante.jpg",
-  "dz-cerave-dz": "https://www.archange-pharma.com/16039-large_default/cerave-creme-moussante-nettoyante-hydratante-236ml.jpg",
-  "dz-lrp-cica-dz": "https://www.archange-pharma.com/20152-large_default/la-roche-posay-cicaplast-baume-b5-tube-100ml.jpg",
-  "euc-aquaphor": "https://www.archange-pharma.com/11944-large_default/eucerin-aquaphor-baume-cutane.jpg",
-  "euc-dermopure": "https://www.archange-pharma.com/5728-large_default/eucerin-dermopure-gel-nettoyant-400ml.jpg",
-  "euc-hyaluron": "https://www.archange-pharma.com/18818-large_default/eucerin-hyaluron-filler-elasticity-3d-serum-30ml.jpg",
-  "euc-sun": "https://www.archange-pharma.com/17609-large_default/eucerin-spf50-sun-leb-protect-gel-creme-visage-corps-150ml.jpg",
   "euc-urearepair": "https://images.openbeautyfacts.org/images/products/400/580/016/2442/front_de.3.400.jpg",
   "int-ord-ha": "https://images.openbeautyfacts.org/images/products/076/991/519/0199/front_en.10.400.jpg",
-  "lie-hydragenist": "https://www.archange-pharma.com/21225-large_default/lierac-hydragenist-creme-rehydratante-eclat-pot-rechargeable-50ml.jpg",
-  "lie-premium": "https://www.archange-pharma.com/21598-large_default/lierac-premium-la-creme-soyeuse-recharge-50ml.jpg",
-  "lrp-anth": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875545086.jpg",
-  "lrp-cica": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875520670.jpg",
-  "lrp-effduo": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875596704.jpg",
-  "lrp-effgel": "https://ccdn.myshoptet.com/usr/www.najlacnejsikozmetika.sk/user/documents/upload/La%20Roche-Posay/Effaclar/effaclar-gel-400ml_1.jpg",
-  "lrp-hyalu": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875545291.jpg",
-  "lrp-tol": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/3/3337875520977.jpg",
-  "ng-bha": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/0/0/0086800108597.jpg",
-  "ng-spf": "https://www.pharmacie-du-centre.fr/media/catalog/product/cache/1/image/700x700/9df78eab33525d08d6e5fb8d27136e95/3/5/3574661685921.jpg",
   "nux-creme-fraiche": "https://images.openbeautyfacts.org/images/products/326/468/000/5343/front_en.3.400.jpg",
-  "nux-huile-prodigieuse": "https://www.archange-pharma.com/7066-large_default/nuxe-huile-prodigieuse-florale-100ml.jpg",
   "nux-merveillance": "https://images.openbeautyfacts.org/images/products/326/468/004/6513/front_fr.3.400.jpg",
-  "pat-absolis": "https://www.archange-pharma.com/16319-large_default/patyka-huile-absolue-50ml.jpg",
-  "skc-age": "https://static.thcdn.com/productimg/original/15066463-1025320435186632.jpg",
-  "skc-cef": "https://static.thcdn.com/productimg/original/11705727-4645320428397365.jpg",
-  "skc-dis": "https://static.thcdn.com/productimg/original/12251638-1665322246376704.jpg",
-  "skc-ha": "https://static.thcdn.com/productimg/original/15491444-1205320436321931.jpg",
-  "skc-met": "https://static.thcdn.com/productimg/original/11705714-9155320418773593.jpg",
-  "skc-ph": "https://static.thcdn.com/productimg/original/11705728-6615320428851739.jpg",
-  "skc-phy": "https://static.thcdn.com/productimg/original/11705715-1475320419109728.jpg",
-  "skc-sil": "https://static.thcdn.com/productimg/original/12781515-1565320432322283.jpg",
-  "skc-spf": "https://static.thcdn.com/productimg/original/11705736-1615320430417136.jpg",
-  "svr-cicavit": "https://www.archange-pharma.com/23140-large_default/svr-cicavit-creme-hppi-repatrice-apaisante-100ml.jpg",
-  "svr-hydra": "https://www.archange-pharma.com/21381-large_default/svr-hydraliane-creme-legere-50ml.jpg",
-  "svr-sebiaclear": "https://www.archange-pharma.com/12407-large_default/svr-sebiaclear-gel-moussant-nettoyant-purifiant-desincrustant.jpg",
   "svr-sun-secure": "https://images.openbeautyfacts.org/images/products/366/236/100/2146/front_en.4.400.jpg",
-  "svr-xerial": "https://www.archange-pharma.com/13271-large_default/svr-xerial-10-lait-corps-hydratant-squames.jpg",
-  "uri-bariesun": "https://www.archange-pharma.com/3990-large_default/uriage-bariesun-cr-solaire-visage-spf50-sans-parfum-tube-50ml.jpg",
   "uri-eau-thermale": "https://images.openbeautyfacts.org/images/products/366/143/400/2656/front_en.3.400.jpg",
-  "uri-isdin": "https://www.archange-pharma.com/15306-large_default/uriage-hyseac-gel-nettoyant.jpg",
-  "uri-prederma": "https://www.archange-pharma.com/3425-large_default/uriage-eau-thermale-cr-eau-riche-40-ml.jpg",
-  "uri-roseliane": "https://www.archange-pharma.com/3431-large_default/uriage-roseliane-cr-rougeurs-spf30-40ml.jpg",
-  "vic-capital": "https://www.archange-pharma.com/18489-large_default/vichy-capital-soleil-uv-age-daily-spf50-40ml.jpg",
-  "vic-liftactiv": "https://www.archange-pharma.com/8675-large_default/vichy-liftactiv-collagen-specialist-age-50ml.jpg",
-  "vic-minral89": "https://www.pharmacie-cap3000.com/155130-thickbox_default/vichy-serum-booster-quotidien-fortifiant-et-repulpant-a-l-acide-hyaluronique-50ml.jpg",
-  "vic-normaderm": "https://www.archange-pharma.com/6981-large_default/vichy-normaderm-phytosolution-gel-purifiant-intense-400ml.jpg",
-  "vic-slow-age": "https://static.thcdn.com/productimg/original/11499284-1605216796436779.jpg"
 };
 
 // ─── PRODUITS ─────────────────────────────────────────────────────────────────
