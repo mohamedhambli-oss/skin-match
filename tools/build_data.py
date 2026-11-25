@@ -19,7 +19,7 @@ LISTS = {'actifs_cles': 'ak', 'composition_inci': 'comp', 'regions': 'region', '
          'problemes': 'c', 'ages': 'age'}
 TEXTS = {'marque': 'marque', 'nom': 'nom', 'type_produit': 'usage', 'texture': 'texture', 'moment': 'moment',
          'pour_qui': 'pq', 'benefices_fr': 'ben', 'benefices_en': 'ben_en', 'application': 'app', 'prix': 'prix',
-         'lien_achat': 'link', 'categorie': 'cat', 'video': 'video', 'label_yuka': 'yl'}
+         'lien_achat': 'link', 'categorie': 'cat', 'video': 'video'}
 BOOLS = {'vegan': 'vegan', 'clean': 'clean', 'teinte': 'teinte', 'fiche_incomplete': 'incomplet'}
 FLAGS = ['retinol', 'parfum', 'paraben', 'alcohol', 'sulfate', 'silicone', 'vitc', 'salicylic', 'aha_bha']
 REQUIRED = ['id', 'marque', 'nom', 'moment']
@@ -78,11 +78,8 @@ def main():
         src = s(row.get('source'))
         if src and src != 'manuel':
             p['source'] = src
-        if s(row.get('note_yuka')):
-            try:
-                p['yuka'] = int(float(s(row.get('note_yuka'))))
-            except ValueError:
-                warnings.append(f'Produits ligne {n} : note_yuka non numérique')
+        # note_yuka / label_yuka : données de Yuka, conservées dans le tableur pour mémoire mais
+        # jamais exportées vers l'app (données propriétaires).
         p.setdefault('ak', []); p.setdefault('comp', [])
         for key in ('usage', 'texture', 'pq', 'ben', 'app'):   # textes lus sans test par l'app
             p.setdefault(key, '')
