@@ -2719,6 +2719,16 @@ function build(){
   };
 
   const bestForStep = (key, etape) => {
+    // Borne en pharmacie : priorité aux produits en rayon (fonction fournie par le module borne).
+    // Le candidat retenu reste soumis aux mêmes filtres : allergies déclarées et grossesse.
+    if (typeof window.SKINMATCH_STOCK_PICK === "function") {
+      const conc = etape === "Sérum soir" ? (c[1] || c[0]) : c[0];
+      const pick = window.SKINMATCH_STOCK_PICK(etape, key, {
+        safe: (k) => !!DB[k] && !usedKeys.has(k) && !hasAllergen(k) && isPregnancySafe(k),
+        compat: (k) => getCompat(k, sk, conc, ST.ageGroup, ST.allergies)
+      });
+      if (pick) return pick;
+    }
     const pool = (etape === "Sérum principal" || etape === "Sérum soir" || etape === "Soin ciblé")
       ? function(){ return poolSerum(key); }
       : ETAPE_POOL[etape];
@@ -5324,7 +5334,7 @@ function renderResult(){
           <div class="pm">${s.marque}</div>
           <div class="badges"><span class="cb">✓ ${s.compat}% ${t('compatible')}</span></div>
         </div>
-        <div style="position:absolute;top:12px;right:12px;background:#FDF0E6;border-radius:8px;padding:5px 11px;font-family:Georgia,serif;font-size:15px;font-weight:800;color:#C4726A">${s.prix}</div>
+        ${s.prix ? `<div style="position:absolute;top:12px;right:12px;background:#FDF0E6;border-radius:8px;padding:5px 11px;font-family:Georgia,serif;font-size:15px;font-weight:800;color:#C4726A">${s.prix}</div>` : ""}
       </div>
       <div class="pb">
         <div class="tags">${(s.ak||[]).slice(0,3).map(a=>`<span class="tag">${a}</span>`).join("")}</div>
@@ -5363,7 +5373,7 @@ function renderResult(){
 
   const shareHtml=`<div class="share-card">
     <div class="sc-head"><div><div class="sc-ey">SkinMatch</div><div class="sc-title">Ma routine ${({seche:"sèche",grasse:"grasse",mixte:"mixte",normale:"normale",sensible:"sensible"})[ST.skinType]||""}</div>${ST.ageGroup?`<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">${ST.ageGroup} ans</div>`:""}</div><div class="sc-budget"><div class="sc-budget-lbl">Budget total</div><div class="sc-budget-val">~${Math.round(r.totalPrix)}${(r.currency||'€')==='€'?'€':' '+(r.currency||'€')}</div></div></div>
-    ${r.steps.map(s=>`<div class="sc-item"><div><div class="sc-item-etape">${translateEtape(s.etape)}</div><div class="sc-item-name">${s.nom}</div><div class="sc-item-brand">${s.marque}</div></div><div class="sc-item-prix">${s.prix}</div></div>`).join("")}
+    ${r.steps.map(s=>`<div class="sc-item"><div><div class="sc-item-etape">${translateEtape(s.etape)}</div><div class="sc-item-name">${s.nom}</div><div class="sc-item-brand">${s.marque}</div></div><div class="sc-item-prix">${s.prix || ""}</div></div>`).join("")}
     <div class="sc-footer">${t("share_footer")}</div>
   </div>`;
 

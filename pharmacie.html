@@ -2835,6 +2835,16 @@ function build(){
   };
 
   const bestForStep = (key, etape) => {
+    // Borne en pharmacie : priorité aux produits en rayon (fonction fournie par le module borne).
+    // Le candidat retenu reste soumis aux mêmes filtres : allergies déclarées et grossesse.
+    if (typeof window.SKINMATCH_STOCK_PICK === "function") {
+      const conc = etape === "Sérum soir" ? (c[1] || c[0]) : c[0];
+      const pick = window.SKINMATCH_STOCK_PICK(etape, key, {
+        safe: (k) => !!DB[k] && !usedKeys.has(k) && !hasAllergen(k) && isPregnancySafe(k),
+        compat: (k) => getCompat(k, sk, conc, ST.ageGroup, ST.allergies)
+      });
+      if (pick) return pick;
+    }
     const pool = (etape === "Sérum principal" || etape === "Sérum soir" || etape === "Soin ciblé")
       ? function(){ return poolSerum(key); }
       : ETAPE_POOL[etape];
@@ -5444,7 +5454,7 @@ function renderResult(){
           <div class="pm">${s.marque}</div>
           <div class="badges"><span class="cb">✓ ${s.compat}% ${t('compatible')}</span></div>
         </div>
-        <div style="position:absolute;top:12px;right:12px;background:#FDF0E6;border-radius:8px;padding:5px 11px;font-family:Georgia,serif;font-size:15px;font-weight:800;color:#C4726A">${s.prix}</div>
+        ${s.prix ? `<div style="position:absolute;top:12px;right:12px;background:#FDF0E6;border-radius:8px;padding:5px 11px;font-family:Georgia,serif;font-size:15px;font-weight:800;color:#C4726A">${s.prix}</div>` : ""}
       </div>
       <div class="pb">
         <div class="tags">${(s.ak||[]).slice(0,3).map(a=>`<span class="tag">${a}</span>`).join("")}</div>
@@ -5483,7 +5493,7 @@ function renderResult(){
 
   const shareHtml=`<div class="share-card">
     <div class="sc-head"><div><div class="sc-ey">SkinMatch</div><div class="sc-title">Ma routine ${({seche:"sèche",grasse:"grasse",mixte:"mixte",normale:"normale",sensible:"sensible"})[ST.skinType]||""}</div>${ST.ageGroup?`<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">${ST.ageGroup} ans</div>`:""}</div><div class="sc-budget"><div class="sc-budget-lbl">Budget total</div><div class="sc-budget-val">~${Math.round(r.totalPrix)}${(r.currency||'€')==='€'?'€':' '+(r.currency||'€')}</div></div></div>
-    ${r.steps.map(s=>`<div class="sc-item"><div><div class="sc-item-etape">${translateEtape(s.etape)}</div><div class="sc-item-name">${s.nom}</div><div class="sc-item-brand">${s.marque}</div></div><div class="sc-item-prix">${s.prix}</div></div>`).join("")}
+    ${r.steps.map(s=>`<div class="sc-item"><div><div class="sc-item-etape">${translateEtape(s.etape)}</div><div class="sc-item-name">${s.nom}</div><div class="sc-item-brand">${s.marque}</div></div><div class="sc-item-prix">${s.prix || ""}</div></div>`).join("")}
     <div class="sc-footer">${t("share_footer")}</div>
   </div>`;
 
@@ -14146,6 +14156,7 @@ function vueAdmin(){
         (a.txt ? '<div style="color:#5A4A44;margin-top:2px">' + esc(a.txt) + '</div>' : '') + '</div>';
     }).join('') : '<div style="font-size:13px;color:#B0958F">Aucun avis pour le moment.</div>')) +
 
+  '<div id="borne-fiches-auto" style="font-size:12px;color:#8B6F5E;margin-bottom:8px"></div>' +
   '<button onclick="window._borneReglages()" style="width:100%;padding:14px;border:1.5px solid #3D2B1F;border-radius:12px;background:#fff;color:#3D2B1F;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">Réglages de l\'officine (nom, code PIN, produits en rayon)</button>' +
   '<button onclick="window._borneCSV()" style="width:100%;padding:14px;border:none;border-radius:12px;background:#3D2B1F;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">Exporter tout en CSV</button>' +
   '<button onclick="window._borneMail()" style="width:100%;padding:13px;border:1.5px solid #EDD9D4;border-radius:12px;background:#fff;color:#3D2B1F;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">M\'envoyer le résumé par e-mail</button>' +
@@ -14342,17 +14353,100 @@ window._borneReglages = function(){
     if (ta.value.trim()) c.stock = extraireCodes(ta.value);
     if (pin) c.pin = await hacherPin(pin);
     ecrireConfig(c); _stock = null; ov.remove(); vueAdmin();
+    genererFichesStock().then(function(n){
+      var el = document.getElementById("borne-fiches-auto");
+      if (el) el.textContent = n + " produit(s) en rayon sans fiche SkinMatch mais à composition connue : fiches générées automatiquement.";
+    });
   };
 };
 
-// Badge « En rayon » sur la vignette des produits disponibles dans l'officine
+
+/* ══════════ RECOMMANDER CE QUE L'OFFICINE A EN RAYON ══════════
+   1. Fiches automatiques : un produit en rayon sans fiche SkinMatch, mais dont la
+      composition est connue (catalogue), reçoit une fiche générée : type de produit,
+      moment d'application, actifs repérés, indicateurs d'ingrédients. Les filtres
+      allergies et grossesse s'appliquent donc à lui comme aux autres.
+      Un produit sans composition connue n'est JAMAIS recommandé : on ne peut pas
+      garantir qu'il est sans danger pour la cliente.
+   2. Choix en rayon : pour chaque étape de la routine, le produit en stock le plus
+      compatible est préféré, s'il atteint un niveau de compatibilité suffisant.
+      Sinon le meilleur produit est conservé et marqué « Sur commande ». */
+var TYPE_USAGE = { "Sérum": "Sérum visage", "Crème / baume": "Crème hydratante visage", "Nettoyant": "Nettoyant visage",
+                   "Solaire": "Protection solaire visage", "Lotion": "Lotion tonique visage" };
+var ACTIFS = [["niacinamide","Niacinamide"],["hyaluron","Acide hyaluronique"],["ceramide","Céramides"],["panthenol","Panthénol"],
+              ["retinol","Rétinol"],["salicylic","Acide salicylique"],["glycolic","Acide glycolique"],["ascorbic","Vitamine C"],
+              ["zinc","Zinc"],["squalane","Squalane"],["urea","Urée"],["allantoin","Allantoïne"],["madecassoside","Madécassoside"]];
+// Données venues d'une base publique : affichées comme du texte, jamais comme du code.
+function _txt(s){ return String(s == null ? "" : s).replace(/[<>&"'`$\\]/g, "").replace(/\s+/g, " ").trim(); }
+function _drapeaux(inci){
+  var t = inci.toLowerCase();
+  return { retinol: /retinol|retinal|retinyl/.test(t), parfum: /parfum|fragrance/.test(t), paraben: /paraben/.test(t),
+           alcohol: /alcohol denat|\bethanol\b/.test(t), sulfate: /lauryl sulfate|laureth sulfate/.test(t),
+           silicone: /dimethicone|siloxane|methicone/.test(t), vitc: /ascorbic|ascorbyl/.test(t),
+           salicylic: /salicylic/.test(t), aha_bha: /glycolic|lactic acid|salicylic|mandelic/.test(t) };
+}
+var _fichesAuto = 0;
+async function genererFichesStock(){
+  var stock = stockSet();
+  if (!Object.keys(stock).length || typeof chargerCatalogue !== "function" || typeof DB === "undefined") return 0;
+  var cat = await chargerCatalogue();
+  if (!cat) return 0;
+  var dansDB = {};
+  Object.keys(DB).forEach(function(k){ if (DB[k].ean) dansDB[String(DB[k].ean).replace(/^0+/, "")] = 1; });
+  var n = 0;
+  Object.keys(stock).forEach(function(e){
+    var it = cat[e];
+    if (dansDB[e] || !it || !it.inci || it.inci.length < 20) return;
+    var nom = _txt(it.n), type = _txt(it.t), quoi = nom + " " + type;
+    if (/corps|mains|pieds|body|l[eè]vres|cheveu|shampo/i.test(quoi)) return;      // routine visage uniquement
+    var usage = TYPE_USAGE[type] ||
+      (/spf|\bip ?\d|50\+/i.test(nom) ? "Protection solaire visage" : /s[ée]rum/i.test(nom) ? "Sérum visage" :
+       /nettoy|moussant|micellaire|lavant/i.test(nom) ? "Nettoyant visage" : /cr[eè]me|baume|fluide|soin/i.test(nom) ? "Crème hydratante visage" : "");
+    if (!usage) return;
+    if (/^Protection solaire/.test(usage) && !/spf|\bip ?\d|50\+|30\+/i.test(nom)) return;   // après-soleil, autobronzant…
+    var bas = it.inci.toLowerCase(), key = "gen-" + e;
+    DB[key] = { nom: nom || "Produit", marque: _txt(it.m), usage: usage, texture: "",
+                moment: /^Protection solaire/.test(usage) ? "AM" : /retin/.test(bas) ? "PM" : "AM+PM",
+                ak: ACTIFS.filter(function(a){ return bas.indexOf(a[0]) > -1; }).map(function(a){ return a[1]; }).slice(0, 4),
+                comp: it.inci.split(/,(?![^()]*\))/).map(_txt).filter(Boolean).slice(0, 80),
+                pq: "", ben: "Fiche générée automatiquement à partir de la composition (Open Beauty Facts).", app: "",
+                ean: e, source: "auto", incomplet: true };
+    INCI_DB[key] = _drapeaux(it.inci);
+    n++;
+  });
+  _fichesAuto = n;
+  return n;
+}
+
+var ETAPE_CAT = { "Nettoyant": "nettoyant", "Hydratant": "creme", "Protection solaire": "spf",
+                  "Sérum principal": "serum", "Sérum soir": "serum", "Soin ciblé": "serum" };
+var COMPAT_MIN = 55;        // en dessous, un produit en rayon n'est pas proposé
+var PERTE_MAX = 25;         // écart de compatibilité accepté pour préférer le stock
+window.SKINMATCH_STOCK_PICK = function(etape, actuel, o){
+  if (!Object.keys(stockSet()).length) return null;
+  if (actuel && enRayon(actuel) && o.safe(actuel)) return actuel;
+  var cat = ETAPE_CAT[etape];
+  if (!cat || typeof categorizeProduct !== "function") return null;
+  var base = actuel && DB[actuel] ? o.compat(actuel) : 0, meilleur = null, score = -1;
+  Object.keys(DB).forEach(function(k){
+    if (!enRayon(k) || categorizeProduct(k) !== cat || !o.safe(k)) return;
+    var s = o.compat(k);
+    if (s > score) { score = s; meilleur = k; }
+  });
+  return (meilleur && score >= COMPAT_MIN && score >= base - PERTE_MAX) ? meilleur : null;
+};
+
+// Badges « En rayon » / « Sur commande » sur la vignette des produits (si l'officine a renseigné son stock)
 if (typeof window.imgHtml === "function") {
   var _img = window.imgHtml;
   window.imgHtml = function(key){
     var h = _img.apply(this, arguments);
-    if (!enRayon(key)) return h;
+    if (!Object.keys(stockSet()).length) return h;
     var i = h.lastIndexOf("</div>");
-    return h.slice(0, i) + '<span style="position:absolute;left:4px;bottom:4px;z-index:2;background:#2E7D32;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px">En rayon</span>' + h.slice(i);
+    var badge = enRayon(key)
+      ? '<span style="position:absolute;left:4px;bottom:4px;z-index:2;background:#2E7D32;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px">En rayon</span>'
+      : '<span style="position:absolute;left:4px;bottom:4px;z-index:2;background:#fff;color:#5A4A44;border:1px solid #D9CCC7;font-size:10px;font-weight:700;padding:1px 6px;border-radius:9px">Sur commande</span>';
+    return h.slice(0, i) + badge + h.slice(i);
   };
 }
 
@@ -14521,7 +14615,7 @@ if (/[?&]admin=1/.test(location.search)) {
   setTimeout(function(){ demanderPin(vueAdmin); }, 400);
 } else {
   window.addEventListener("load", function(){ setTimeout(function(){
-    if (!lireConfig()) ecranInstallation(); else afficherOfficine();
+    if (!lireConfig()) ecranInstallation(); else { afficherOfficine(); genererFichesStock(); }
   }, 350); });
   compter("sessions");
   relancerMinuteur();
