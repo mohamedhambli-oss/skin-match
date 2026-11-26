@@ -10,13 +10,13 @@
 <!-- CSP : restreint les sources autorisées pour script, style, img, frame, etc. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://www.googleapis.com;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://www.googleapis.com https://www.google.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https:;
   font-src 'self' data: https://fonts.gstatic.com;
-  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.open-meteo.com https://world.openbeautyfacts.org https://*.openbeautyfacts.org;
+  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.open-meteo.com https://world.openbeautyfacts.org https://*.openbeautyfacts.org https://www.google.com;
   media-src 'self' blob:;
-  frame-src https://www.youtube.com https://www.tiktok.com https://*.firebaseapp.com;
+  frame-src https://www.youtube.com https://www.tiktok.com https://*.firebaseapp.com https://www.google.com https://recaptcha.google.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -114,6 +114,22 @@
 
   const app = initializeApp(firebaseConfig);
   window._fbApp = app;      // utilisé par les rappels (Firebase Cloud Messaging, chargé à la demande)
+@@si public@@
+  // App Check : prouve aux serveurs (Firestore, Authentification, proxy IA) que la requête vient
+  // bien de l'application SkinMatch, et pas d'un script qui aurait copié leurs adresses.
+  // Clé : Firebase › App Check › Applications › reCAPTCHA Enterprise (clé du site, non secrète).
+  // Vide = App Check désactivé, l'application fonctionne comme avant.
+  const SKINMATCH_RECAPTCHA_KEY = "";
+  // Chargé seulement si la clé est renseignée ; « await » : prêt avant les premières requêtes
+  // de l'authentification et de la base de données.
+  if (SKINMATCH_RECAPTCHA_KEY) {
+    try {
+      const ac = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js");
+      const appCheck = ac.initializeAppCheck(app, { provider: new ac.ReCaptchaEnterpriseProvider(SKINMATCH_RECAPTCHA_KEY), isTokenAutoRefreshEnabled: true });
+      window._getAppCheckToken = async () => { try { return (await ac.getToken(appCheck, false)).token; } catch (e) { return null; } };
+    } catch (e) { console.warn("App Check", e && e.message); }
+  }
+@@fin@@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const googleProvider = new GoogleAuthProvider();
@@ -2736,9 +2752,14 @@ async function _aiCall(task, payload) {
   try {
     var token = await user.getIdToken();
     var body = Object.assign({ task: task }, payload);
+    var headers = { "Content-Type": "application/json", "Authorization": "Bearer " + token };
+    if (typeof window._getAppCheckToken === "function") {          // App Check (si activé)
+      var ac = await window._getAppCheckToken();
+      if (ac) headers["X-Firebase-AppCheck"] = ac;
+    }
     var r = await fetch(SKINMATCH_AI_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      headers: headers,
       body: JSON.stringify(body)
     });
     var data = await r.json().catch(function(){ return {}; });

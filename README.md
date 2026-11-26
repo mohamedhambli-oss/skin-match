@@ -42,6 +42,19 @@ Certificats Web Push › Générer, puis coller la clé publique dans `SKINMATCH
 (`src/skinmatch.html`), régénérer les pages et déployer les fonctions. Sans cette clé, les
 rappels ne s'affichent que si l'application est ouverte.
 
+## App Check (protection contre les abus)
+
+Prouve aux serveurs que les requêtes viennent de l'application. Activation, dans l'ordre :
+1. Firebase › App Check › Applications › application web › **reCAPTCHA Enterprise** : copier la
+   clé du site dans `SKINMATCH_RECAPTCHA_KEY` (`src/skinmatch.html`, `suppression-compte.html`,
+   `admin.html`), régénérer les pages, publier.
+2. Proxy IA : mode `monitor` par défaut (appels sans preuve journalisés, « appcheck_absent »
+   dans les journaux). Après quelques jours sans anomalie : `APPCHECK_MODE=enforce` dans
+   `functions/.env`, puis `firebase deploy --only functions`.
+3. Firestore et Authentification : dans la console App Check, regarder les métriques puis
+   cliquer « Appliquer » quand presque toutes les requêtes sont vérifiées.
+Sans clé, rien ne change.
+
 ## Google Play
 
 Guide pas à pas, textes de la fiche, réponses aux formulaires et visuels : `store/GOOGLE_PLAY.md`.

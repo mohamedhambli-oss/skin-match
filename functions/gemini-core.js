@@ -118,5 +118,12 @@ function nextUsage(current, task, today) {
   return u;
 }
 
-module.exports = { validateRequest, buildGeminiBody, extractText, sanitizeResult, nextUsage, parseJson,
+// App Check : « off » (ignoré), « monitor » (journalisé, laissé passer), « enforce » (refusé).
+// Déploiement conseillé : monitor, vérifier les chiffres quelques jours, puis enforce.
+function appCheckVerdict(mode, valide) {
+  if (valide || mode === "off") return "ok";
+  return mode === "enforce" ? "refuser" : "signaler";
+}
+
+module.exports = { appCheckVerdict, validateRequest, buildGeminiBody, extractText, sanitizeResult, nextUsage, parseJson,
   BadRequest, DAILY_LIMITS, CONCERN_IDS, ALLERGY_LABELS };

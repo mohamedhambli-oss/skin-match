@@ -69,3 +69,12 @@ test("réflexion désactivée sur Gemini 2.5 Flash, inchangé pour les autres mo
   assert.strictEqual(core.buildGeminiBody(skin, "gemini-2.5-pro").generationConfig.thinkingConfig, undefined);
   assert.strictEqual(core.buildGeminiBody(skin).generationConfig.thinkingConfig, undefined);
 });
+
+test("App Check : surveillance par défaut, refus seulement en mode « enforce »", () => {
+  assert.strictEqual(core.appCheckVerdict("monitor", false), "signaler");
+  assert.strictEqual(core.appCheckVerdict("monitor", true), "ok");
+  assert.strictEqual(core.appCheckVerdict("enforce", false), "refuser");
+  assert.strictEqual(core.appCheckVerdict("enforce", true), "ok");
+  assert.strictEqual(core.appCheckVerdict("off", false), "ok");
+  assert.strictEqual(core.appCheckVerdict("nimporte", false), "signaler");
+});

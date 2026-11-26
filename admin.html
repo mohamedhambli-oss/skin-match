@@ -6,10 +6,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' https://www.gstatic.com;
+  script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src https://fonts.gstatic.com;
-  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com;
+  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://www.google.com;
+  frame-src https://www.google.com https://recaptcha.google.com;
   img-src 'self' data:;
   base-uri 'none'; form-action 'none'; object-src 'none';">
 <title>SkinMatch — Tableau de bord</title>
@@ -221,6 +222,14 @@
     projectId: "skin-match-c7189",
     appId: "1:1033609385398:web:4b08eef7db24e6470ddd17"
   });
+  // App Check (même clé que dans src/skinmatch.html ; vide = désactivé)
+  const SKINMATCH_RECAPTCHA_KEY = "";
+  if (SKINMATCH_RECAPTCHA_KEY) {
+    try {
+      const ac = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js");
+      ac.initializeAppCheck(app, { provider: new ac.ReCaptchaEnterpriseProvider(SKINMATCH_RECAPTCHA_KEY), isTokenAutoRefreshEnabled: true });
+    } catch (e) { console.warn("App Check", e && e.message); }
+  }
   const auth = getAuth(app);
   const URL_STATS = "https://europe-west1-skin-match-c7189.cloudfunctions.net/stats";
   const err = (m) => { document.getElementById("err").textContent = m; };

@@ -22,6 +22,15 @@ admin.initializeApp();
 
 const GEMINI_KEY = defineSecret("GEMINI_KEY");
 const GEMINI_MODEL = defineString("GEMINI_MODEL", { default: "gemini-2.5-flash" });
+// App Check sur le proxy IA : « monitor » (par défaut) journalise les appels sans preuve,
+// « enforce » les refuse, « off » ignore. Réglage : APPCHECK_MODE=enforce dans functions/.env.
+const APPCHECK_MODE = defineString("APPCHECK_MODE", { default: "monitor" });
+
+async function appCheckValide(req) {
+  const t = req.get("X-Firebase-AppCheck");
+  if (!t) return false;
+  try { await admin.appCheck().verifyToken(t); return true; } catch (e) { return false; }
+}
 
 // Origines autorisées à appeler le proxy depuis un navigateur.
 const ALLOWED_ORIGINS = [
@@ -48,6 +57,11 @@ exports.gemini = onRequest({
   let uid;
   try { uid = (await admin.auth().verifyIdToken(m[1])).uid; }
   catch (e) { res.status(401).json({ error: "auth" }); return; }
+
+  // 1 bis. App Check : la requête vient-elle de l'application ?
+  const verdict = core.appCheckVerdict(APPCHECK_MODE.value(), await appCheckValide(req));
+  if (verdict === "refuser") { res.status(401).json({ error: "appcheck" }); return; }
+  if (verdict === "signaler") logger.warn("appcheck_absent", { uid });
 
   // 2. Requête limitée à une tâche connue
   let parsed;

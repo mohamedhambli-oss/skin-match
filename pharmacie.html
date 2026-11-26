@@ -6,13 +6,13 @@
 <!-- CSP : restreint les sources autorisées pour script, style, img, frame, etc. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://www.googleapis.com;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://www.googleapis.com https://www.google.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https:;
   font-src 'self' data: https://fonts.gstatic.com;
-  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.open-meteo.com https://world.openbeautyfacts.org https://*.openbeautyfacts.org;
+  connect-src 'self' https://europe-west1-skin-match-c7189.cloudfunctions.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.open-meteo.com https://world.openbeautyfacts.org https://*.openbeautyfacts.org https://www.google.com;
   media-src 'self' blob:;
-  frame-src https://www.youtube.com https://www.tiktok.com https://*.firebaseapp.com;
+  frame-src https://www.youtube.com https://www.tiktok.com https://*.firebaseapp.com https://www.google.com https://recaptcha.google.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -2656,9 +2656,14 @@ async function _aiCall(task, payload) {
   try {
     var token = await user.getIdToken();
     var body = Object.assign({ task: task }, payload);
+    var headers = { "Content-Type": "application/json", "Authorization": "Bearer " + token };
+    if (typeof window._getAppCheckToken === "function") {          // App Check (si activé)
+      var ac = await window._getAppCheckToken();
+      if (ac) headers["X-Firebase-AppCheck"] = ac;
+    }
     var r = await fetch(SKINMATCH_AI_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      headers: headers,
       body: JSON.stringify(body)
     });
     var data = await r.json().catch(function(){ return {}; });
