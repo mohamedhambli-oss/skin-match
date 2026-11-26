@@ -34,6 +34,14 @@ page web autonome pour Google Play). Le code commun n'y figure qu'une fois ; les
 version sont encadrés par `@@si public@@ … @@sinon@@ … @@fin@@` ou `@@si borne@@ … @@fin@@`.
 `python3 tools/build_pages.py --check` vérifie que les pages publiées sont à jour.
 
+## Rappels de routine (notifications)
+
+Le serveur (fonction `reminders`, toutes les 15 minutes) envoie les rappels matin et soir, même
+application fermée. Pour l'activer : Firebase › Paramètres du projet › Cloud Messaging ›
+Certificats Web Push › Générer, puis coller la clé publique dans `SKINMATCH_VAPID_KEY`
+(`src/skinmatch.html`), régénérer les pages et déployer les fonctions. Sans cette clé, les
+rappels ne s'affichent que si l'application est ouverte.
+
 ## Google Play
 
 Guide pas à pas, textes de la fiche, réponses aux formulaires et visuels : `store/GOOGLE_PLAY.md`.

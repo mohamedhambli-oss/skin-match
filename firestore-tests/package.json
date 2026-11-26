@@ -3,7 +3,7 @@
   "private": true,
   "description": "Tests des règles Firestore et du nettoyage de compte sur l'émulateur (Java requis).",
   "scripts": {
-    "test": "firebase emulators:exec --only firestore,auth --project demo-skinmatch --config ../firebase.json \"node --test rules.test.js && node ../functions/test/cleanup.emulator.js && node ../functions/test/stats.emulator.js\""
+    "test": "firebase emulators:exec --only firestore,auth --project demo-skinmatch --config ../firebase.json \"node --test rules.test.js && node ../functions/test/cleanup.emulator.js && node ../functions/test/stats.emulator.js && node ../functions/test/reminders.emulator.js\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

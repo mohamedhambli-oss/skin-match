@@ -62,7 +62,7 @@
   <div class="card">
     <h2>Ce qui est supprimé, ce qui est conservé</h2>
     <ul>
-      <li><strong>Supprimé immédiatement et définitivement</strong> : votre compte (e-mail, prénom), votre profil de peau, vos routines et leur historique, vos données de santé (grossesse, allergies, carnation), vos retours de tolérance, votre activité, votre compteur d'analyses IA, et les codes-barres que vous avez proposés et qui n'ont pas encore été validés.</li>
+      <li><strong>Supprimé immédiatement et définitivement</strong> : votre compte (e-mail, prénom), votre profil de peau, vos routines et leur historique, vos données de santé (grossesse, allergies, carnation), vos retours de tolérance, votre activité, votre abonnement aux rappels, votre compteur d'analyses IA, et les codes-barres que vous avez proposés et qui n'ont pas encore été validés.</li>
       <li><strong>Conservé sans lien avec vous</strong> : les codes-barres déjà validés et intégrés à la base produits (l'auteur est remplacé par « utilisateur supprimé »), et les retours de tolérance partagés anonymement, qui ne comportent aucun identifiant et ne peuvent donc pas être retrouvés.</li>
       <li>Les photos de peau, le suivi du cycle et les préférences n'ont jamais quitté votre téléphone : désinstallez l'application ou effacez ses données pour les supprimer.</li>
     </ul>
@@ -138,7 +138,7 @@
     const uid = user.uid;
     // Données effacées ici ; la fonction serveur « cleanupDeletedUser » repasse derrière
     // (compteur IA, contributions) quand le compte est supprimé.
-    for (const c of ["users", "routines", "feedbacks"]) { try { await deleteDoc(doc(db, c, uid)); } catch (e) {} }
+    for (const c of ["users", "routines", "feedbacks", "push"]) { try { await deleteDoc(doc(db, c, uid)); } catch (e) {} }
     try {
       const mine = await getDocs(query(collection(db, "community_eans"), where("addedBy", "==", uid)));
       for (const d of mine.docs) if (d.get("validated") !== true) { try { await deleteDoc(d.ref); } catch (e) {} }

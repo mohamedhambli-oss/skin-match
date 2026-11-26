@@ -75,6 +75,19 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // Rappels de routine : jeton de notification de l'appareil et créneaux UTC (« HHMM »).
+    // Lu et envoyé par la fonction « reminders » (Admin SDK) ; le titulaire seul peut l'écrire.
+    match /push/{uid} {
+      function slot(v) { return v == null || (v is string && v.matches('^([01][0-9]|2[0-3])(00|15|30|45)$')); }
+      allow get, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['token', 'lang', 'matin', 'soir', 'updatedAt'])
+        && request.resource.data.token is string && request.resource.data.token.size() > 0 && request.resource.data.token.size() <= 4096
+        && request.resource.data.lang in ['fr', 'en', 'es']
+        && slot(request.resource.data.get('matin', null)) && slot(request.resource.data.get('soir', null))
+        && request.resource.data.updatedAt is string;
+    }
+
     // Quotas du proxy IA : réservés au serveur (Admin SDK, qui ignore ces règles).
     match /ai_usage/{uid} { allow read, write: if false; }
 

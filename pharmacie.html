@@ -85,6 +85,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
+  window._fbApp = app;      // utilisé par les rappels (Firebase Cloud Messaging, chargé à la demande)
   const auth = getAuth(app);
   const db = getFirestore(app);
   const googleProvider = new GoogleAuthProvider();
@@ -197,6 +198,7 @@
       if (typeof window.onFirebaseUserReady === 'function') {
         window.onFirebaseUserReady(user);
       }
+      if (typeof rappelsRafraichir === 'function') { try { rappelsRafraichir(); } catch (e) {} }
     } else {
       window._userProfile = null;
       if (typeof window.onFirebaseUserReady === 'function') {
@@ -1609,7 +1611,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">1. Responsable du traitement</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Le responsable du traitement est l'éditeur de SkinMatch : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : raison sociale, forme juridique, adresse du siège]</mark>. Contact pour toute question sur vos données : <a href="mailto:contact@skinmatch.app" style="color:#C4726A">contact@skinmatch.app</a>.</p>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">2. Données traitées et bases légales</h3>
-    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Compte</strong> (prénom, e-mail, mot de passe chiffré par Firebase) — exécution du service (art. 6.1.b RGPD).</li><li><strong>Activité du compte</strong> (date d'inscription, dernier jour d'utilisation, semaines d'utilisation sur les six derniers mois) — intérêt légitime (art. 6.1.f) : mesurer, uniquement sous forme de statistiques globales, si l'application rend service dans la durée.</li><li><strong>Profil peau et routine</strong> (type de peau, tranche d'âge, préoccupations, budget, produits retenus) — exécution du service.</li><li><strong>Données de santé</strong> : grossesse ou allaitement, allergies, carnation (phototype). Elles servent à écarter les produits déconseillés. Elles ne sont enregistrées dans votre compte qu'avec votre <strong>consentement explicite</strong> (art. 9.2.a RGPD) ; sans lui, elles restent sur votre appareil.</li><li><strong>Cycle menstruel</strong> : stocké uniquement sur votre appareil, jamais transmis.</li><li><strong>Photos de peau</strong> (suivi avant/après) : stockées uniquement sur votre appareil.</li><li><strong>Retours de tolérance</strong> (produit bien toléré, sans effet, ou réaction et ses symptômes) : sur votre appareil ; dans votre compte seulement avec votre consentement aux données de santé. Ils servent à ne plus vous recommander un produit qui vous a fait réagir. Si vous cochez la case de partage anonyme, le retour est enregistré sans identifiant ni e-mail (produit, symptômes, type de peau, tranche d'âge, préoccupation principale, mois) afin d'améliorer les recommandations ; n'étant rattaché à aucun compte, il ne peut plus être supprimé ensuite.</li><li><strong>Analyse par IA</strong> : la photo ou le texte libre que vous soumettez est transmis à Google (API Gemini), avec votre consentement (art. 6.1.a). SkinMatch ne conserve ni la photo ni le texte ; seul un compteur d'utilisation quotidien est enregistré.</li><li><strong>Mesure d'audience</strong> (Google Analytics : pages vues, événements, type d'appareil), uniquement si vous l'acceptez — consentement.</li><li><strong>Conseils météo</strong> : position arrondie à environ 10 km, envoyée à Open-Meteo, uniquement si vous activez la fonction — consentement.</li><li><strong>Codes-barres proposés</strong> (code, nom et marque du produit, identifiant de compte) — intérêt légitime à enrichir la base produits.</li><li><strong>Préférences</strong> (langue, pays, notifications) : stockées sur votre appareil.</li></ul>
+    <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li><strong>Compte</strong> (prénom, e-mail, mot de passe chiffré par Firebase) — exécution du service (art. 6.1.b RGPD).</li><li><strong>Activité du compte</strong> (date d'inscription, dernier jour d'utilisation, semaines d'utilisation sur les six derniers mois) — intérêt légitime (art. 6.1.f) : mesurer, uniquement sous forme de statistiques globales, si l'application rend service dans la durée.</li><li><strong>Profil peau et routine</strong> (type de peau, tranche d'âge, préoccupations, budget, produits retenus) — exécution du service.</li><li><strong>Données de santé</strong> : grossesse ou allaitement, allergies, carnation (phototype). Elles servent à écarter les produits déconseillés. Elles ne sont enregistrées dans votre compte qu'avec votre <strong>consentement explicite</strong> (art. 9.2.a RGPD) ; sans lui, elles restent sur votre appareil.</li><li><strong>Cycle menstruel</strong> : stocké uniquement sur votre appareil, jamais transmis.</li><li><strong>Photos de peau</strong> (suivi avant/après) : stockées uniquement sur votre appareil.</li><li><strong>Retours de tolérance</strong> (produit bien toléré, sans effet, ou réaction et ses symptômes) : sur votre appareil ; dans votre compte seulement avec votre consentement aux données de santé. Ils servent à ne plus vous recommander un produit qui vous a fait réagir. Si vous cochez la case de partage anonyme, le retour est enregistré sans identifiant ni e-mail (produit, symptômes, type de peau, tranche d'âge, préoccupation principale, mois) afin d'améliorer les recommandations ; n'étant rattaché à aucun compte, il ne peut plus être supprimé ensuite.</li><li><strong>Analyse par IA</strong> : la photo ou le texte libre que vous soumettez est transmis à Google (API Gemini), avec votre consentement (art. 6.1.a). SkinMatch ne conserve ni la photo ni le texte ; seul un compteur d'utilisation quotidien est enregistré.</li><li><strong>Mesure d'audience</strong> (Google Analytics : pages vues, événements, type d'appareil), uniquement si vous l'acceptez — consentement.</li><li><strong>Conseils météo</strong> : position arrondie à environ 10 km, envoyée à Open-Meteo, uniquement si vous activez la fonction — consentement.</li><li><strong>Codes-barres proposés</strong> (code, nom et marque du produit, identifiant de compte) — intérêt légitime à enrichir la base produits.</li><li><strong>Rappels de routine</strong>, si vous les activez : un identifiant de notification propre à votre appareil, la langue et les heures de rappel (sans aucune donnée de santé), pour que le serveur envoie le rappel — consentement, retiré à tout moment dans Paramètres › Rappels de routine.</li><li><strong>Préférences</strong> (langue, pays, notifications) : stockées sur votre appareil.</li></ul>
     <h3 style="margin-top:20px;font-family:Georgia,serif;font-size:18px;color:#3D2B1F">3. Destinataires et sous-traitants</h3>
     <p style="font-size:13px;line-height:1.7;color:#5A4A42">Vos données ne sont ni vendues ni louées. Elles sont traitées par :</p>
     <ul style="font-size:13px;line-height:1.7;color:#5A4A42;padding-left:20px"><li>Google Ireland Ltd / Google LLC — Firebase (authentification, base de données Firestore, fonctions serveur), Google Analytics et API Gemini. Région de la base Firestore : <mark class="legal-todo" style="background:#FFF3B0;padding:0 3px">[À compléter : région du projet Firebase, à lire dans la console Firestore]</mark>.</li><li>Netlify, Inc. (États-Unis) — hébergement du site : reçoit l'adresse IP et les informations techniques de chaque visite. Transferts encadrés par les clauses contractuelles types de la Commission européenne.</li><li>Open Beauty Facts — reçoit le code-barres scanné (aucune donnée personnelle).</li><li>Open-Meteo — reçoit la position arrondie si les conseils météo sont activés.</li><li>Fournisseurs techniques (Google Fonts, cdnjs) — reçoivent l'adresse IP lors du chargement des polices et bibliothèques.</li></ul>
@@ -5627,24 +5629,16 @@ function renderResult(){
       ${t('btn_restart')}
     </button>`;
 
-  // ══ Bouton notifications ══
+  // ══ Rappels de routine (app grand public) ══
   var existingNotifBtn = document.getElementById('notif-btn-wrap');
   if (existingNotifBtn) existingNotifBtn.remove();
-  if ('Notification' in window && 'serviceWorker' in navigator) {
+  if (typeof ouvrirRappels === 'function' && 'Notification' in window && 'serviceWorker' in navigator) {
     var notifWrap = document.createElement('div');
     notifWrap.id = 'notif-btn-wrap';
     notifWrap.style.cssText = 'margin-top:12px';
-    var notifHtml = '';
-    if (Notification.permission === 'granted') {
-      notifHtml = '<div style="background:#E8F5E9;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px">';
-      notifHtml += '<span style="font-size:20px">🔔</span>';
-      notifHtml += '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#2E7D32">' + (LANG==="en" ? "Reminders activated" : "Rappels activés") + '</div>';
-      notifHtml += '<div style="font-size:11px;color:#4CAF50">' + (LANG==="en" ? "You will be reminded morning & evening" : "Tu seras rappelé matin & soir") + '</div></div></div>';
-    } else {
-      notifHtml = '<button onclick="requestNotifPermission()" style="width:100%;padding:13px;border-radius:50px;border:1.5px solid #C4726A;background:transparent;color:#C4726A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">';
-      notifHtml += '<span>🔔</span><span>' + (LANG==="en" ? "Get morning & evening reminders" : "Recevoir des rappels matin & soir") + '</span></button>';
-    }
-    notifWrap.innerHTML = notifHtml;
+    var rp = rappelsPrefs() && Notification.permission === 'granted';
+    notifWrap.innerHTML = '<button onclick="ouvrirRappels()" style="width:100%;padding:13px;border-radius:50px;border:1.5px solid ' + (rp ? '#B5C4B1' : '#C4726A') + ';background:' + (rp ? '#F2F6F1' : 'transparent') + ';color:' + (rp ? '#2E6B3A' : '#C4726A') + ';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">' +
+      '<span>🔔</span><span>' + (rp ? (LANG === 'en' ? 'Reminders: ' : 'Rappels : ') + _libelleRappels() : (LANG === 'en' ? 'Get a morning or evening reminder' : 'Recevoir un rappel matin ou soir')) + '</span></button>';
     var resultContent = document.querySelector("#sc-result .content");
     if (resultContent) resultContent.appendChild(notifWrap);
   }
@@ -10233,6 +10227,8 @@ async function _handleGoogleRedirect() {
 }
 
 async function doLogout() {
+  // Les rappels serveur sont liés au compte : on se désabonne (les réglages restent en local).
+  if (typeof _pushDesabonner === 'function') { try { await _pushDesabonner(); } catch (e) {} }
   await window._signOut(window._auth);
   window._currentUser = null; window._userProfile = null;
   var b1=document.getElementById("btn-log"); if(b1){b1.style.display="";b1.textContent="Se connecter";b1.onclick=function(){go("login")};}
@@ -10326,6 +10322,7 @@ async function _confirmAccountDeletion() {
     try { await window._deleteDoc(window._doc(window._db, 'users', uid)); } catch(e){}
     try { await window._deleteDoc(window._doc(window._db, 'routines', uid)); } catch(e){}
     try { await window._deleteDoc(window._doc(window._db, 'feedbacks', uid)); } catch(e){}
+    try { await window._deleteDoc(window._doc(window._db, 'push', uid)); } catch(e){}
     try {
       var mine = await _myCommunityEans(uid);
       for (var i = 0; i < mine.length; i++) {
@@ -10718,7 +10715,6 @@ function renderSettings() {
   var content = document.getElementById('settings-content');
   if (!content) return;
 
-  var notifGranted = 'Notification' in window && Notification.permission === 'granted';
   var currentLang = LANG === 'en' ? '🇬🇧 English' : LANG === 'es' ? '🇪🇸 Español' : '🇫🇷 Français';
   var regionFlags = {fr:'🇫🇷 France',dz:'🇩🇿 Algérie',ma:'🇲🇦 Maroc',gb:'🇬🇧 United Kingdom',es:'🇪🇸 España',de:'🇩🇪 Deutschland',be:'🇧🇪 Belgique',ch:'🇨🇭 Suisse',other:'🌍 Autre'};
   var currentRegion = regionFlags[REGION] || '🌍';
@@ -10746,8 +10742,7 @@ function renderSettings() {
     {
       title: isEN ? '🔔 Notifications' : '🔔 Notifications',
       items: [
-        { label: isEN ? 'Morning reminder (8:00)' : 'Rappel matin (8h00)', value: notifGranted ? (isEN ? 'Active' : 'Actif') : (isEN ? 'Inactive' : 'Inactif'), action: 'requestNotifPermission()', toggle: notifGranted },
-        { label: isEN ? 'Evening reminder (21:00)' : 'Rappel soir (21h00)', value: notifGranted ? (isEN ? 'Active' : 'Actif') : (isEN ? 'Inactive' : 'Inactif'), toggle: notifGranted },
+        { label: isEN ? 'Routine reminders' : 'Rappels de routine', value: typeof _libelleRappels === 'function' ? _libelleRappels() : (isEN ? 'Not available' : 'Indisponible'), action: typeof ouvrirRappels === 'function' ? 'ouvrirRappels()' : '' },
       ]
     },
     {
@@ -11300,70 +11295,6 @@ function _fillBody(msg) {
   return msg.replace('{streak}', streak);
 }
 
-function requestNotifPermission() {
-  if (!('Notification' in window)) return;
-  Notification.requestPermission().then(function(perm) {
-    track('notif_permission', { granted: perm === 'granted' });
-    if (perm === 'granted') {
-      scheduleRoutineReminders();
-      var wrap = document.getElementById('notif-btn-wrap');
-      if (wrap) wrap.innerHTML = '<div style="background:#E8F5E9;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">🔔</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#2E7D32">' + (LANG==="en" ? "Reminders activated!" : "Rappels activés !") + '</div><div style="font-size:11px;color:#4CAF50">' + (LANG==="en" ? "Check your settings to manage times" : "Gère tes horaires dans les paramètres") + '</div></div></div>';
-    }
-  });
-}
-
-// ════════ Programmation des 3 notifications quotidiennes ════════
-// Matin 8h (rappel routine, message varié)
-// Midi 14h (notif événement type curiosité, contenu différent chaque jour)
-// Soir 21h (rappel routine soir, message varié)
-function scheduleRoutineReminders() {
-  _scheduleDailyNotif(8, 0, function() {
-    var msg = _getDailyMessage(_NOTIF_MORNING, LANG);
-    return { title: 'SkinMatch ' + msg.emoji, body: _fillBody(msg.body) };
-  });
-  _scheduleDailyNotif(14, 0, function() {
-    var msg = _getDailyMessage(_NOTIF_EVENT, LANG);
-    return { title: msg.emoji + ' ' + msg.title, body: _fillBody(msg.body) };
-  });
-  _scheduleDailyNotif(21, 0, function() {
-    var msg = _getDailyMessage(_NOTIF_EVENING, LANG);
-    return { title: 'SkinMatch ' + msg.emoji, body: _fillBody(msg.body) };
-  });
-}
-
-// Helper : programme une notif quotidienne à hh:mm
-function _scheduleDailyNotif(hh, mm, buildMsgFn) {
-  var now = new Date();
-  var target = new Date(now);
-  target.setHours(hh, mm, 0, 0);
-  if (target <= now) target.setDate(target.getDate() + 1);
-  var msUntil = target - now;
-  setTimeout(function() {
-    if (Notification.permission === 'granted') {
-      try {
-        var m = buildMsgFn();
-        new Notification(m.title, {
-          body: m.body,
-          icon: 'icon-192.png',
-          badge: 'icon-192.png',
-          tag: 'sm-daily-' + hh
-        });
-      } catch(e) {}
-    }
-    setInterval(function() {
-      if (Notification.permission === 'granted') {
-        try {
-          var m = buildMsgFn();
-          new Notification(m.title, {
-            body: m.body,
-            icon: 'icon-192.png',
-            tag: 'sm-daily-' + hh
-          });
-        } catch(e) {}
-      }
-    }, 24 * 60 * 60 * 1000);
-  }, msUntil);
-}
 
 // ══ FEEDBACK PRODUIT ══
 var productFeedback = JSON.parse(localStorage.getItem('skinmatch_feedback') || '{}');
@@ -11420,6 +11351,20 @@ function _hideSplash() {
   var s = document.getElementById('app-splash');
   if (s) { s.style.opacity = '0'; setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 400); }
   _checkSharedRoutine();
+  _ouvrirRaccourci();
+}
+
+// Raccourcis de l'icône (manifeste) et clic sur un rappel : ?a=routine ou ?a=scan
+function _ouvrirRaccourci() {
+  var a = (location.search.match(/[?&]a=(routine|scan)\b/) || [])[1];
+  if (!a || window._raccourciFait) return;
+  window._raccourciFait = true;
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+  if (a === 'scan') { if (typeof navTo === 'function') navTo('scan-product'); else go('scan-product'); return; }
+  if (!ST.result) {
+    try { var sv = JSON.parse(localStorage.getItem('skinmatch_last_routine') || 'null'); if (sv && sv.result) { Object.assign(ST, sv.ST || {}); ST.result = sv.result; } } catch (e) {}
+  }
+  if (ST.result) { go('result'); if (typeof updateNav === 'function') updateNav('result'); renderResult(); }
 }
 
 function buildFromKeys(keys) {
@@ -12273,117 +12218,6 @@ function _getPhotos() {
   }
 })();
 
-
-
-// ══════════════════════════════════════════════════════════════
-// RAPPELS ROUTINE — Notification programmée à 21h
-// ══════════════════════════════════════════════════════════════
-
-function setupEveningReminder() {
-  // Vérifier permission notifications
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'denied') return;
-
-  // Si déjà demandé aujourd'hui, ne pas redemander
-  var lastAsk = localStorage.getItem('skinmatch_notif_ask');
-  var today = new Date().toISOString().slice(0,10);
-  if (lastAsk === today) return;
-
-  // Demander la permission de manière douce, après 2 visites
-  var visits = parseInt(localStorage.getItem('skinmatch_visits') || '0') + 1;
-  localStorage.setItem('skinmatch_visits', visits);
-
-  if (visits >= 2 && Notification.permission === 'default') {
-    setTimeout(function() {
-      _askNotifPermission();
-      localStorage.setItem('skinmatch_notif_ask', today);
-    }, 5000);
-  }
-
-  // Programmer la notification du soir si permission accordée
-  if (Notification.permission === 'granted') {
-    _scheduleEveningNotif();
-  }
-}
-
-function _askNotifPermission() {
-  var isEN = LANG === 'en';
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(61,43,31,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-
-  var modal = document.createElement('div');
-  modal.style.cssText = 'background:#fff;border-radius:24px;padding:24px;max-width:360px;width:100%;text-align:center';
-
-  modal.innerHTML =
-    '<div style="font-size:48px;margin-bottom:12px">🔔</div>' +
-    '<div style="font-family:Georgia,serif;font-size:18px;font-weight:700;color:#3D2B1F;margin-bottom:8px">' +
-      (isEN?'Stay on track':'Reste régulière') +
-    '</div>' +
-    '<div style="font-size:13px;color:#8B6F5E;line-height:1.6;margin-bottom:20px">' +
-      (isEN?'A gentle reminder at 9pm so you never miss your evening routine.':'Un rappel à 21h pour ne plus jamais oublier ta routine du soir.') +
-    '</div>';
-
-  var allowBtn = document.createElement('button');
-  allowBtn.textContent = isEN ? 'Activate reminders' : 'Activer les rappels';
-  allowBtn.style.cssText = 'width:100%;padding:14px;border-radius:50px;border:none;background:linear-gradient(135deg,#3D2B1F,#5A3D2B);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px';
-  allowBtn.onclick = function() {
-    Notification.requestPermission().then(function(perm) {
-      if (perm === 'granted') _scheduleEveningNotif();
-      overlay.remove();
-    });
-  };
-  modal.appendChild(allowBtn);
-
-  var skipBtn = document.createElement('button');
-  skipBtn.textContent = isEN ? 'Maybe later' : 'Plus tard';
-  skipBtn.style.cssText = 'width:100%;padding:12px;border-radius:50px;border:none;background:transparent;color:#8B6F5E;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit';
-  skipBtn.onclick = function() { overlay.remove(); };
-  modal.appendChild(skipBtn);
-
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-}
-
-function _scheduleEveningNotif() {
-  // Vérifier si déjà programmée aujourd'hui
-  var scheduled = localStorage.getItem('skinmatch_notif_today');
-  var today = new Date().toISOString().slice(0,10);
-  if (scheduled === today) return;
-
-  var now = new Date();
-  var target = new Date();
-  target.setHours(21, 0, 0, 0);
-  if (target < now) {
-    // Trop tard pour ce soir, programmer pour demain
-    target.setDate(target.getDate() + 1);
-  }
-  var delay = target - now;
-  if (delay > 0 && delay < 24*60*60*1000) {
-    setTimeout(function() {
-      _showRoutineReminder();
-      localStorage.setItem('skinmatch_notif_today', today);
-    }, delay);
-  }
-}
-
-function _showRoutineReminder() {
-  if (Notification.permission !== 'granted') return;
-  var isEN = LANG === 'en';
-  var name = window._currentUser && window._currentUser.displayName
-    ? window._currentUser.displayName.split(' ')[0] : '';
-  var title = isEN ? '🌙 Evening routine time' : '🌙 C\'est l\'heure de ta routine';
-  var body = name
-    ? (isEN ? name + ', take 5 min for your skin tonight 💆‍♀️' : name + ', prends 5 min pour ta peau ce soir 💆‍♀️')
-    : (isEN ? 'Take 5 min for your skin tonight 💆‍♀️' : 'Prends 5 min pour ta peau ce soir 💆‍♀️');
-  try {
-    new Notification(title, { body: body, icon: '/icon-192.png' });
-  } catch(e) {}
-}
-
-// Lancer le setup après le chargement
-window.addEventListener('load', function() {
-  setTimeout(setupEveningReminder, 6000);
-});
 
 
 // ══════════════════════════════════════════════════════════════
@@ -13298,14 +13132,6 @@ function notifEnAttente(jour, L, P, data){
   }
   return null;
 }
-function pushNatif(n){
-  // iOS : ne fonctionne que si la PWA est installée sur l'écran d'accueil (iOS 16.4+)
-  try {
-    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification("SkinMatch — " + n.t, { body:n.b, tag:"sm-cycle" });
-    }
-  } catch(e){}
-}
 
 /* ── Cadran SVG ── */
 function polar(cx, cy, r, deg){
@@ -13400,9 +13226,6 @@ function renderSetup(el){
       duration: parseInt(document.getElementById("cyc-dur").value, 10),
       notified: {}
     });
-    try {
-      if (typeof Notification !== "undefined" && Notification.permission === "default") Notification.requestPermission();
-    } catch(e){}
     if (window._logEvent) { try { window._logEvent("cycle_optin", {}); } catch(e){} }
     _offset = 0; _notifFermee = false;
     renderCycle();
@@ -13416,7 +13239,7 @@ function renderMain(el, data){
   var ph = phaseFor(jour, L, P);
   var reco = recoPourPhase(ph, 3);
   var notif = _notifFermee ? null : notifEnAttente(jour, L, P, data);
-  if (notif && _offset === 0) { pushNatif(notif); notif.marquer(); }
+  if (notif && _offset === 0) { notif.marquer(); }   // affiché dans l'écran (bandeau), pas en notification système
 
   var bornes = {
     menstruelle:  "J1 – J" + P,

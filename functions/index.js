@@ -15,6 +15,8 @@ const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const core = require("./gemini-core");
 const stats = require("./stats-core");
+const reminders = require("./reminders-core");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 
 admin.initializeApp();
 
@@ -124,6 +126,35 @@ exports.stats = onRequest({
   }
 });
 
+// Rappels de routine (notifications) : toutes les 15 minutes, envoi aux personnes dont le
+// créneau matin ou soir (en UTC, calculé par l'app) correspond au quart d'heure en cours.
+exports.reminders = onSchedule({
+  schedule: "every 15 minutes",
+  region: "europe-west1",
+  timeoutSeconds: 120,
+  memory: "256MiB",
+  maxInstances: 1,
+  retryCount: 0                       // pas de nouvel essai : un rappel en double est pire qu'un rappel manqué
+}, async (event) => {
+  const db = admin.firestore();
+  const slot = reminders.slotOf(event && event.scheduleTime ? event.scheduleTime : new Date());
+  let envoyes = 0, supprimes = 0, echecs = 0;
+  for (const kind of reminders.KINDS) {
+    const snap = await db.collection("push").where(kind, "==", slot).get();
+    const docs = snap.docs.map((d) => ({ ref: d.ref, msg: reminders.buildMessage(d.data(), kind) })).filter((x) => x.msg);
+    for (let i = 0; i < docs.length; i += 500) {             // 500 messages au plus par envoi groupé
+      const lot = docs.slice(i, i + 500);
+      const res = await admin.messaging().sendEach(lot.map((x) => x.msg));
+      await Promise.all(res.responses.map(async (r, j) => {
+        if (r.success) { envoyes++; return; }
+        if (reminders.isDeadToken(r.error && r.error.code)) { supprimes++; await lot[j].ref.delete().catch(() => {}); }
+        else echecs++;
+      }));
+    }
+  }
+  logger.info("reminders_sent", { slot, envoyes, supprimes, echecs });
+});
+
 // Suppression de compte : efface côté serveur ce que le client ne peut pas (ou n'a pas pu)
 // effacer — profil, quotas IA, contributions non validées — et anonymise les contributions
 // déjà validées, intégrées à la base produits.
@@ -136,6 +167,7 @@ exports.cleanupDeletedUser = functionsV1.region("europe-west1").auth.user().onDe
   batch.delete(db.doc("ai_usage/" + uid));
   batch.delete(db.doc("routines/" + uid));
   batch.delete(db.doc("feedbacks/" + uid));
+  batch.delete(db.doc("push/" + uid));
   const contribs = await db.collection("community_eans").where("addedBy", "==", uid).get();
   contribs.forEach((d) => {
     if (d.get("validated") === true) batch.update(d.ref, { addedBy: "deleted-user" });

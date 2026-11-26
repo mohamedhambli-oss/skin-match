@@ -150,6 +150,7 @@ comme un « partage » au sens du formulaire.
 | Activité dans les applis › Autre contenu généré par l'utilisateur (codes-barres proposés) | Oui | Non | Oui | Fonctionnement |
 | Position › Position approximative (conseils météo, arrondie à ~10 km) | Oui, éphémère | Non | Oui | Fonctionnement |
 | Identifiants de l'appareil ou autres (identifiant Google Analytics, si accepté) | Oui | Non | Oui | Statistiques (analyse) |
+| Identifiants de l'appareil ou autres (jeton de notification, si les rappels sont activés) | Oui | Non | Oui | Fonctionnement (rappels) |
 
 Le suivi du cycle et les photos du suivi avant/après restent sur le téléphone : non collectés.
 

@@ -101,3 +101,17 @@ test("activité : jour et semaines bornés", async () => {
   await assertFails(setDoc(doc(db, "users/alice"), { lastSeen: "hier" }, { merge: true }));
   await assertFails(setDoc(doc(db, "users/alice"), { activeWeeks: new Array(27).fill("2026-11-23") }, { merge: true }));
 });
+
+test("push : abonnement aux rappels, titulaire seul, champs fermés", async () => {
+  const ok = { token: "jeton-fcm", lang: "fr", matin: "0700", soir: null, updatedAt: NOW };
+  await assertSucceeds(setDoc(doc(alice(), "push/alice"), ok));
+  await assertSucceeds(getDoc(doc(alice(), "push/alice")));
+  await assertFails(getDoc(doc(bob(), "push/alice")));
+  await assertFails(setDoc(doc(bob(), "push/alice"), ok));
+  await assertFails(setDoc(doc(guest(), "push/alice"), ok));
+  await assertFails(setDoc(doc(alice(), "push/alice"), { ...ok, matin: "0710" }));
+  await assertFails(setDoc(doc(alice(), "push/alice"), { ...ok, lang: "de" }));
+  await assertFails(setDoc(doc(alice(), "push/alice"), { ...ok, cycle: "J14" }));
+  await assertFails(getDocs(collection(alice(), "push")));
+  await assertSucceeds(deleteDoc(doc(alice(), "push/alice")));
+});
