@@ -16,6 +16,7 @@ filtres grossesse et allaitement. Deux versions :
 | L'application (écrans, logique, styles) | `src/skinmatch.html` | `python3 tools/build_pages.py` |
 | Les produits | `data/produits.xlsx` | `python3 tools/build_data.py` |
 | Le catalogue depuis Open Beauty Facts | — | `python3 tools/import_obf.py` puis `tools/build_data.py` |
+| Les photos de produits (Open Beauty Facts) | colonne `photo` du tableur (une photo saisie à la main n'est jamais remplacée) | `python3 tools/import_photos.py` puis `tools/build_data.py` |
 | Le proxy IA ou le nettoyage de compte | `functions/` | `firebase deploy --only functions` |
 | Les règles de sécurité Firestore | `firestore.rules` | `firebase deploy --only firestore:rules` |
 | Le tableau de bord (indicateurs) | `admin.html` (affichage), `functions/stats-core.js` (calculs) | `firebase deploy --only functions` |

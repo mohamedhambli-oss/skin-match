@@ -23,6 +23,7 @@ TEXTS = {'marque': 'marque', 'nom': 'nom', 'type_produit': 'usage', 'texture': '
 BOOLS = {'vegan': 'vegan', 'clean': 'clean', 'teinte': 'teinte', 'fiche_incomplete': 'incomplet'}
 FLAGS = ['retinol', 'parfum', 'paraben', 'alcohol', 'sulfate', 'silicone', 'vitc', 'salicylic', 'aha_bha']
 REQUIRED = ['id', 'marque', 'nom', 'moment']
+OBF_IMG = 'https://images.openbeautyfacts.org/images/products/'
 
 # Ingrédients qui rendent un drapeau « contient_… » obligatoirement OUI. Si le tableur indique NON
 # alors que la composition contient l'ingrédient, le drapeau est corrigé (et signalé) : une
@@ -100,6 +101,12 @@ def main():
             v = s(row.get(col)).upper()
             if v in ('OUI', 'NON'):
                 p[key] = v == 'OUI'
+        photo = s(row.get('photo'))
+        if photo:
+            if re.fullmatch(r'https://[^\s"\'<>]+', photo):
+                p['img'] = photo
+            else:
+                warnings.append(f'Produits ligne {n} : photo « {photo[:60]} » ignorée (adresse https:// attendue)')
         src = s(row.get('source'))
         if src and src != 'manuel':
             p['source'] = src
@@ -137,7 +144,10 @@ def main():
             continue                                      # la fiche complète prime
         inci = s(row.get('composition_inci'))
         avec += bool(inci)
-        items[ean] = [s(row.get('marque')), s(row.get('nom')), s(row.get('type_produit')), inci, s(row.get('source'))]
+        photo = s(row.get('photo'))
+        # Photos Open Beauty Facts : seul le chemin variable est stocké (catalogue plus léger)
+        photo = photo[len(OBF_IMG):] if photo.startswith(OBF_IMG) else (photo if re.fullmatch(r'https://[^\s"\'<>]+', photo) else '')
+        items[ean] = [s(row.get('marque')), s(row.get('nom')), s(row.get('type_produit')), inci, s(row.get('source')), photo]
 
     if errors:
         print('ERREURS (rien n’a été écrit) :\n  ' + '\n  '.join(errors[:50]))
@@ -147,7 +157,8 @@ def main():
           'window.SKINMATCH_DATA = ' + json.dumps({'version': version, 'DB': DB, 'INCI_DB': INCI_DB},
                                                   ensure_ascii=False, separators=(',', ':')) + ';\n')
     open(os.path.join(ROOT, 'data', 'products.js'), 'w', encoding='utf-8').write(js)
-    json.dump({'version': version, 'champs': ['marque', 'nom', 'type', 'inci', 'source'], 'produits': items},
+    json.dump({'version': version, 'champs': ['marque', 'nom', 'type', 'inci', 'source', 'photo'],
+               'photo_prefixe': OBF_IMG, 'produits': items},
               open(os.path.join(ROOT, 'data', 'catalogue.json'), 'w', encoding='utf-8'),
               ensure_ascii=False, separators=(',', ':'))
     print(f'products.js : {len(DB)} fiches ({sum(1 for p in DB.values() if p.get("ean"))} avec code-barres)')

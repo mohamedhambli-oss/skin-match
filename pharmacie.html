@@ -1520,7 +1520,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
 <!-- ══ ÉCRAN CYCLE (module hormonal) ══ -->
 <div id="sc-cycle" class="hidden">
   <div class="topbar">
-    <button class="btn-back" onclick="go('dashboard')">← Retour</button>
+    <button class="btn-back" onclick="_retourEspace()">← Retour</button>
     <div class="logo"><div class="logo-icon">SM</div>Skin<span>Match</span></div>
   </div>
   <div class="content" style="padding-bottom:40px">
@@ -1567,7 +1567,7 @@ h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:3px}
 <!-- ══ ÉCRAN RÉGLAGES ══ -->
 <div id="sc-settings" class="hidden">
   <div class="topbar">
-    <button class="btn-back" onclick="go('dashboard')">← Retour</button>
+    <button class="btn-back" onclick="_retourEspace()">← Retour</button>
     <div class="logo"><div class="logo-icon">SM</div>Skin<span>Match</span></div>
   </div>
   <div class="content" style="padding-bottom:90px">
@@ -3719,7 +3719,7 @@ function resultBack(){
   if (window._resultOrigin === 'diagnostic') {
     go('q5');
   } else if (window._resultOrigin === 'dashboard') {
-    go('dashboard');
+    _retourEspace();
   } else {
     go('welcome');
   }
@@ -5016,9 +5016,16 @@ function translateEtape(etape){
   return map[etape]||etape;
 }
 
+// Photo d'un produit : celle choisie à la main (IMGS), sinon celle du tableur (colonne « photo »,
+// Open Beauty Facts). Vignette : version 200 px, plus légère. Sans photo : initiales de la marque.
+function photoProduit(key, petite) {
+  var src = IMGS[key] || (typeof DB !== "undefined" && DB[key] && DB[key].img) || "";
+  if (petite && src.indexOf("images.openbeautyfacts.org") > -1) src = src.replace(/\.400\.jpg$/, ".200.jpg");
+  return /^https:\/\//.test(src) ? src : "";
+}
 function imgHtml(key,marque,size){
   size = size || 88;
-  var src = IMGS[key] || "";
+  var src = photoProduit(key, size <= 100);
   var words = (marque||"").replace(/[^a-zA-Z ]/g,'').trim().split(" ");
   var init = words.length >= 2 && words[1] ? (words[0][0]+words[1][0]).toUpperCase() : (marque||"SK").substring(0,2).toUpperCase();
   var style = getBrandStyle(marque);
@@ -5028,7 +5035,7 @@ function imgHtml(key,marque,size){
   return '<div style="width:'+size+'px;height:'+size+'px;border-radius:14px;background:'+style.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0;overflow:hidden;position:relative">' +
     '<span style="font-size:'+(size>60?22:16)+'px;font-weight:900;color:'+style.tx+';letter-spacing:.5px">'+init+'</span>' +
     '<span style="font-size:9px;font-weight:600;color:'+style.tx+';opacity:.8;text-align:center;padding:0 4px;max-width:'+(size-8)+'px;overflow:hidden;white-space:nowrap">'+marque+'</span>' +
-    (src ? '<img src="'+src+'" alt="'+marque+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:14px" onerror="this.style.display=\'none\'" />' : '') +
+    (src ? '<img src="'+_escHtml(src)+'" alt="'+_escHtml(marque||"")+'" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#fff;border-radius:14px" onerror="this.style.display=\'none\'" />' : '') +
   '</div>';
 }
 
@@ -5643,11 +5650,11 @@ function renderResult(){
   // ══ Rappels de routine (app grand public) ══
   var existingNotifBtn = document.getElementById('notif-btn-wrap');
   if (existingNotifBtn) existingNotifBtn.remove();
-  if (typeof ouvrirRappels === 'function' && 'Notification' in window && 'serviceWorker' in navigator) {
+  if (typeof ouvrirRappels === 'function') {
     var notifWrap = document.createElement('div');
     notifWrap.id = 'notif-btn-wrap';
     notifWrap.style.cssText = 'margin-top:12px';
-    var rp = rappelsPrefs() && Notification.permission === 'granted';
+    var rp = !!(rappelsPrefs() && _notifPossible() && Notification.permission === 'granted');
     notifWrap.innerHTML = '<button onclick="ouvrirRappels()" style="width:100%;padding:13px;border-radius:50px;border:1.5px solid ' + (rp ? '#B5C4B1' : '#C4726A') + ';background:' + (rp ? '#F2F6F1' : 'transparent') + ';color:' + (rp ? '#2E6B3A' : '#C4726A') + ';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">' +
       '<span>🔔</span><span>' + (rp ? (LANG === 'en' ? 'Reminders: ' : 'Rappels : ') + _libelleRappels() : (LANG === 'en' ? 'Get a morning or evening reminder' : 'Recevoir un rappel matin ou soir')) + '</span></button>';
     var resultContent = document.querySelector("#sc-result .content");
@@ -6880,7 +6887,8 @@ async function chargerCatalogue() {
     var prods = data.produits || {};
     for (var ean in prods) {
       var v = prods[ean];
-      _catalogue[ean.replace(/^0+/, "")] = { e: ean, m: v[0], n: v[1], t: v[2], inci: v[3], src: v[4] };
+      var ph = v[5] ? (/^https:\/\//.test(v[5]) ? v[5] : (data.photo_prefixe || "") + v[5]) : "";
+      _catalogue[ean.replace(/^0+/, "")] = { e: ean, m: v[0], n: v[1], t: v[2], inci: v[3], src: v[4], img: /^https:\/\//.test(ph) ? ph : "" };
     }
     _catalogueEtat = "pret";
     return _catalogue;
@@ -6906,6 +6914,7 @@ function afficherProduitCatalogue(code, it) {
     '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:12px">' +
       '<div style="font-size:10px;font-weight:700;color:#5E8C6A;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">✓ ' +
         (isEN ? "Product recognised" : "Produit reconnu") + '</div>' +
+      (it.img ? '<img src="' + esc(it.img.replace(/\.400\.jpg$/, ".200.jpg")) + '" alt="" loading="lazy" referrerpolicy="no-referrer" style="float:right;width:72px;height:72px;object-fit:contain;background:#fff;border-radius:12px;border:1px solid var(--bdr);margin-left:10px" onerror="this.remove()">' : '') +
       '<div style="font-family:Georgia,serif;font-size:19px;font-weight:700;color:var(--pri);line-height:1.2">' + esc(it.m || "") + '</div>' +
       '<div style="font-size:13px;color:var(--mut);margin-top:3px">' + esc(it.n || "") + (it.t ? ' · ' + esc(it.t) : '') + '</div>' +
       '<div style="font-family:monospace;font-size:11px;color:var(--mut);margin-top:10px">' + esc(code) + '</div>' +
@@ -7708,9 +7717,13 @@ function displayScanResult(data) {
 
   // En-tête produit
   html += "<div style='background:#fff;border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.07)'>";
-  html += "<div style='width:60px;height:60px;border-radius:14px;background:" + style.bg + ";display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0'>";
-  html += "<span style='font-size:18px;font-weight:900;color:" + style.tx + "'>" + data.initiales + "</span>";
-  html += "<span style='font-size:8px;color:" + style.tx + ";opacity:.8;text-align:center;padding:0 2px;line-height:1.1'>" + data.marque + "</span></div>";
+  if (data.key && DB[data.key]) {
+    html += imgHtml(data.key, data.marque, 60);              // photo du produit si disponible, sinon initiales
+  } else {
+    html += "<div style='width:60px;height:60px;border-radius:14px;background:" + style.bg + ";display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0'>";
+    html += "<span style='font-size:18px;font-weight:900;color:" + style.tx + "'>" + data.initiales + "</span>";
+    html += "<span style='font-size:8px;color:" + style.tx + ";opacity:.8;text-align:center;padding:0 2px;line-height:1.1'>" + data.marque + "</span></div>";
+  }
   html += "<div style='flex:1'><div style='font-size:16px;font-weight:700;color:#3D2B1F;font-family:Georgia,serif'>" + data.nom + "</div>";
   html += "<div style='font-size:13px;color:#8B6F5E;margin-top:2px'>" + data.marque + "</div>";
   html += "<div style='display:inline-block;margin-top:5px;padding:3px 10px;background:#F5E8E6;border-radius:20px;font-size:10px;font-weight:700;color:#C4726A'>" + data.cat + "</div></div>";
@@ -8417,6 +8430,14 @@ function getDashData() {
 
 function saveDashData(data) {
     try { localStorage.setItem(DASH_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+// Retour vers « Mon espace » : sans compte, cet écran est vide (il était affiché tel quel) ;
+// on revient alors à l'accueil. Avec compte, navTo charge son contenu.
+function _retourEspace() {
+  if (window._currentUser) { navTo('dashboard'); return; }
+  go('welcome'); if (typeof updateNav === 'function') updateNav('welcome');
+  if (typeof applyWelcomeLang === 'function') setTimeout(applyWelcomeLang, 50);
 }
 
 function openDashboard() {
@@ -10274,15 +10295,26 @@ async function doForgotPassword() {
 // ── Renvoyer email de vérification ──
 async function resendEmailVerification() {
   var isEN = LANG === 'en';
-  if (!window._currentUser) {
-    showToast(isEN ? 'You must be logged in.' : 'Tu dois être connecté.', {type:'error'});
+  var u = window._currentUser;
+  if (!u) { go('login'); return; }
+  // Le statut peut avoir changé depuis l'ouverture de l'app (lien déjà cliqué) : on le relit.
+  try { if (typeof u.reload === 'function') await u.reload(); } catch (e) {}
+  if (u.emailVerified) {
+    showToast(isEN ? 'Your email is already verified ✓' : 'Ton e-mail est déjà vérifié ✓', { type: 'success' });
+    if (typeof renderSettings === 'function') renderSettings();
     return;
   }
   try {
-    await window._sendEmailVerification(window._currentUser);
-    showToast(isEN ? 'Verification email sent!' : 'Email de vérification envoyé !', {type:'success'});
-  } catch(e) {
-    showToast(isEN ? 'Error sending verification.' : 'Erreur d\'envoi.', {type:'error'});
+    await window._sendEmailVerification(u);
+    showToast(isEN ? 'Email sent to ' + u.email + '. Check your spam folder too, then come back here.'
+                   : 'E-mail envoyé à ' + u.email + '. Regarde aussi dans les spams, puis reviens ici.', { type: 'success', duration: 6000 });
+  } catch (e) {
+    var code = (e && e.code) || '';
+    showToast(code === 'auth/too-many-requests'
+      ? (isEN ? 'Too many attempts. Wait a few minutes and try again.' : 'Trop de demandes. Attends quelques minutes puis réessaie.')
+      : code === 'auth/network-request-failed'
+      ? (isEN ? 'No connection. Check your network.' : 'Pas de connexion. Vérifie ton réseau.')
+      : (isEN ? 'Sending failed (' + code + ').' : 'Envoi impossible (' + (code || 'erreur inconnue') + ').'), { type: 'error', duration: 6000 });
   }
 }
 
@@ -10912,15 +10944,21 @@ function renderSettings() {
         { label: isEN ? 'Routine reminders' : 'Rappels de routine', value: typeof _libelleRappels === 'function' ? _libelleRappels() : (isEN ? 'Not available' : 'Indisponible'), action: typeof ouvrirRappels === 'function' ? 'ouvrirRappels()' : '' },
       ]
     },
-    {
+    window._currentUser ? {
       title: isEN ? '👤 Account' : '👤 Compte',
       items: [
-        { label: isEN ? 'Email' : 'Email', value: window._currentUser ? window._currentUser.email : '-' },
-        { label: isEN ? 'Verify my email' : 'Vérifier mon email', value: window._currentUser && !window._currentUser.emailVerified ? (isEN?'Pending':'En attente') : (isEN?'Verified':'Vérifié'), action: window._currentUser && !window._currentUser.emailVerified ? 'resendEmailVerification()' : null },
+        { label: isEN ? 'Email' : 'Email', value: window._currentUser.email || '-' },
+        { label: isEN ? 'Verify my email' : 'Vérifier mon email', value: !window._currentUser.emailVerified ? (isEN?'Pending':'En attente') : (isEN?'Verified':'Vérifié'), action: !window._currentUser.emailVerified ? 'resendEmailVerification()' : null },
         { label: isEN ? 'Change password' : 'Changer mon mot de passe', value: '', action: 'doForgotPassword()' },
         { label: isEN ? 'Logout' : 'Se déconnecter', value: '', action: 'doLogout()', danger: true },
         { label: isEN ? 'Download my data' : 'Télécharger mes données', value: '', action: 'exportMyData()' },
         { label: isEN ? 'Delete my account' : 'Supprimer mon compte', value: '', action: 'deleteMyAccount()', danger: true },
+      ]
+    } : {
+      title: isEN ? '👤 Account' : '👤 Compte',
+      items: [
+        { label: isEN ? 'Log in' : 'Se connecter', value: '', action: "go('login')" },
+        { label: isEN ? 'Create a free account' : 'Créer un compte gratuit', value: '', action: "go('register')" },
       ]
     },
     {
@@ -14216,7 +14254,7 @@ async function genererFichesStock(){
                 ak: ACTIFS.filter(function(a){ return bas.indexOf(a[0]) > -1; }).map(function(a){ return a[1]; }).slice(0, 4),
                 comp: it.inci.split(/,(?![^()]*\))/).map(_txt).filter(Boolean).slice(0, 80),
                 pq: "", ben: "Fiche générée automatiquement à partir de la composition (Open Beauty Facts).", app: "",
-                ean: e, source: "auto", incomplet: true };
+                ean: e, source: "auto", incomplet: true, img: it.img || "" };
     INCI_DB[key] = _drapeaux(it.inci);
     n++;
   });
