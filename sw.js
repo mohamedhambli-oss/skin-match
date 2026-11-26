@@ -1,7 +1,7 @@
 // SkinMatch — service worker
 // Doit être servi comme un vrai fichier depuis la même origine : un service worker
 // enregistré depuis une URL blob: est refusé par les navigateurs.
-const VERSION = 'sm-v18';
+const VERSION = 'sm-v19';
 const CACHE_APP  = VERSION + '-app';
 const CACHE_DATA = VERSION + '-data';
 
@@ -91,28 +91,28 @@ self.addEventListener('fetch', (e) => {
 // Le serveur n'envoie que le type de rappel et la langue ; le texte est choisi ici.
 const RAPPELS = {
   matin: {
-    fr: [['🌅 Ta routine du matin', 'Nettoyant, soin, protection solaire : 2 minutes pour ta peau.'],
-         ['☀️ N\'oublie pas le SPF', 'La protection solaire, c\'est tous les matins, même quand il fait gris.'],
-         ['💧 Routine du matin', 'Une peau bien hydratée dès le matin tient mieux toute la journée.'],
-         ['✨ C\'est parti', 'Ta routine du matin t\'attend.']],
-    en: [['🌅 Your morning routine', 'Cleanser, care, sunscreen: 2 minutes for your skin.'],
-         ['☀️ Don\'t forget your SPF', 'Sunscreen every morning, even on cloudy days.'],
-         ['💧 Morning routine', 'Well-hydrated skin in the morning lasts all day.'],
-         ['✨ Let\'s go', 'Your morning routine is waiting.']],
-    es: [['🌅 Tu rutina de mañana', 'Limpiador, tratamiento, protector solar: 2 minutos para tu piel.'],
-         ['☀️ No olvides el SPF', 'Protector solar cada mañana, incluso con nubes.']]
+    fr: [['Ta routine du matin', 'Nettoyant, soin, protection solaire : 2 minutes pour ta peau.'],
+         ['N\'oublie pas le SPF', 'La protection solaire, c\'est tous les matins, même quand il fait gris.'],
+         ['Routine du matin', 'Une peau bien hydratée dès le matin tient mieux toute la journée.'],
+         ['C\'est parti', 'Ta routine du matin t\'attend.']],
+    en: [['Your morning routine', 'Cleanser, care, sunscreen: 2 minutes for your skin.'],
+         ['Don\'t forget your SPF', 'Sunscreen every morning, even on cloudy days.'],
+         ['Morning routine', 'Well-hydrated skin in the morning lasts all day.'],
+         ['Let\'s go', 'Your morning routine is waiting.']],
+    es: [['Tu rutina de mañana', 'Limpiador, tratamiento, protector solar: 2 minutos para tu piel.'],
+         ['No olvides el SPF', 'Protector solar cada mañana, incluso con nubes.']]
   },
   soir: {
-    fr: [['🌙 Ta routine du soir', 'Démaquillage, soin, crème : ta peau se répare pendant la nuit.'],
-         ['💆 5 minutes pour toi', 'C\'est l\'heure de ta routine du soir.'],
-         ['🌿 Routine du soir', 'Un petit rituel chaque soir, de vrais résultats en quelques semaines.'],
-         ['✨ Avant de dormir', 'Ta peau te dira merci demain matin.']],
-    en: [['🌙 Your evening routine', 'Cleanse, treat, moisturise: your skin repairs itself overnight.'],
-         ['💆 5 minutes for you', 'Time for your evening routine.'],
-         ['🌿 Evening routine', 'A small ritual every night, real results in a few weeks.'],
-         ['✨ Before bed', 'Your skin will thank you tomorrow morning.']],
-    es: [['🌙 Tu rutina de noche', 'Desmaquillar, tratar, hidratar: tu piel se repara de noche.'],
-         ['💆 5 minutos para ti', 'Es la hora de tu rutina de noche.']]
+    fr: [['Ta routine du soir', 'Démaquillage, soin, crème : ta peau se répare pendant la nuit.'],
+         ['5 minutes pour toi', 'C\'est l\'heure de ta routine du soir.'],
+         ['Routine du soir', 'Un petit rituel chaque soir, de vrais résultats en quelques semaines.'],
+         ['Avant de dormir', 'Ta peau te dira merci demain matin.']],
+    en: [['Your evening routine', 'Cleanse, treat, moisturise: your skin repairs itself overnight.'],
+         ['5 minutes for you', 'Time for your evening routine.'],
+         ['Evening routine', 'A small ritual every night, real results in a few weeks.'],
+         ['Before bed', 'Your skin will thank you tomorrow morning.']],
+    es: [['Tu rutina de noche', 'Desmaquillar, tratar, hidratar: tu piel se repara de noche.'],
+         ['5 minutos para ti', 'Es la hora de tu rutina de noche.']]
   }
 };
 
