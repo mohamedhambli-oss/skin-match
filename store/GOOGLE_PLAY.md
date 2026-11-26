@@ -130,7 +130,7 @@ Pages web exigées par Google (déjà en ligne avec le site) :
 | Applications d'actualités | Non |
 | Applications de santé | Remplir la déclaration : cocher les fonctions réellement présentes, notamment le **suivi du cycle menstruel** ; l'application n'est **pas un dispositif médical** et ne pose pas de diagnostic |
 | Applications financières, gouvernementales | Non |
-| Contenu généré par IA | Oui (analyse de peau par photo). Signalement prévu dans l'app : bouton « Signaler un problème avec cette analyse » |
+| Contenu généré par IA | Oui (analyse de peau par photo et Skin Coach). Signalement dans l'app : « Signaler un problème avec cette analyse » et « Signaler » sous chaque réponse du coach |
 
 ### Sécurité des données (Data safety)
 

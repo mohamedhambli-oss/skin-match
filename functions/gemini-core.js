@@ -18,7 +18,8 @@ const SKIN_TYPES = ["seche", "grasse", "mixte", "normale", "sensible",
   "dry", "oily", "combination", "normal", "sensitive"];
 
 // Limites quotidiennes par utilisateur (remises à zéro chaque jour UTC).
-const DAILY_LIMITS = { skin: 3, normalize: 30 };
+const DAILY_LIMITS = { skin: 3, normalize: 30, coach: 20 };
+const coach = require("./coach-core");
 
 const MAX_IMAGE_B64 = 4 * 1024 * 1024;   // ~3 Mo d'image JPEG
 const MAX_TEXT = 200;
@@ -41,6 +42,10 @@ function validateRequest(body) {
     const lang = body.lang === "en" ? "en" : "fr";
     return { task, image, lang };
   }
+  if (task === "coach") {
+    try { return coach.validateCoach(body, { concernIds: CONCERN_IDS, allergyLabels: ALLERGY_LABELS }); }
+    catch (e) { throw new BadRequest(e.message); }
+  }
   throw new BadRequest("task");
 }
 
@@ -52,6 +57,7 @@ function thinkingConfig(model) {
 }
 
 function buildGeminiBody(req, model) {
+  if (req.task === "coach") return coach.buildCoachBody(req, thinkingConfig(model));
   if (req.task === "normalize") {
     const prompt = req.type === "concern"
       ? "Tu es un expert skincare. L'utilisateur décrit un problème de peau en texte libre. Retourne UNIQUEMENT une liste JSON des clés correspondantes parmi : " +
@@ -90,6 +96,7 @@ const str = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
 
 // Ne renvoie au client que des champs connus, typés et de taille bornée.
 function sanitizeResult(req, text) {
+  if (req.task === "coach") return coach.sanitizeCoach(req, text);
   const data = parseJson(text);
   if (req.task === "normalize") {
     const allowed = req.type === "concern" ? CONCERN_IDS : ALLERGY_LABELS;

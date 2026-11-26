@@ -34,6 +34,16 @@ page web autonome pour Google Play). Le code commun n'y figure qu'une fois ; les
 version sont encadrés par `@@si public@@ … @@sinon@@ … @@fin@@` ou `@@si borne@@ … @@fin@@`.
 `python3 tools/build_pages.py --check` vérifie que les pages publiées sont à jour.
 
+## Skin Coach (assistant IA)
+
+Le coach passe par le proxy IA (`functions/coach-core.js`, tâche « coach », 20 messages par jour
+et par compte). Garde-fous : il ne cite que des produits de la base envoyés par l'app (déjà
+filtrés allergies et grossesse), ne pose pas de diagnostic, oriente vers le pharmacien, le
+médecin ou le 15/112 (détection par mots-clés aussi côté serveur et téléphone). Sans compte,
+sans accord pour l'IA ou quand le quota est atteint : réponses automatiques prudentes.
+**Avant de l'ouvrir au public**, lancer l'évaluation avec le vrai Gemini (14 questions pièges) :
+`cd functions && GEMINI_KEY=… node test/coach.eval.js`, et relire les réponses.
+
 ## Rappels de routine (notifications)
 
 Le serveur (fonction `reminders`, toutes les 15 minutes) envoie les rappels matin et soir, même
